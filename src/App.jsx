@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Box, Button, Heading, Input, Stack, Text } from "@chakra-ui/react";
+import Navbar from "./Components/Navbar/Navbar";
 import axios from "axios";
 import { Chess } from "chess.js";
+import './index.css';
 
 // const API = "https://stockfish.broadcastsofcbi.live/evaluate?fen=";
-const API = "http://localhost:5000/evaluate?fen=";
+const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
 export default function App() {
   const [pgn, setPgn] = useState("");
-  const [evaluation, setEvaluation] = useState<number | null>(null);
+  const [evaluation, setEvaluation] = useState(null);
 
   const handleEvaluate = async () => {
     if (!pgn.trim()) return;
@@ -23,9 +25,11 @@ export default function App() {
   const width = evaluation === null ? "50%" : `${50 + Math.max(-5, Math.min(5, evaluation)) * 10}%`;
 
   return (
-    <Box maxW="600px" mx="auto" mt={10} p={6} borderWidth={1} borderRadius="lg">
+    <>
+      <Navbar />
+      <Box maxW="600px" mx="auto" mt={10} p={6} borderWidth={1} borderRadius="lg">
       <Heading size="md" mb={4}>PGN → Evaluation Bar</Heading>
-      <Stack spacing={4}>
+      <Stack>
         <Input placeholder="Paste PGN here" value={pgn} onChange={(e) => setPgn(e.target.value)} />
         <Button onClick={handleEvaluate}>Evaluate</Button>
         {evaluation !== null && (
@@ -40,6 +44,7 @@ export default function App() {
           </>
         )}
       </Stack>
-    </Box>
+      </Box>
+    </>
   );
 }
