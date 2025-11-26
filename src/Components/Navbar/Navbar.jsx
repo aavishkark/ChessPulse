@@ -3,25 +3,13 @@ import "./Navbar.css";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [theme, setTheme] = useState("dark");
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
 
   const pieces = ["Sicilian Defense", "King's Gambit", "French Defense", "Queen's Indian", "Ruy Lopez", "Caro-Kann"];
 
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]);
-
-  const handleSearch = (value) => {
-    setQuery(value);
-    if (value.trim() === "") {
-      setResults([]);
-      return;
-    }
-    setResults(pieces.filter((p) => p.toLowerCase().includes(value.toLowerCase())));
-  };
 
   useEffect(() => {
     if (!open) return;
@@ -36,25 +24,10 @@ export default function Navbar() {
         <div className="chess-navbar__logo">♞ ChessPulse</div>
       </div>
 
-      <div className="chess-navbar__center">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Add PGN"
-            value={query}
-            onChange={(e) => handleSearch(e.target.value)}
-            aria-label="Add PGN"
-          />
-          <button className="search-box-btn">
-            Evaluate
-          </button>
-        </div>
-      </div>
-
       <div className="chess-navbar__right">
         <button
           className="chess-navbar__toggle"
-          onClick={() => { setOpen(!open); }}
+          onClick={() => { console.log(1); setOpen(!open); }}
           aria-label="Toggle menu"
           aria-expanded={open}
         >

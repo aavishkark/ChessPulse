@@ -11,9 +11,7 @@
   z-index: 200;
 }
 
-.chess-navbar__left { flex: 0 0 auto; display:flex; align-items:center; }
-.chess-navbar__center { flex: 1 1 auto; display:flex; justify-content:end; }
-.chess-navbar__right { flex: 0 0 auto; display:flex; align-items:center; gap:12px; }
+.chess-navbar__left { flex: 1 1; display:flex; align-items:center; }
 
 .chess-navbar__logo {
   font-size: 1.45rem;
@@ -62,6 +60,7 @@
   cursor: pointer;
   padding: 6px;
   border-radius: 6px;
+  position: relative;
   z-index: 310;
 }
 .chess-navbar__toggle .bar { display:block; width:22px; height:3px; margin:4px 0; background:var(--accent); border-radius:2px; }
@@ -138,7 +137,7 @@
   .search-box input { width: min(56vw, 240px); }
   .search-box input:focus { width: min(80vw, 320px); }
 
-  .chess-navbar__toggle { display:block; }
+  .chess-navbar__toggle { display:block;  }
 
   .chess-navbar__links {
     position: fixed;
@@ -157,7 +156,7 @@
     z-index: 300;
   }
 
-  .chess-navbar__links.active { transform: translateX(0); }
+  .chess-navbar__links.active { transform: translateX(0); background-color: var(--bg); }
 
   .chess-navbar__links a, .chess-navbar__links .theme-toggle, .profile-btn {
     font-size: 1.12rem;

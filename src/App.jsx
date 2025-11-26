@@ -4,8 +4,8 @@ import Navbar from "./Components/Navbar/Navbar";
 import axios from "axios";
 import { Chess } from "chess.js";
 import './index.css';
+import Home from "./Pages/Home/Home";
 
-// const API = "https://stockfish.broadcastsofcbi.live/evaluate?fen=";
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
 export default function App() {
@@ -27,7 +27,8 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <Box maxW="600px" mx="auto" mt={10} p={6} borderWidth={1} borderRadius="lg">
+      <Home />
+      {/* <Box maxW="600px" mx="auto" mt={10} p={6} borderWidth={1} borderRadius="lg">
       <Heading size="md" mb={4}>PGN → Evaluation Bar</Heading>
       <Stack>
         <Input placeholder="Paste PGN here" value={pgn} onChange={(e) => setPgn(e.target.value)} />
@@ -44,7 +45,7 @@ export default function App() {
           </>
         )}
       </Stack>
-      </Box>
+      </Box> */}
     </>
   );
 }
