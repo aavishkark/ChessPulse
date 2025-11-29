@@ -1,0 +1,147 @@
+.live-row-wrapper {
+  max-width: 1200px;
+  margin: 18px auto;
+  padding: 12px;
+  background: transparent;
+  color: #eaeaea;
+  box-sizing: border-box;
+}
+
+.live-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.live-row-title {
+  font-weight: 700;
+  color: #86efac;
+  font-size: 16px;
+}
+
+.live-speed-selector {
+  display: flex;
+  gap: 8px;
+}
+.speed-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #222;
+  color: #ddd;
+  border: 1px solid rgba(255,255,255,0.04);
+  font-size: 12px;
+  cursor: pointer;
+}
+.speed-btn.active {
+  background: linear-gradient(180deg,#2f9b5b,#1b6a3f);
+  color: white;
+  box-shadow: 0 6px 18px rgba(28, 113, 72, 0.12);
+}
+
+.live-boards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.live-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-top {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.player-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+.player-top-name { 
+    color: #ffd7d7; 
+}
+.player-top-elo { 
+    color: #d0d0d0; 
+    font-weight: 500; 
+    font-size: 12px; 
+}
+.player-top-clock { 
+    color: #ffd166; 
+    font-weight: 700; 
+    font-size: 13px; 
+}
+
+.card-board {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: transparent;
+  border-radius: 6px;
+}
+
+.card-bottom {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.player-bottom {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  font-size: 13px;
+}
+.player-bottom-name { 
+    color: #d7ffd7; 
+}
+.player-bottom-elo { 
+    color: #d0d0d0; 
+    font-weight: 500; 
+    font-size: 12px; 
+}
+.player-bottom-clock { 
+    color: #86efac; 
+    font-weight: 700; 
+    font-size: 13px; 
+}
+
+.card-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 2px;
+}
+.lichess-link {
+  font-size: 12px;
+  color: #bcd;
+  text-decoration: none;
+  opacity: 0.9;
+}
+.lichess-link:hover { text-decoration: underline; }
+
+@media (max-width: 980px) {
+  .live-boards-grid {
+    grid-template-columns: repeat(2, minmax(200px, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .live-boards-grid {
+    grid-template-columns: 1fr;
+  }
+}
