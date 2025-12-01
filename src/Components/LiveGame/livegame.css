@@ -3,7 +3,7 @@
   margin: 18px auto;
   padding: 12px;
   background: transparent;
-  color: #eaeaea;
+  color: var(--text);
   box-sizing: border-box;
 }
 
@@ -14,9 +14,10 @@
   gap: 12px;
   margin-bottom: 12px;
 }
+
 .live-row-title {
   font-weight: 700;
-  color: #86efac;
+  color: var(--accent);
   font-size: 16px;
 }
 
@@ -24,122 +25,127 @@
   display: flex;
   gap: 8px;
 }
+
 .speed-btn {
   padding: 6px 10px;
   border-radius: 8px;
-  background: #222;
-  color: #ddd;
-  border: 1px solid rgba(255,255,255,0.04);
+  background: var(--bg-soft);
+  color: var(--text);
+  border: 1px solid var(--border);
   font-size: 12px;
   cursor: pointer;
+  transition: 0.2s ease;
 }
+
+.speed-btn:hover {
+  background: var(--glass);
+}
+
 .speed-btn.active {
-  background: linear-gradient(180deg,#2f9b5b,#1b6a3f);
-  color: white;
-  box-shadow: 0 6px 18px rgba(28, 113, 72, 0.12);
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 6px 18px var(--card-glow);
 }
 
 .live-boards-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 12px;
+  gap: 14px;
   align-items: start;
 }
 
 .live-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.04);
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 4px 18px var(--glass);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  transition: 0.25s ease-in-out;
 }
 
-.card-top {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.player-top {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  font-weight: 600;
-  font-size: 13px;
-}
-.player-top-name { 
-    color: #ffd7d7; 
-}
-.player-top-elo { 
-    color: #d0d0d0; 
-    font-weight: 500; 
-    font-size: 12px; 
-}
-.player-top-clock { 
-    color: #ffd166; 
-    font-weight: 700; 
-    font-size: 13px; 
+.live-card:hover {
+  box-shadow: 0 6px 28px var(--card-glow);
+  transform: translateY(-3px);
 }
 
-.card-board {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  background: transparent;
-  border-radius: 6px;
-}
-
+.card-top,
 .card-bottom {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
+.player-top,
 .player-bottom {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: center;
   font-weight: 600;
   font-size: 13px;
 }
-.player-bottom-name { 
-    color: #d7ffd7; 
+
+.player-top-name {
+  color: var(--accent-2);
 }
-.player-bottom-elo { 
-    color: #d0d0d0; 
-    font-weight: 500; 
-    font-size: 12px; 
+.player-bottom-name {
+  color: var(--accent);
 }
-.player-bottom-clock { 
-    color: #86efac; 
-    font-weight: 700; 
-    font-size: 13px; 
+
+.player-top-elo,
+.player-bottom-elo {
+  color: var(--text);
+  opacity: 0.8;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.player-top-clock,
+.player-bottom-clock {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.card-board {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  background: var(--glass);
+  border-radius: 10px;
 }
 
 .card-footer {
   width: 100%;
   display: flex;
   justify-content: center;
-  margin-top: 2px;
+  margin-top: 4px;
 }
+
 .lichess-link {
   font-size: 12px;
-  color: #bcd;
+  color: var(--accent);
   text-decoration: none;
   opacity: 0.9;
+  transition: 0.2s ease;
 }
-.lichess-link:hover { text-decoration: underline; }
+
+.lichess-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
 
 @media (max-width: 980px) {
   .live-boards-grid {
-    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 }
+
 @media (max-width: 600px) {
   .live-boards-grid {
     grid-template-columns: 1fr;

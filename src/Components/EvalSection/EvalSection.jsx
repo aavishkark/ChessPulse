@@ -180,7 +180,6 @@ export default function EvalSection() {
   };
 
   const position = fenList[currentIndex] || new Chess().fen();
-  console.log("Current position FEN:", position);
   const game = {position}
 
   const boardWidth = (typeof window !== "undefined")
