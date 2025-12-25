@@ -1,7 +1,7 @@
 .live-row-wrapper {
-  max-width: 1200px;
-  margin: 18px auto;
-  padding: 12px;
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 16px;
   background: transparent;
   color: var(--text);
   box-sizing: border-box;
@@ -12,13 +12,14 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .live-row-title {
   font-weight: 700;
   color: var(--accent);
-  font-size: 16px;
+  font-size: 20px;
+  letter-spacing: -0.5px;
 }
 
 .live-speed-selector {
@@ -49,27 +50,29 @@
 
 .live-boards-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
+  gap: 20px;
   align-items: start;
 }
 
 .live-card {
   background: var(--bg-soft);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 4px 18px var(--glass);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  transition: 0.25s ease-in-out;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .live-card:hover {
-  box-shadow: 0 6px 28px var(--card-glow);
-  transform: translateY(-3px);
+  box-shadow: 0 8px 32px var(--card-glow), 0 0 40px rgba(15, 240, 252, 0.08);
+  transform: translateY(-6px);
+  border-color: rgba(15, 240, 252, 0.2);
 }
 
 .card-top,
@@ -78,46 +81,70 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  transition: background 0.2s ease;
 }
 
-.player-top,
-.player-bottom {
+.card-top:hover,
+.card-bottom:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.player-info {
   display: flex;
-  gap: 6px;
   align-items: center;
-  font-weight: 600;
-  font-size: 13px;
+  gap: 8px;
 }
 
-.player-top-name {
-  color: var(--accent-2);
-}
-.player-bottom-name {
-  color: var(--accent);
-}
-
-.player-top-elo,
-.player-bottom-elo {
-  color: var(--text);
-  opacity: 0.8;
-  font-weight: 500;
-  font-size: 12px;
-}
-
-.player-top-clock,
-.player-bottom-clock {
+.player-name {
   font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  letter-spacing: 0.2px;
+}
+
+.player-elo {
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 500;
   font-size: 13px;
+}
+
+.player-clock {
+  font-weight: 700;
+  font-size: 17px;
   color: var(--accent);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  min-width: 60px;
+  text-align: right;
+  text-shadow: 0 0 10px rgba(15, 240, 252, 0.3);
 }
 
 .card-board {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  background: var(--glass);
-  border-radius: 10px;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(15, 240, 252, 0.04) 0%, rgba(168, 85, 247, 0.04) 100%);
+  border-radius: 12px;
+  position: relative;
+}
+
+.card-board::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(15, 240, 252, 0.15), rgba(168, 85, 247, 0.15));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: exclude;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .card-footer {
@@ -128,26 +155,44 @@
 }
 
 .lichess-link {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--accent);
   text-decoration: none;
-  opacity: 0.9;
-  transition: 0.2s ease;
+  opacity: 0.85;
+  transition: all 0.2s ease;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .lichess-link:hover {
   opacity: 1;
-  text-decoration: underline;
+  background: rgba(15, 240, 252, 0.1);
+  text-decoration: none;
 }
 
-@media (max-width: 980px) {
+.error-badge {
+  font-size: 11px;
+  color: #ff6b6b;
+  font-weight: 600;
+  padding: 5px 10px;
+  background: rgba(255, 107, 107, 0.12);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+@media (max-width: 1200px) {
   .live-boards-grid {
-    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .live-boards-grid {
     grid-template-columns: 1fr;
+  }
+
+  .live-row-wrapper {
+    padding: 12px;
   }
 }

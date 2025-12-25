@@ -32,7 +32,7 @@ export default function Rankings() {
       .get(ENDPOINTS[section][type])
       .then((res) => {
         const responseData = res.data;
-        
+
         if (Array.isArray(responseData)) {
           setPlayers(responseData);
         } else if (responseData && Array.isArray(responseData.data)) {
@@ -98,18 +98,18 @@ export default function Rankings() {
         )}
         <div className="table-body">
           {!loading && Array.isArray(players) && players.length > 0 ? (
-            players.map((p) => {
+            players.slice(0, 30).map((p) => {
               const isFide = p.flag === "ff" || p.country_name.includes("FIDE");
-              
-              const flagSrc = isFide 
-                ? fide 
+
+              const flagSrc = isFide
+                ? fide
                 : `https://flagsapi.com/${p.flag ? p.flag.toUpperCase() : 'XX'}/flat/32.png`;
 
               const displayCountry = isFide ? "FIDE" : p.country_name;
 
               return (
                 <div key={p.fideid || Math.random()} className="table-row player-row">
-                  
+
                   <div className="col-rank">
                     <span className={`rank-number rank-${p.live_pos}`}>
                       {p.live_pos}
@@ -138,12 +138,11 @@ export default function Rankings() {
                   </div>
 
                   <div className="col-diff">
-                    <span className={`diff-tag ${
-                      p.raitingDiff > 0 ? "up" : p.raitingDiff < 0 ? "down" : "neutral"
-                    }`}>
+                    <span className={`diff-tag ${p.raitingDiff > 0 ? "up" : p.raitingDiff < 0 ? "down" : "neutral"
+                      }`}>
                       {p.raitingDiff > 0 ? `+${p.raitingDiff}` : p.raitingDiff}
                     </span>
-                    
+
                     {p.pos_change && (
                       <span className={`pos-change ${p.pos_change.includes("↑") ? "up" : "down"}`}>
                         {p.pos_change}

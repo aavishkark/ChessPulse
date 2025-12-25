@@ -1,38 +1,29 @@
-/* =================================
-   THEME MAPPING 
-   Uses your existing variables
-   ================================= */
 .rankings-wrapper {
-  /* Inherit global theme variables */
-  background: var(--bg-soft, #1e1e24); 
+  background: var(--bg-soft, #1e1e24);
   color: var(--text-main, #ffffff);
-  border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
-  
-  /* Modern container styles */
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+
   border-radius: 20px;
-  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  
+
   display: flex;
   flex-direction: column;
-  height: 85vh; /* Fixed height for scrolling inside */
+  height: 85vh;
   max-width: 900px;
   margin: 20px auto;
-  overflow: hidden; /* Clips children */
+  overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* =================================
-   HEADER & CONTROLS
-   ================================= */
 .rankings-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--bg-soft); /* Ensure opaque bg for contrast */
+  background: var(--bg-soft);
 }
 
 .header-title {
@@ -61,9 +52,17 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 .rankings-controls {
@@ -72,13 +71,12 @@
   flex-wrap: wrap;
 }
 
-/* Segmented Control "Pill" Style */
 .segment-group {
   display: flex;
-  background: rgba(0, 0, 0, 0.2); /* Darker track */
+  background: rgba(0, 0, 0, 0.2);
   padding: 4px;
   border-radius: 12px;
-  border: 1px solid var(--glass-border, rgba(255,255,255,0.05));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.05));
 }
 
 .segment-btn {
@@ -103,59 +101,56 @@
   box-shadow: 0 2px 8px var(--accent-glow, rgba(59, 130, 246, 0.4));
 }
 
-/* =================================
-   TABLE LAYOUT (CSS GRID)
-   ================================= */
 .rankings-table-container {
   flex: 1;
-  overflow-y: auto; /* Scrollable area */
+  overflow-y: auto;
   position: relative;
 }
 
 /* Custom Scrollbar */
-.rankings-table-container::-webkit-scrollbar { width: 6px; }
-.rankings-table-container::-webkit-scrollbar-track { background: transparent; }
-.rankings-table-container::-webkit-scrollbar-thumb { 
-  background: var(--glass-border); 
-  border-radius: 10px; 
+.rankings-table-container::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* Grid Definition */
+.rankings-table-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rankings-table-container::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+}
+
 .table-row {
   display: grid;
-  grid-template-columns: 50px 1fr 80px 80px; /* Fixed widths for data, fluid for name */
+  grid-template-columns: 50px 1fr 80px 80px;
   align-items: center;
   padding: 12px 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-/* Sticky Header Row */
 .table-head {
   position: sticky;
   top: 0;
-  background: var(--bg-soft); /* Must match bg to cover scrolling content */
+  background: var(--bg-soft);
   z-index: 10;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 700;
   color: var(--text-muted);
-  backdrop-filter: blur(12px); /* Glass effect on scroll */
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--glass-border);
 }
 
-/* =================================
-   ROW STYLING
-   ================================= */
 .player-row {
   transition: background 0.15s ease;
 }
 
 .player-row:hover {
-  background: rgba(255, 255, 255, 0.03); /* Subtle hover */
+  background: rgba(255, 255, 255, 0.03);
 }
 
-/* Rank Number */
 .rank-number {
   font-weight: 700;
   font-size: 14px;
@@ -164,13 +159,22 @@
   text-align: center;
   display: inline-block;
 }
+.rank-1 {
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+  font-size: 16px;
+}
 
-/* Gold/Silver/Bronze colors for top 3 */
-.rank-1 { color: #fbbf24; text-shadow: 0 0 12px rgba(251, 191, 36, 0.4); font-size: 16px; }
-.rank-2 { color: #94a3b8; font-size: 15px; }
-.rank-3 { color: #b45309; font-size: 15px; }
+.rank-2 {
+  color: #94a3b8;
+  font-size: 15px;
+}
 
-/* Player Column */
+.rank-3 {
+  color: #b45309;
+  font-size: 15px;
+}
+
 .col-player {
   display: flex;
   align-items: center;
@@ -181,13 +185,14 @@
   width: 26px;
   height: 19px;
   border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   object-fit: cover;
 }
 
 .player-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .player-name {
@@ -200,9 +205,10 @@
   font-size: 11px;
   color: var(--text-muted);
   opacity: 0.8;
+  text-align: left;
+  width: 100%;
 }
 
-/* Rating Column (Monospace for alignment) */
 .col-rating {
   font-family: 'Consolas', 'Monaco', monospace;
   font-weight: 700;
@@ -211,7 +217,6 @@
   letter-spacing: -0.5px;
 }
 
-/* Diff Column */
 .col-diff {
   text-align: right;
   display: flex;
@@ -224,36 +229,52 @@
   font-size: 13px;
   font-weight: 600;
 }
-.diff-tag.up { color: var(--success, #10b981); }
-.diff-tag.down { color: var(--danger, #ef4444); }
-.diff-tag.neutral { color: var(--text-muted); opacity: 0.3; }
+
+.diff-tag.up {
+  color: var(--success, #10b981);
+}
+
+.diff-tag.down {
+  color: var(--danger, #ef4444);
+}
+
+.diff-tag.neutral {
+  color: var(--text-muted);
+  opacity: 0.3;
+}
 
 .pos-change {
   font-size: 10px;
   font-weight: 700;
   margin-top: 2px;
 }
-.pos-change.up { color: var(--success); }
-.pos-change.down { color: var(--danger); }
 
-/* =================================
-   SKELETON LOADER
-   ================================= */
+.pos-change.up {
+  color: var(--success);
+}
+
+.pos-change.down {
+  color: var(--danger);
+}
+
 .skeleton-row {
-  height: 55px; /* Matches row height */
+  height: 55px;
   margin: 0 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  background: linear-gradient(
-    90deg, 
-    rgba(255,255,255,0.02) 25%, 
-    rgba(255,255,255,0.06) 50%, 
-    rgba(255,255,255,0.02) 75%
-  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.02) 25%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
