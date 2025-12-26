@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./Navbar.css";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState("dark");
+  const location = useLocation();
 
   const pieces = ["Sicilian Defense", "King's Gambit", "French Defense", "Queen's Indian", "Ruy Lopez", "Caro-Kann"];
 
@@ -17,6 +19,10 @@ export default function Navbar() {
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
   }, [open]);
+
+  const handleLinkClick = () => {
+    setOpen(false);
+  };
 
   return (
     <nav className={`chess-navbar ${open ? "slide-open" : ""}`} role="navigation">
@@ -37,12 +43,16 @@ export default function Navbar() {
         </button>
 
         <ul className={`chess-navbar__links ${open ? "active" : ""}`} role="menu">
-          <li role="none"><a role="menuitem" href="/">Home</a></li>
-          <li role="none"><a role="menuitem" href="/analysis">Tournaments</a></li>
+          <li role="none">
+            <Link role="menuitem" to="/" className={location.pathname === "/" ? "active" : ""} onClick={handleLinkClick}>Home</Link>
+          </li>
+          <li role="none">
+            <Link role="menuitem" to="/tournaments" className={location.pathname === "/tournaments" ? "active" : ""} onClick={handleLinkClick}>Tournaments</Link>
+          </li>
           <li role="none"><a role="menuitem" href="/games">Games</a></li>
           <li role="none"><a role="menuitem" href="/openings">Customize</a></li>
           <li role="none"><a role="menuitem" href="/profile">Profile</a></li>
-          <li  
+          <li
             onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); playClick(); }}
             role="none"
             tabIndex={0}

@@ -1,17 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import "./tournament-search.css";
 
-export default function TournamentSearch({ onSearch }) {
-    const [query, setQuery] = useState("");
-
+export default function TournamentSearch({ value, onSearch }) {
     const handleChange = (e) => {
-        const value = e.target.value;
-        setQuery(value);
-        onSearch(value);
+        onSearch(e.target.value);
     };
 
     const handleClear = () => {
-        setQuery("");
         onSearch("");
     };
 
@@ -26,10 +21,10 @@ export default function TournamentSearch({ onSearch }) {
                     type="text"
                     className="search-input"
                     placeholder="Search tournaments..."
-                    value={query}
+                    value={value}
                     onChange={handleChange}
                 />
-                {query && (
+                {value && (
                     <button className="search-clear-btn" onClick={handleClear} aria-label="Clear search">
                         ×
                     </button>

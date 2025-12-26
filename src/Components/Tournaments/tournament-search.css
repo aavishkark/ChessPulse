@@ -1,0 +1,68 @@
+.tournament-search {
+    width: 100%;
+    max-width: 500px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    color: #7b68ee;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    padding: 14px 48px 14px 48px;
+    background: rgba(20, 20, 35, 0.6);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(15, 240, 252, 0.15);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-input::placeholder {
+    color: #7070 80;
+}
+
+.search-input:focus {
+    border-color: #0ff0fc;
+    box-shadow: 0 4px 20px rgba(15, 240, 252, 0.2);
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 88, 88, 0.2);
+    border: 1px solid rgba(255, 88, 88, 0.4);
+    border-radius: 50%;
+    color: #ff5858;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-clear-btn:hover {
+    background: rgba(255, 88, 88, 0.3);
+    transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .search-input {
+        padding: 12px 40px 12px 44px;
+        font-size: 0.95rem;
+    }
+}

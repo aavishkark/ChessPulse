@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { Box, Button, Heading, Input, Stack, Text } from "@chakra-ui/react";
 import Navbar from "./Components/Navbar/Navbar";
 import { Footer } from "./Components/Footer/Footer";
@@ -6,6 +7,7 @@ import axios from "axios";
 import { Chess } from "chess.js";
 import './index.css';
 import Home from "./Pages/Home/Home";
+import TournamentsPage from "./Pages/TournamentsPage/TournamentsPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -28,7 +30,10 @@ export default function App() {
   return (
     <>
       <Navbar />
-      <Home />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/tournaments" element={<TournamentsPage />} />
+      </Routes>
       <Footer />
     </>
   );
