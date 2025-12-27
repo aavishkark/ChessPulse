@@ -8,6 +8,7 @@ import { Chess } from "chess.js";
 import './index.css';
 import Home from "./Pages/Home/Home";
 import TournamentsPage from "./Pages/TournamentsPage/TournamentsPage";
+import GameViewPage from "./Pages/GameViewPage/GameViewPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -33,6 +34,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/tournaments" element={<TournamentsPage />} />
+        <Route path="/game/:roundId/:gameIndex" element={<GameViewPage />} />
       </Routes>
       <Footer />
     </>

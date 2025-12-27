@@ -1,0 +1,248 @@
+.round-games-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.round-games-modal {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.round-games-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(218, 165, 32, 0.2);
+}
+
+.round-games-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0;
+}
+
+.modal-close-button {
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: var(--text);
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+    background: var(--glass);
+    opacity: 1;
+}
+
+.loading-state,
+.error-state,
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text);
+    opacity: 0.7;
+}
+
+.modal-loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-state {
+    color: #ff6b6b;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.game-card {
+    background: var(--bg-soft);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.game-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px var(--card-glow);
+}
+
+.live-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    animation: pulse 2s ease-in-out infinite;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.live-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+    animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.modal-player {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.modal-player-color {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.modal-player-name {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vs-divider {
+    text-align: center;
+    color: var(--text);
+    opacity: 0.5;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 12px 0;
+}
+
+.game-result {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px solid var(--border);
+    text-align: center;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    .round-games-modal {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .round-games-header h2 {
+        font-size: 20px;
+    }
+}
