@@ -7,7 +7,8 @@
   background: var(--bg);
   border-bottom: 2px solid var(--border);
   color: var(--text);
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 200;
 }
 

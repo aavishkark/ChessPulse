@@ -19,23 +19,24 @@
 .search-input {
     width: 100%;
     padding: 14px 48px 14px 48px;
-    background: rgba(20, 20, 35, 0.6);
+    background: var(--bg-soft);
     backdrop-filter: blur(8px);
-    border: 2px solid rgba(15, 240, 252, 0.15);
+    border: 2px solid var(--border);
     border-radius: 12px;
-    color: #fff;
+    color: var(--text);
     font-size: 1rem;
     outline: none;
     transition: all 0.3s ease;
 }
 
 .search-input::placeholder {
-    color: #7070 80;
+    color: var(--text);
+    opacity: 0.5;
 }
 
 .search-input:focus {
-    border-color: #0ff0fc;
-    box-shadow: 0 4px 20px rgba(15, 240, 252, 0.2);
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px var(--card-glow);
 }
 
 .search-clear-btn {

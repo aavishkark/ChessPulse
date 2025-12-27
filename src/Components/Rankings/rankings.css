@@ -1,7 +1,7 @@
 .rankings-wrapper {
-  background: var(--bg-soft, #1e1e24);
-  color: var(--text-main, #ffffff);
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  background: var(--bg-soft);
+  color: var(--text);
+  border: 1px solid var(--border);
 
   border-radius: 20px;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
@@ -19,7 +19,7 @@
 
 .rankings-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -36,7 +36,7 @@
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--text);
   letter-spacing: -0.5px;
 }
 
@@ -73,16 +73,17 @@
 
 .segment-group {
   display: flex;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--glass);
   padding: 4px;
   border-radius: 12px;
-  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border);
 }
 
 .segment-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text);
+  opacity: 0.6;
   padding: 6px 14px;
   font-size: 13px;
   font-weight: 600;
@@ -92,13 +93,14 @@
 }
 
 .segment-btn:hover {
-  color: var(--text-main);
+  opacity: 1;
 }
 
 .segment-btn.active {
-  background: var(--accent-color, #3b82f6);
+  background: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 8px var(--accent-glow, rgba(59, 130, 246, 0.4));
+  opacity: 1;
+  box-shadow: 0 2px 8px var(--card-glow);
 }
 
 .rankings-table-container {
@@ -117,7 +119,7 @@
 }
 
 .rankings-table-container::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
+  background: var(--border);
   border-radius: 10px;
 }
 
@@ -126,7 +128,7 @@
   grid-template-columns: 50px 1fr 80px 80px;
   align-items: center;
   padding: 12px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
 }
 
 .table-head {
@@ -138,9 +140,10 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 700;
-  color: var(--text-muted);
+  color: var(--text);
+  opacity: 0.6;
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .player-row {
@@ -148,17 +151,19 @@
 }
 
 .player-row:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass);
 }
 
 .rank-number {
   font-weight: 700;
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--text);
+  opacity: 0.6;
   width: 24px;
   text-align: center;
   display: inline-block;
 }
+
 .rank-1 {
   color: #fbbf24;
   text-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
@@ -198,13 +203,13 @@
 .player-name {
   font-weight: 600;
   font-size: 14px;
-  color: var(--text-main);
+  color: var(--text);
 }
 
 .player-meta {
   font-size: 11px;
-  color: var(--text-muted);
-  opacity: 0.8;
+  color: var(--text);
+  opacity: 0.6;
   text-align: left;
   width: 100%;
 }
@@ -213,7 +218,7 @@
   font-family: 'Consolas', 'Monaco', monospace;
   font-weight: 700;
   font-size: 15px;
-  color: var(--text-main);
+  color: var(--text);
   letter-spacing: -0.5px;
 }
 
@@ -239,7 +244,7 @@
 }
 
 .diff-tag.neutral {
-  color: var(--text-muted);
+  color: var(--text);
   opacity: 0.3;
 }
 
@@ -260,11 +265,11 @@
 .skeleton-row {
   height: 55px;
   margin: 0 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
   background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0.02) 25%,
-      rgba(255, 255, 255, 0.06) 50%,
-      rgba(255, 255, 255, 0.02) 75%);
+      var(--glass) 25%,
+      var(--border) 50%,
+      var(--glass) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

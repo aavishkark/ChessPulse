@@ -1,17 +1,21 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { pastTournaments } from "../../data/pastTournaments";
 import TournamentTabs from "../../Components/Tournaments/TournamentTabs";
 import TournamentCard from "../../Components/Tournaments/TournamentCard";
 import TournamentSearch from "../../Components/Tournaments/TournamentSearch";
 import TournamentLoader from "../../Components/Tournaments/TournamentLoader";
+import RoundGamesModal from "../../Components/Tournaments/RoundGamesModal";
 import "./tournaments-page.css";
 
 export default function TournamentsPage() {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("ongoing");
     const [searchTerm, setSearchTerm] = useState("");
     const [tournaments, setTournaments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedRound, setSelectedRound] = useState(null);
 
     useEffect(() => {
         fetchTournaments();
@@ -22,7 +26,6 @@ export default function TournamentsPage() {
 
         tournaments.forEach(tournament => {
             const name = tournament.tour.name;
-            // Check if tournament name has divisions (marked by |)
             const baseNameMatch = name.match(/^(.+?)\s*\|/);
 
             if (baseNameMatch) {
@@ -41,7 +44,6 @@ export default function TournamentsPage() {
                     };
                 }
 
-                // Add this as a section with its rounds
                 const sectionName = name.substring(baseNameMatch[0].length).trim();
                 grouped[baseName].sections.push({
                     name: sectionName,
@@ -50,12 +52,10 @@ export default function TournamentsPage() {
                     id: tournament.tour.id
                 });
 
-                // Also add all rounds to the main rounds array for filtering
                 if (tournament.rounds) {
                     grouped[baseName].rounds.push(...tournament.rounds);
                 }
             } else {
-                // No grouping needed, use tournament as-is
                 grouped[name] = {
                     ...tournament,
                     sections: null
@@ -104,21 +104,29 @@ export default function TournamentsPage() {
         return tournaments.filter(tournament => {
             if (!tournament.rounds || tournament.rounds.length === 0) return false;
 
-            // Get today's date in user's local timezone (normalized to midnight)
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const tomorrowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
-            const hasOngoingRounds = tournament.rounds.some(round => round.ongoing === true);
+            const hasOngoingRounds = tournament.rounds.some(round => {
+                if (!round.ongoing) return false;
+                if (round.startsAt) {
+                    const roundDate = new Date(round.startsAt);
+                    return roundDate.getTime() <= now.getTime();
+                }
+                return true;
+            });
 
-            // Check if any round starts today in user's timezone
             const hasRoundsToday = tournament.rounds.some(round => {
                 if (!round.startsAt) return false;
                 const roundDate = new Date(round.startsAt);
-                // Normalize round date to midnight for day comparison
                 const roundDayStart = new Date(roundDate.getFullYear(), roundDate.getMonth(), roundDate.getDate());
-                // Strictly check if round is TODAY (not tomorrow, not yesterday)
-                return roundDayStart.getTime() === todayStart.getTime();
+
+                const isToday = roundDayStart.getTime() === todayStart.getTime();
+                const hasStarted = roundDate.getTime() <= now.getTime() + (5 * 60 * 1000);
+                const isActive = !round.finished;
+
+                return isToday && hasStarted && isActive;
             });
 
             const hasCreatedRounds = tournament.rounds.some(round => !round.ongoing && !round.finished);
@@ -126,17 +134,14 @@ export default function TournamentsPage() {
 
             let statusMatch = false;
 
-            // Live Now: Tournaments with ongoing games OR rounds starting today
             if (activeTab === "ongoing") {
                 statusMatch = hasOngoingRounds || hasRoundsToday;
             }
 
-            // Upcoming: Tournaments scheduled but no rounds today
             if (activeTab === "upcoming") {
                 statusMatch = !hasOngoingRounds && !hasRoundsToday && hasCreatedRounds;
             }
 
-            // Past: Tournaments that have finished
             if (activeTab === "past") {
                 statusMatch = allFinished;
             }
@@ -153,12 +158,23 @@ export default function TournamentsPage() {
 
     const filteredTournaments = getFilteredTournaments();
 
-    // Add past tournaments when on past tab
     const displayTournaments = activeTab === "past"
         ? [...filteredTournaments, ...pastTournaments.filter(t =>
             !searchTerm || t.tour.name.toLowerCase().includes(searchTerm.toLowerCase())
         )]
         : filteredTournaments;
+
+    const handleSelectRound = (roundId, roundName) => {
+        setSelectedRound({ id: roundId, name: roundName });
+    };
+
+    const handleSelectGame = (roundId, gameIndex) => {
+        navigate(`/game/${roundId}/${gameIndex}`);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedRound(null);
+    };
 
     if (loading) {
         return (
@@ -214,9 +230,20 @@ export default function TournamentsPage() {
                             key={tournament.tour.id}
                             tournament={tournament}
                             showLiveButton={activeTab === "ongoing"}
+                            onSelectRound={handleSelectRound}
                         />
                     ))}
                 </div>
+            )}
+
+            {selectedRound && (
+                <RoundGamesModal
+                    roundId={selectedRound.id}
+                    roundName={selectedRound.name}
+                    isOpen={!!selectedRound}
+                    onClose={handleCloseModal}
+                    onSelectGame={handleSelectGame}
+                />
             )}
         </div>
     );
