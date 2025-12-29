@@ -98,7 +98,7 @@ export default function Rankings() {
         )}
         <div className="table-body">
           {!loading && Array.isArray(players) && players.length > 0 ? (
-            players.slice(0, 30).map((p) => {
+            players.slice(0, 10).map((p) => {
               const isFide = p.flag === "ff" || p.country_name.includes("FIDE");
 
               const flagSrc = isFide

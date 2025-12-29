@@ -1,15 +1,11 @@
 import React from 'react';
+import ChessLoader from '../ChessLoader/ChessLoader';
 import './tournament-loader.css';
 
 const TournamentLoader = () => {
     return (
         <div className="tournament-loader-container">
-            <div className="pawn-3d-loader">
-                <div className="chess-pawn">♟</div>
-            </div>
-            <div className="loader-text">
-                <span className="loading-text">Loading tournaments</span>
-            </div>
+            <ChessLoader text="Loading tournaments" />
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchRoundGames, splitGames } from '../../utils/pgnStream';
 import { parsePlayerNames, getGameResult } from '../../utils/pgnParser';
+import ChessLoader from '../ChessLoader/ChessLoader';
 import './round-games-modal.css';
 
 const RoundGamesModal = ({ roundId, roundName, isOpen, onClose, onSelectGame }) => {
@@ -70,8 +71,7 @@ const RoundGamesModal = ({ roundId, roundName, isOpen, onClose, onSelectGame }) 
 
                 {loading && (
                     <div className="loading-state">
-                        <div className="modal-loading-spinner"></div>
-                        <p>Loading games...</p>
+                        <ChessLoader text="Loading games..." />
                     </div>
                 )}
 
