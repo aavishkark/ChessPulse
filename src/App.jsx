@@ -9,6 +9,8 @@ import './index.css';
 import Home from "./Pages/Home/Home";
 import TournamentsPage from "./Pages/TournamentsPage/TournamentsPage";
 import GameViewPage from "./Pages/GameViewPage/GameViewPage";
+import SignInPage from "./Pages/SignInPage/SignInPage";
+import SignUpPage from "./Pages/SignUpPage/SignUpPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -29,14 +31,18 @@ export default function App() {
   const width = evaluation === null ? "50%" : `${50 + Math.max(-5, Math.min(5, evaluation)) * 10}%`;
 
   return (
-    <>
+    <div className="app-container">
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/tournaments" element={<TournamentsPage />} />
-        <Route path="/game/:roundId/:gameIndex" element={<GameViewPage />} />
-      </Routes>
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/tournaments" element={<TournamentsPage />} />
+          <Route path="/game/:roundId/:gameIndex" element={<GameViewPage />} />
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+        </Routes>
+      </div>
       <Footer />
-    </>
+    </div>
   );
 }
