@@ -11,6 +11,8 @@ import TournamentsPage from "./Pages/TournamentsPage/TournamentsPage";
 import GameViewPage from "./Pages/GameViewPage/GameViewPage";
 import SignInPage from "./Pages/SignInPage/SignInPage";
 import SignUpPage from "./Pages/SignUpPage/SignUpPage";
+import OAuthCallbackPage from "./Pages/OAuthCallbackPage/OAuthCallbackPage";
+import ProfilePage from "./Pages/ProfilePage/ProfilePage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -40,6 +42,8 @@ export default function App() {
           <Route path="/game/:roundId/:gameIndex" element={<GameViewPage />} />
           <Route path="/signin" element={<SignInPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
       <Footer />

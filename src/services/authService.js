@@ -25,8 +25,8 @@ export const authService = {
   },
 
   verifyToken: async () => {
-    const response = await authAPI.get('/verify');
-    return response.data;
+    const response = await axios.get(`${API_BASE_URL}/auth/verify`);
+    return response;
   },
 
   refreshToken: async (refreshToken) => {

@@ -101,10 +101,10 @@ export default function Navbar() {
                   </div>
                   <div className="dropdown-divider"></div>
                   <Link to="/profile" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
-                    👤 Profile
+                    Profile
                   </Link>
                   <button className="dropdown-item logout-btn" onClick={handleLogout}>
-                    🚪 Logout
+                    Logout
                   </button>
                 </div>
               )}

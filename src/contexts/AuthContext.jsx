@@ -22,11 +22,15 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('accessToken');
+
       if (storedToken) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         try {
           const response = await authService.verifyToken();
-          setUser(response.data.user);
+
+          if (response.data && response.data.data && response.data.data.user) {
+            setUser(response.data.data.user);
+          }
         } catch (error) {
           console.error('Token verification failed:', error);
           logout();
@@ -50,14 +54,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.register(email, username, password);
       const { user, accessToken, refreshToken: newRefreshToken } = response.data;
-      
+
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', newRefreshToken);
-      
+
       setToken(accessToken);
       setRefreshToken(newRefreshToken);
       setUser(user);
-      
+
       return { success: true, user };
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
@@ -69,14 +73,14 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.login(email, password);
       const { user, accessToken, refreshToken: newRefreshToken } = response.data;
-      
+
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', newRefreshToken);
-      
+
       setToken(accessToken);
       setRefreshToken(newRefreshToken);
       setUser(user);
-      
+
       return { success: true, user };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
