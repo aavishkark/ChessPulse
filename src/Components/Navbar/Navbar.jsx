@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import "./navbar.css";
+import "./Navbar.css";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
