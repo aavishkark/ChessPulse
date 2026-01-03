@@ -13,6 +13,11 @@ import SignInPage from "./Pages/SignInPage/SignInPage";
 import SignUpPage from "./Pages/SignUpPage/SignUpPage";
 import OAuthCallbackPage from "./Pages/OAuthCallbackPage/OAuthCallbackPage";
 import ProfilePage from "./Pages/ProfilePage/ProfilePage";
+import PuzzlesPage from "./Pages/PuzzlesPage/PuzzlesPage";
+import PuzzleRushPage from "./Pages/PuzzleRushPage/PuzzleRushPage";
+import PuzzleSurvivalPage from "./Pages/PuzzleSurvivalPage/PuzzleSurvivalPage";
+import PuzzleRatedPage from "./Pages/PuzzleRatedPage/PuzzleRatedPage";
+import PuzzleThemedPage from "./Pages/PuzzleThemedPage/PuzzleThemedPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -44,6 +49,11 @@ export default function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/puzzles" element={<PuzzlesPage />} />
+          <Route path="/puzzles/rush" element={<PuzzleRushPage />} />
+          <Route path="/puzzles/survival" element={<PuzzleSurvivalPage />} />
+          <Route path="/puzzles/rating" element={<PuzzleRatedPage />} />
+          <Route path="/puzzles/themed" element={<PuzzleThemedPage />} />
         </Routes>
       </div>
       <Footer />

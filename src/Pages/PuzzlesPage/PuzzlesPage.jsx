@@ -1,0 +1,216 @@
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
+import { puzzleService } from '../../services/puzzleService';
+import './puzzles.css';
+
+const PuzzlesPage = () => {
+    const { isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+    const [currentPuzzle, setCurrentPuzzle] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [puzzleSolved, setPuzzleSolved] = useState(false);
+
+    const [puzzleCount, setPuzzleCount] = useState(() => {
+        if (!isAuthenticated) return 0;
+        const today = new Date().toISOString().split('T')[0];
+        const saved = localStorage.getItem('puzzleStats');
+        if (saved) {
+            const stats = JSON.parse(saved);
+            if (stats.date === today) return stats.count;
+        }
+        return 0;
+    });
+
+    const [streak, setStreak] = useState(() => {
+        if (!isAuthenticated) return 0;
+        const saved = localStorage.getItem('puzzleStreak');
+        return saved ? parseInt(saved, 10) : 0;
+    });
+
+    useEffect(() => {
+        loadPuzzle(true);
+    }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem('puzzleStats', JSON.stringify({ date: today, count: puzzleCount }));
+            localStorage.setItem('puzzleStreak', streak.toString());
+        }
+    }, [puzzleCount, streak, isAuthenticated]);
+
+    const loadPuzzle = useCallback(async (isFirst = false) => {
+        try {
+            setLoading(true);
+            setPuzzleSolved(false);
+            const puzzle = isFirst
+                ? await puzzleService.getDailyPuzzle()
+                : await puzzleService.getRandomPuzzle();
+            setCurrentPuzzle(puzzle);
+        } catch (error) {
+            console.error('Failed to load puzzle:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const handlePuzzleSolve = () => {
+        setPuzzleSolved(true);
+        setPuzzleCount(prev => prev + 1);
+        setStreak(prev => prev + 1);
+    };
+
+    const handlePuzzleFail = () => {
+        setStreak(0);
+    };
+
+    const loadNextPuzzle = () => {
+        loadPuzzle(false);
+    };
+
+    const puzzleModes = [
+        {
+            id: 'rush',
+            title: 'Puzzle Rush',
+            description: 'Solve as many as you can before time runs out',
+            gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
+            path: '/puzzles/rush'
+        },
+        {
+            id: 'survival',
+            title: 'Survival',
+            description: '3 lives - how far can you go?',
+            gradient: 'linear-gradient(135deg, #845ef7, #7048e8)',
+            path: '/puzzles/survival'
+        },
+        {
+            id: 'rating',
+            title: 'Rated Puzzles',
+            description: 'Climb the rating ladder with matched puzzles',
+            gradient: 'linear-gradient(135deg, #20c997, #12b886)',
+            path: '/puzzles/rating',
+            requiresAuth: true
+        },
+        {
+            id: 'themed',
+            title: 'Themed Practice',
+            description: 'Master specific tactics like forks, pins & mates',
+            gradient: 'linear-gradient(135deg, #fab005, #f59e0b)',
+            path: '/puzzles/themed'
+        }
+    ];
+
+    const handleModeClick = (mode) => {
+        if (mode.requiresAuth && !isAuthenticated) {
+            navigate('/signin');
+        } else {
+            navigate(mode.path);
+        }
+    };
+
+    return (
+        <div className="puzzles-page">
+            <div className="puzzles-header">
+                <h1>Puzzle Training</h1>
+                <p>Sharpen your tactical skills with daily puzzles</p>
+            </div>
+
+            <div className="puzzles-layout">
+                <div className="puzzle-main">
+                    <div className="daily-puzzle-header">
+                        <span className="daily-badge">Daily Puzzle</span>
+                        {currentPuzzle?.rating && (
+                            <span className="puzzle-rating">Rating: {currentPuzzle.rating}</span>
+                        )}
+                    </div>
+
+                    {loading ? (
+                        <div className="puzzle-loading">
+                            <div className="loading-spinner"></div>
+                            <p>Loading puzzle...</p>
+                        </div>
+                    ) : currentPuzzle ? (
+                        <div className="puzzle-container">
+                            <PuzzleBoard
+                                puzzle={currentPuzzle}
+                                onSolve={handlePuzzleSolve}
+                                onFail={handlePuzzleFail}
+                            />
+                            <div className="puzzle-actions">
+                                {puzzleSolved ? (
+                                    <button className="next-puzzle-btn" onClick={loadNextPuzzle}>
+                                        Next Puzzle →
+                                    </button>
+                                ) : (
+                                    <button className="skip-btn" onClick={loadNextPuzzle}>
+                                        Skip Puzzle
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="puzzle-error">
+                            <p>Failed to load puzzle</p>
+                            <button onClick={() => loadPuzzle(true)}>Try Again</button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="puzzle-sidebar">
+                    <div className="stats-card">
+                        <div className="stats-header">
+                            <h3>{isAuthenticated ? "Today's Progress" : "Session"}</h3>
+                        </div>
+                        <div className="stats-grid">
+                            <div className="stat-box streak">
+                                <span className="stat-value">{streak}</span>
+                                <span className="stat-label">Streak</span>
+                            </div>
+                            {isAuthenticated && (
+                                <div className="stat-box solved">
+                                    <span className="stat-value">{puzzleCount}</span>
+                                    <span className="stat-label">Solved Today</span>
+                                </div>
+                            )}
+                        </div>
+                        {!isAuthenticated && (
+                            <p className="session-note">Sign in to save progress</p>
+                        )}
+                    </div>
+
+                    <div className="modes-card">
+                        <h3>Training Modes</h3>
+                        <div className="modes-grid">
+                            {puzzleModes.map(mode => (
+                                <button
+                                    key={mode.id}
+                                    className={`mode-card ${mode.requiresAuth && !isAuthenticated ? 'locked' : ''}`}
+                                    style={{ '--mode-gradient': mode.gradient }}
+                                    onClick={() => handleModeClick(mode)}
+                                >
+                                    <span className="mode-title">{mode.title}</span>
+                                    <span className="mode-desc">{mode.description}</span>
+                                    {mode.requiresAuth && !isAuthenticated && (
+                                        <span className="lock-badge">Sign in</span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {!isAuthenticated && (
+                        <div className="auth-card">
+                            <h4>Track Your Progress</h4>
+                            <p>Sign in to save stats, track rating, and compete on leaderboards</p>
+                            <Link to="/signin" className="signin-btn">Sign In</Link>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default PuzzlesPage;
