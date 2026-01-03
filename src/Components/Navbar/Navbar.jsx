@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import "./Navbar.css";
+import "./navbar.css";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -72,7 +72,9 @@ export default function Navbar() {
           <li role="none">
             <Link role="menuitem" to="/tournaments" className={location.pathname === "/tournaments" ? "active" : ""} onClick={handleLinkClick}>Tournaments</Link>
           </li>
-          <li role="none"><a role="menuitem" href="/games">Games</a></li>
+          <li role="none">
+            <Link role="menuitem" to="/puzzles" className={location.pathname === "/puzzles" ? "active" : ""} onClick={handleLinkClick}>Puzzles</Link>
+          </li>
           <li role="none"><a role="menuitem" href="/openings">Customize</a></li>
 
           <li

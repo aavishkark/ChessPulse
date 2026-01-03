@@ -22,6 +22,10 @@ body[data-theme="dark"] {
   --accent: #0ff0fc;
   --accent-2: #a855f7;
 
+  --success: #4ade80;
+  --error: #f87171;
+  --warning: #fbbf24;
+
   --card-glow: rgba(0, 255, 255, 0.12);
   --image-glow: rgba(168, 85, 247, 0.25);
 
@@ -36,6 +40,10 @@ body[data-theme="light"] {
 
   --accent: #4169e1;
   --accent-2: #7c3aed;
+
+  --success: #22c55e;
+  --error: #ef4444;
+  --warning: #f59e0b;
 
   --card-glow: rgba(65, 105, 225, 0.12);
   --image-glow: rgba(124, 58, 237, 0.25);

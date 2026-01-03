@@ -40,17 +40,6 @@
   letter-spacing: -0.5px;
 }
 
-.live-badge {
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--danger, #ef4444);
-  background: rgba(239, 68, 68, 0.1);
-  padding: 4px 8px;
-  border-radius: 20px;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  animation: pulse 2s infinite;
-}
-
 @keyframes pulse {
   0% {
     opacity: 1;

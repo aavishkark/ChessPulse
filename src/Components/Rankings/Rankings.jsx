@@ -54,7 +54,6 @@ export default function Rankings() {
       <header className="rankings-header">
         <div className="header-title">
           <h2>World Rankings</h2>
-          <span className="live-badge">● LIVE</span>
         </div>
         <div className="rankings-controls">
           <div className="segment-group">

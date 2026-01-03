@@ -17,8 +17,8 @@ const Hero = () => {
             </h1>
 
             <p className="hero-description">
-                Discover a world where you can tailor your chess journey to your unique style.
-                Personalized themes to adaptive tools, ChessPulse puts you in control of your chess experience.
+              Discover a world where you can tailor your chess journey to your unique style.
+              Personalized themes to adaptive tools, ChessPulse puts you in control of your chess experience.
             </p>
 
             <div className="hero-ctaWrapper">
