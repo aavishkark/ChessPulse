@@ -324,7 +324,7 @@ const PuzzleRushPage = () => {
                     <div className="rush-hero-visual">
                         <div className="rush-image-glow"></div>
                         <img
-                            src="/src/assets/puzzlerush.png"
+                            src="/assets/puzzlerush.png"
                             alt="Puzzle Rush"
                             className="rush-illustration"
                         />

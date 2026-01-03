@@ -282,7 +282,7 @@ const PuzzleSurvivalPage = () => {
                     <div className="survival-hero-visual">
                         <div className="survival-image-glow"></div>
                         <img
-                            src="/src/assets/puzzlesurvival.png"
+                            src="/assets/puzzlesurvival.png"
                             alt="Puzzle Survival"
                             className="survival-illustration"
                         />

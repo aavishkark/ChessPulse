@@ -296,7 +296,7 @@ const PuzzleRatedPage = () => {
                     <div className="rated-hero-visual">
                         <div className="rated-image-glow"></div>
                         <img
-                            src="/src/assets/puzzlerated.png"
+                            src="/assets/puzzlerated.png"
                             alt="Rated Puzzles"
                             className="rated-illustration"
                         />

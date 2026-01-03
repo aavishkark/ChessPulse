@@ -31,7 +31,7 @@ const Hero = () => {
             <div className="hero-imageGlow"></div>
             <img
               className="hero-illustration"
-              src="src/assets/hero.png"
+              src="/assets/hero.png"
               alt="illustration"
             />
           </div>
