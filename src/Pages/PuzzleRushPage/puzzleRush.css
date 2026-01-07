@@ -914,3 +914,69 @@
     border-color: var(--accent);
     color: var(--accent);
 }
+
+/* AI Feedback Section */
+.ai-feedback-section {
+    width: 100%;
+    max-width: 400px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.05));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+    text-align: left;
+}
+
+.ai-feedback-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 0.75rem 0;
+}
+
+.ai-loading {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 0;
+}
+
+.ai-summary {
+    font-size: 0.85rem;
+    color: var(--text);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.5;
+}
+
+.ai-tips-list {
+    margin: 0 0 0.75rem 0;
+    padding-left: 1.25rem;
+    list-style: none;
+}
+
+.ai-tips-list li {
+    position: relative;
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+}
+
+.ai-tips-list li::before {
+    content: '→';
+    position: absolute;
+    left: -1.1rem;
+    color: var(--accent);
+}
+
+.ai-strength {
+    font-size: 0.8rem;
+    color: #4ade80;
+    margin: 0;
+}
+
+.ai-error {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+}

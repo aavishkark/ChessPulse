@@ -4,14 +4,16 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
+import { puzzleStatsService } from '../../services/puzzleStatsService';
+import { DiceIcon, SeedlingIcon, TrendUpIcon, FlameIcon, CrownIcon, AIIcon, HeartIcon, CheckIcon } from '../../Components/Icons/Icons';
 import './puzzleSurvival.css';
 
 const DIFFICULTY_OPTIONS = {
-    'all': { label: 'All Levels', description: 'Mixed', icon: '🎲' },
-    'beginner': { label: 'Beginner', description: '800-1199', icon: '🌱' },
-    'intermediate': { label: 'Intermediate', description: '1200-1599', icon: '📈' },
-    'advanced': { label: 'Advanced', description: '1600-1999', icon: '🔥' },
-    'expert': { label: 'Expert', description: '2000-2400', icon: '👑' }
+    'all': { label: 'All Levels', description: 'Mixed', Icon: DiceIcon },
+    'beginner': { label: 'Beginner', description: '800-1199', Icon: SeedlingIcon },
+    'intermediate': { label: 'Intermediate', description: '1200-1599', Icon: TrendUpIcon },
+    'advanced': { label: 'Advanced', description: '1600-1999', Icon: FlameIcon },
+    'expert': { label: 'Expert', description: '2000-2400', Icon: CrownIcon }
 };
 
 const PuzzleSurvivalPage = () => {
@@ -34,6 +36,24 @@ const PuzzleSurvivalPage = () => {
     const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
     const [showTurnOverlay, setShowTurnOverlay] = useState(false);
     const [difficulty, setDifficulty] = useState('all');
+    const [aiFeedback, setAiFeedback] = useState(null);
+    const [loadingFeedback, setLoadingFeedback] = useState(false);
+
+    useEffect(() => {
+        if (gameState === 'finished' && isAuthenticated && !aiFeedback) {
+            setLoadingFeedback(true);
+            puzzleStatsService.getSessionFeedback({
+                mode: 'survival',
+                solved: streak,
+                failed: 3,
+                totalAttempted: streak + 3,
+                streak: streak
+            }).then(res => {
+                if (res.success) setAiFeedback(res.data);
+            }).catch(err => console.error('Failed to get AI feedback:', err))
+                .finally(() => setLoadingFeedback(false));
+        }
+    }, [gameState, isAuthenticated]);
 
     const loadNewPuzzle = useCallback(async (selectedDifficulty) => {
         setIsLoadingPuzzle(true);
@@ -103,14 +123,40 @@ const PuzzleSurvivalPage = () => {
             return newStreak;
         });
 
+        if (isAuthenticated && currentPuzzle) {
+            try {
+                await puzzleStatsService.recordAttempt({
+                    puzzleId: currentPuzzle.id,
+                    solved: true,
+                    puzzleRating: currentPuzzle.rating,
+                    themes: currentPuzzle.themes || [],
+                    mode: 'survival',
+                    difficulty
+                });
+            } catch (err) {
+                console.error('Failed to record attempt:', err);
+            }
+        }
+
         setTimeout(async () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(difficulty);
         }, 500);
-    }, [loadNewPuzzle, difficulty, bestStreak]);
+    }, [loadNewPuzzle, difficulty, bestStreak, isAuthenticated, currentPuzzle]);
 
     const handleWrongMove = useCallback(() => {
         setFeedbackStatus('wrong');
+
+        if (isAuthenticated && currentPuzzle) {
+            puzzleStatsService.recordAttempt({
+                puzzleId: currentPuzzle.id,
+                solved: false,
+                puzzleRating: currentPuzzle.rating,
+                themes: currentPuzzle.themes || [],
+                mode: 'survival',
+                difficulty
+            }).catch(err => console.error('Failed to record attempt:', err));
+        }
 
         if (currentPuzzle && game) {
             const correctMove = currentPuzzle.moves[currentMoveIndex];
@@ -141,7 +187,7 @@ const PuzzleSurvivalPage = () => {
             }
             return newLives;
         });
-    }, [loadNewPuzzle, difficulty, currentPuzzle, game, currentMoveIndex]);
+    }, [loadNewPuzzle, difficulty, currentPuzzle, game, currentMoveIndex, isAuthenticated]);
 
     const onDrop = useCallback((moveData) => {
         if (gameState !== 'playing' || !game || !currentPuzzle || isLoadingPuzzle) return false;
@@ -243,9 +289,9 @@ const PuzzleSurvivalPage = () => {
                         </p>
 
                         <div className="survival-lives-display">
-                            <span className="heart">♥</span>
-                            <span className="heart">♥</span>
-                            <span className="heart">♥</span>
+                            <span className="heart"><HeartIcon size={24} color="#ef4444" filled /></span>
+                            <span className="heart"><HeartIcon size={24} color="#ef4444" filled /></span>
+                            <span className="heart"><HeartIcon size={24} color="#ef4444" filled /></span>
                         </div>
 
                         {bestStreak > 0 && (
@@ -258,16 +304,19 @@ const PuzzleSurvivalPage = () => {
                         <div className="survival-difficulty-selector">
                             <h3>Difficulty</h3>
                             <div className="survival-difficulty-options">
-                                {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => (
-                                    <button
-                                        key={key}
-                                        className={`survival-difficulty-option ${difficulty === key ? 'active' : ''}`}
-                                        onClick={() => setDifficulty(key)}
-                                    >
-                                        <span className="difficulty-icon">{value.icon}</span>
-                                        <span className="difficulty-label">{value.label}</span>
-                                    </button>
-                                ))}
+                                {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => {
+                                    const IconComponent = value.Icon;
+                                    return (
+                                        <button
+                                            key={key}
+                                            className={`survival-difficulty-option ${difficulty === key ? 'active' : ''}`}
+                                            onClick={() => setDifficulty(key)}
+                                        >
+                                            <span className="difficulty-icon"><IconComponent size={18} /></span>
+                                            <span className="difficulty-label">{value.label}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -302,9 +351,9 @@ const PuzzleSurvivalPage = () => {
 
                 <div className="survival-results">
                     <div className="results-hearts">
-                        <span className="heart lost">♥</span>
-                        <span className="heart lost">♥</span>
-                        <span className="heart lost">♥</span>
+                        <span className="heart lost"><HeartIcon size={20} color="#666" /></span>
+                        <span className="heart lost"><HeartIcon size={20} color="#666" /></span>
+                        <span className="heart lost"><HeartIcon size={20} color="#666" /></span>
                     </div>
 
                     <h1 className="results-title">Game Over</h1>
@@ -326,6 +375,31 @@ const PuzzleSurvivalPage = () => {
                         <div className="signin-prompt">
                             <p>Sign in to save your streak and compete on the leaderboard!</p>
                             <Link to="/signin" className="signin-link">Sign In</Link>
+                        </div>
+                    )}
+
+                    {isAuthenticated && (
+                        <div className="ai-feedback-section">
+                            <h3 className="ai-feedback-title"><AIIcon size={18} /> AI Coach Tips</h3>
+                            {loadingFeedback ? (
+                                <p className="ai-loading">Analyzing your session...</p>
+                            ) : aiFeedback ? (
+                                <div className="ai-feedback-content">
+                                    <p className="ai-summary">{aiFeedback.summary}</p>
+                                    {aiFeedback.tips && aiFeedback.tips.length > 0 && (
+                                        <ul className="ai-tips-list">
+                                            {aiFeedback.tips.map((tip, i) => (
+                                                <li key={i}>{tip}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                    {aiFeedback.strength && (
+                                        <p className="ai-strength"><CheckIcon size={14} /> {aiFeedback.strength}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="ai-error">Could not load tips</p>
+                            )}
                         </div>
                     )}
 

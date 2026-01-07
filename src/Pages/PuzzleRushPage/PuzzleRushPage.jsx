@@ -4,6 +4,8 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
+import { puzzleStatsService } from '../../services/puzzleStatsService';
+import { DiceIcon, SeedlingIcon, TrendUpIcon, FlameIcon, CrownIcon, AIIcon, TimerIcon, CheckIcon } from '../../Components/Icons/Icons';
 import './puzzleRush.css';
 
 const TIME_OPTIONS = {
@@ -13,11 +15,11 @@ const TIME_OPTIONS = {
 };
 
 const DIFFICULTY_OPTIONS = {
-    'all': { label: 'All Levels', description: 'Mixed puzzles', icon: '🎲' },
-    'beginner': { label: 'Beginner', description: '800-1199', icon: '🌱' },
-    'intermediate': { label: 'Intermediate', description: '1200-1599', icon: '📈' },
-    'advanced': { label: 'Advanced', description: '1600-1999', icon: '🔥' },
-    'expert': { label: 'Expert', description: '2000-2400', icon: '👑' }
+    'all': { label: 'All Levels', description: 'Mixed puzzles', Icon: DiceIcon },
+    'beginner': { label: 'Beginner', description: '800-1199', Icon: SeedlingIcon },
+    'intermediate': { label: 'Intermediate', description: '1200-1599', Icon: TrendUpIcon },
+    'advanced': { label: 'Advanced', description: '1600-1999', Icon: FlameIcon },
+    'expert': { label: 'Expert', description: '2000-2400', Icon: CrownIcon }
 };
 
 const PuzzleRushPage = () => {
@@ -40,6 +42,8 @@ const PuzzleRushPage = () => {
     const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
     const [showTurnOverlay, setShowTurnOverlay] = useState(false);
     const [difficulty, setDifficulty] = useState('all');
+    const [aiFeedback, setAiFeedback] = useState(null);
+    const [loadingFeedback, setLoadingFeedback] = useState(false);
 
     const timerRef = useRef(null);
 
@@ -64,6 +68,23 @@ const PuzzleRushPage = () => {
             return () => clearInterval(timerRef.current);
         }
     }, [gameState]);
+
+    useEffect(() => {
+        if (gameState === 'finished' && isAuthenticated && !aiFeedback) {
+            setLoadingFeedback(true);
+            puzzleStatsService.getSessionFeedback({
+                mode: 'rush',
+                solved: puzzlesSolved,
+                failed: puzzlesAttempted,
+                totalAttempted: puzzlesSolved + puzzlesAttempted,
+                duration: `${TIME_OPTIONS[timeMode]?.label || '5 min'}`,
+                score: score
+            }).then(res => {
+                if (res.success) setAiFeedback(res.data);
+            }).catch(err => console.error('Failed to get AI feedback:', err))
+                .finally(() => setLoadingFeedback(false));
+        }
+    }, [gameState, isAuthenticated]);
 
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
@@ -141,16 +162,42 @@ const PuzzleRushPage = () => {
         setScore(prev => prev + 1);
         setPuzzlesSolved(prev => prev + 1);
 
+        if (isAuthenticated && currentPuzzle) {
+            try {
+                await puzzleStatsService.recordAttempt({
+                    puzzleId: currentPuzzle.id,
+                    solved: true,
+                    puzzleRating: currentPuzzle.rating,
+                    themes: currentPuzzle.themes || [],
+                    mode: 'rush',
+                    difficulty
+                });
+            } catch (err) {
+                console.error('Failed to record attempt:', err);
+            }
+        }
+
         setTimeout(async () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(difficulty);
         }, 500);
-    }, [loadNewPuzzle, difficulty]);
+    }, [loadNewPuzzle, difficulty, isAuthenticated, currentPuzzle]);
 
     const handleWrongMove = useCallback(() => {
         setFeedbackStatus('wrong');
         setTimeLeft(prev => Math.max(0, prev - 5));
         setPuzzlesAttempted(prev => prev + 1);
+
+        if (isAuthenticated && currentPuzzle) {
+            puzzleStatsService.recordAttempt({
+                puzzleId: currentPuzzle.id,
+                solved: false,
+                puzzleRating: currentPuzzle.rating,
+                themes: currentPuzzle.themes || [],
+                mode: 'rush',
+                difficulty
+            }).catch(err => console.error('Failed to record attempt:', err));
+        }
 
         if (currentPuzzle && game) {
             const correctMove = currentPuzzle.moves[currentMoveIndex];
@@ -170,7 +217,7 @@ const PuzzleRushPage = () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(difficulty);
         }, 600);
-    }, [loadNewPuzzle, difficulty, currentPuzzle, game, currentMoveIndex]);
+    }, [loadNewPuzzle, difficulty, currentPuzzle, game, currentMoveIndex, isAuthenticated]);
 
     const onDrop = useCallback((moveData) => {
         if (gameState !== 'playing' || !game || !currentPuzzle || isLoadingPuzzle) return false;
@@ -288,17 +335,20 @@ const PuzzleRushPage = () => {
                         <div className="rush-difficulty-selector">
                             <h3>Difficulty</h3>
                             <div className="rush-difficulty-options">
-                                {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => (
-                                    <button
-                                        key={key}
-                                        className={`rush-difficulty-option ${difficulty === key ? 'active' : ''}`}
-                                        onClick={() => setDifficulty(key)}
-                                    >
-                                        <span className="difficulty-icon">{value.icon}</span>
-                                        <span className="difficulty-label">{value.label}</span>
-                                        <span className="difficulty-desc">{value.description}</span>
-                                    </button>
-                                ))}
+                                {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => {
+                                    const IconComponent = value.Icon;
+                                    return (
+                                        <button
+                                            key={key}
+                                            className={`rush-difficulty-option ${difficulty === key ? 'active' : ''}`}
+                                            onClick={() => setDifficulty(key)}
+                                        >
+                                            <span className="difficulty-icon"><IconComponent size={18} /></span>
+                                            <span className="difficulty-label">{value.label}</span>
+                                            <span className="difficulty-desc">{value.description}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -345,7 +395,7 @@ const PuzzleRushPage = () => {
                 <div className="rush-bg-aura-2"></div>
 
                 <div className="rush-results">
-                    <div className="results-timer-icon">⏱</div>
+                    <div className="results-timer-icon"><TimerIcon size={48} /></div>
 
                     <h1 className="results-title">Time's Up!</h1>
 
@@ -369,6 +419,31 @@ const PuzzleRushPage = () => {
                         <div className="signin-prompt">
                             <p>Sign in to save your score and compete on the leaderboard!</p>
                             <Link to="/signin" className="signin-link">Sign In</Link>
+                        </div>
+                    )}
+
+                    {isAuthenticated && (
+                        <div className="ai-feedback-section">
+                            <h3 className="ai-feedback-title"><AIIcon size={18} /> AI Coach Tips</h3>
+                            {loadingFeedback ? (
+                                <p className="ai-loading">Analyzing your session...</p>
+                            ) : aiFeedback ? (
+                                <div className="ai-feedback-content">
+                                    <p className="ai-summary">{aiFeedback.summary}</p>
+                                    {aiFeedback.tips && aiFeedback.tips.length > 0 && (
+                                        <ul className="ai-tips-list">
+                                            {aiFeedback.tips.map((tip, i) => (
+                                                <li key={i}>{tip}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                    {aiFeedback.strength && (
+                                        <p className="ai-strength"><CheckIcon size={14} /> {aiFeedback.strength}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="ai-error">Could not load tips</p>
+                            )}
                         </div>
                     )}
 
@@ -416,7 +491,7 @@ const PuzzleRushPage = () => {
                         )}
 
                         {feedbackStatus === 'correct' && (
-                            <div className="feedback-overlay correct">✓</div>
+                            <div className="feedback-overlay correct"><CheckIcon size={64} /></div>
                         )}
                         {feedbackStatus === 'wrong' && (
                             <div className="feedback-overlay wrong">✗</div>

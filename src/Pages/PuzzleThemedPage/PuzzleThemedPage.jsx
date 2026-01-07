@@ -2,7 +2,9 @@ import { useState, useCallback } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
+import { puzzleStatsService } from '../../services/puzzleStatsService';
 import './puzzleThemed.css';
 
 const THEME_DATA = {
@@ -30,6 +32,7 @@ const DIFFICULTY_OPTIONS = {
 const PuzzleThemedPage = () => {
     const navigate = useNavigate();
     const { theme } = useParams();
+    const { isAuthenticated } = useAuth();
 
     const [selectedTheme, setSelectedTheme] = useState(theme || null);
     const [puzzlesSolved, setPuzzlesSolved] = useState(0);
@@ -113,14 +116,40 @@ const PuzzleThemedPage = () => {
         setFeedbackStatus('correct');
         setPuzzlesSolved(prev => prev + 1);
 
+        if (isAuthenticated && currentPuzzle) {
+            try {
+                await puzzleStatsService.recordAttempt({
+                    puzzleId: currentPuzzle.id,
+                    solved: true,
+                    puzzleRating: currentPuzzle.rating,
+                    themes: currentPuzzle.themes || [selectedTheme],
+                    mode: 'themed',
+                    difficulty
+                });
+            } catch (err) {
+                console.error('Failed to record attempt:', err);
+            }
+        }
+
         setTimeout(async () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(selectedTheme, difficulty);
         }, 600);
-    }, [loadNewPuzzle, selectedTheme, difficulty]);
+    }, [loadNewPuzzle, selectedTheme, difficulty, isAuthenticated, currentPuzzle]);
 
     const handleWrongMove = useCallback(() => {
         setFeedbackStatus('wrong');
+
+        if (isAuthenticated && currentPuzzle) {
+            puzzleStatsService.recordAttempt({
+                puzzleId: currentPuzzle.id,
+                solved: false,
+                puzzleRating: currentPuzzle.rating,
+                themes: currentPuzzle.themes || [selectedTheme],
+                mode: 'themed',
+                difficulty
+            }).catch(err => console.error('Failed to record attempt:', err));
+        }
 
         if (currentPuzzle && game) {
             const correctMove = currentPuzzle.moves[currentMoveIndex];
@@ -140,7 +169,7 @@ const PuzzleThemedPage = () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(selectedTheme, difficulty);
         }, 800);
-    }, [loadNewPuzzle, selectedTheme, difficulty, currentPuzzle, game, currentMoveIndex]);
+    }, [loadNewPuzzle, selectedTheme, difficulty, currentPuzzle, game, currentMoveIndex, isAuthenticated]);
 
     const onDrop = useCallback((moveData) => {
         if (!isPlaying || !game || !currentPuzzle || isLoadingPuzzle) return false;
