@@ -18,7 +18,7 @@ import PuzzleRushPage from "./Pages/PuzzleRushPage/PuzzleRushPage";
 import PuzzleSurvivalPage from "./Pages/PuzzleSurvivalPage/PuzzleSurvivalPage";
 import PuzzleRatedPage from "./Pages/PuzzleRatedPage/PuzzleRatedPage";
 import PuzzleThemedPage from "./Pages/PuzzleThemedPage/PuzzleThemedPage";
-import PuzzleStatsPage from "./Pages/PuzzleStatsPage/PuzzleStatsPage";
+import PuzzleStatsPage from "./Pages/PuzzleStatsPage";
 import LeaderboardPage from "./Pages/LeaderboardPage/LeaderboardPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
