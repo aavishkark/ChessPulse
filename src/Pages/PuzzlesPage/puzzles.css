@@ -249,12 +249,14 @@
     background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stat-box.solved .stat-value {
     background: linear-gradient(135deg, #20c997, #12b886);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .stat-label {
@@ -266,14 +268,40 @@
 }
 
 .session-note {
-    margin-top: 16px;
+    margin: 16px auto 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0.8rem;
-    color: var(--text-muted);
-    text-align: center;
-    padding: 10px;
-    background: rgba(250, 176, 5, 0.1);
-    border-radius: 8px;
-    border: 1px solid rgba(250, 176, 5, 0.2);
+    color: #fbbf24;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05));
+    border-radius: 10px;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.session-note .note-icon {
+    color: #fbbf24;
+    flex-shrink: 0;
+}
+
+.signin-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, var(--accent), #2563eb);
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.signin-btn-sm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
 }
 
 .modes-card h3 {
@@ -431,4 +459,30 @@
     .stat-value {
         font-size: 2rem;
     }
+}
+
+.quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.quick-link:hover {
+    border-color: var(--accent);
+    transform: translateX(4px);
 }

@@ -134,40 +134,54 @@ function transformPuzzle(data) {
     const puzzle = data.puzzle || {};
     const game = data.game || {};
 
-    let fen = null;
-
-    if (game.pgn) {
-        fen = getFenFromPgn(game.pgn, puzzle.initialPly);
-    }
-
-    if (!fen) {
+    if (!game.pgn || puzzle.initialPly === undefined) {
         return getRandomFromPool();
     }
 
+    const result = getFenAndSetupMove(game.pgn, puzzle.initialPly);
+
+    if (!result || !result.fen) {
+        return getRandomFromPool();
+    }
+
+    const moves = result.setupMove
+        ? [result.setupMove, ...(puzzle.solution || [])]
+        : puzzle.solution || [];
+
     return {
         id: puzzle.id,
-        fen: fen,
-        moves: puzzle.solution || [],
+        fen: result.fen,
+        moves: moves,
         rating: puzzle.rating,
         themes: puzzle.themes || [],
         initialPly: puzzle.initialPly
     };
 }
 
-function getFenFromPgn(pgn, initialPly) {
+function getFenAndSetupMove(pgn, initialPly) {
     try {
         const game = new Chess();
         game.loadPgn(pgn);
         const history = game.history({ verbose: true });
 
         const newGame = new Chess();
-        const targetPly = Math.min(initialPly + 1, history.length);
 
-        for (let i = 0; i < targetPly && i < history.length; i++) {
+        for (let i = 0; i < initialPly && i < history.length; i++) {
             newGame.move(history[i].san);
         }
 
-        return newGame.fen();
+        const fenBeforeSetup = newGame.fen();
+
+        let setupMove = null;
+        if (initialPly < history.length) {
+            const move = history[initialPly];
+            setupMove = move.from + move.to + (move.promotion || '');
+        }
+
+        return {
+            fen: fenBeforeSetup,
+            setupMove: setupMove
+        };
     } catch (e) {
         console.error('Error parsing PGN:', e);
         return null;

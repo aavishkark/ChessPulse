@@ -4,6 +4,8 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
+import { puzzleStatsService } from '../../services/puzzleStatsService';
+import { AIIcon, CheckIcon, TrophyIcon, TrendUpIcon, ArrowRightIcon, TimerIcon } from '../../Components/Icons/Icons';
 import './puzzleRated.css';
 
 const INITIAL_RATING = 1200;
@@ -21,16 +23,8 @@ const PuzzleRatedPage = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
 
-    const [rating, setRating] = useState(() => {
-        if (!isAuthenticated) return INITIAL_RATING;
-        const saved = localStorage.getItem('puzzleRating');
-        return saved ? parseInt(saved, 10) : INITIAL_RATING;
-    });
-    const [ratingHistory, setRatingHistory] = useState(() => {
-        if (!isAuthenticated) return [INITIAL_RATING];
-        const saved = localStorage.getItem('puzzleRatingHistory');
-        return saved ? JSON.parse(saved) : [INITIAL_RATING];
-    });
+    const [rating, setRating] = useState(INITIAL_RATING);
+    const [peakRating, setPeakRating] = useState(INITIAL_RATING);
     const [puzzlesSolved, setPuzzlesSolved] = useState(0);
     const [puzzlesAttempted, setPuzzlesAttempted] = useState(0);
     const [lastChange, setLastChange] = useState(null);
@@ -43,6 +37,27 @@ const PuzzleRatedPage = () => {
     const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
     const [showTurnOverlay, setShowTurnOverlay] = useState(false);
     const [sessionActive, setSessionActive] = useState(false);
+    const [aiFeedback, setAiFeedback] = useState(null);
+    const [loadingFeedback, setLoadingFeedback] = useState(false);
+    const [sessionJustEnded, setSessionJustEnded] = useState(false);
+    const [loadingRating, setLoadingRating] = useState(true);
+
+    // Fetch rating from backend on mount
+    useEffect(() => {
+        if (isAuthenticated) {
+            puzzleStatsService.getRating()
+                .then(res => {
+                    if (res.success) {
+                        setRating(res.data.rating);
+                        setPeakRating(res.data.peakRating);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch rating:', err))
+                .finally(() => setLoadingRating(false));
+        } else {
+            setLoadingRating(false);
+        }
+    }, [isAuthenticated]);
 
     const loadNewPuzzle = useCallback(async (currentRating) => {
         setIsLoadingPuzzle(true);
@@ -90,10 +105,30 @@ const PuzzleRatedPage = () => {
         await loadNewPuzzle(rating);
     };
 
-    const endSession = () => {
+    const endSession = async () => {
         setSessionActive(false);
         setCurrentPuzzle(null);
         setGame(null);
+
+        if (puzzlesAttempted > 0) {
+            setSessionJustEnded(true);
+            if (isAuthenticated) {
+                setLoadingFeedback(true);
+                try {
+                    const res = await puzzleStatsService.getSessionFeedback({
+                        mode: 'rated',
+                        solved: puzzlesSolved,
+                        failed: puzzlesAttempted - puzzlesSolved,
+                        totalAttempted: puzzlesAttempted
+                    });
+                    if (res.success) setAiFeedback(res.data);
+                } catch (err) {
+                    console.error('Failed to get AI feedback:', err);
+                } finally {
+                    setLoadingFeedback(false);
+                }
+            }
+        }
     };
 
     const makeUciMove = (chessGame, uciMove) => {
@@ -104,35 +139,49 @@ const PuzzleRatedPage = () => {
         return chessGame.move({ from, to, promotion });
     };
 
-    const updateRating = useCallback((puzzleRating, solved) => {
-        const { newRating, change } = calculateNewRating(rating, puzzleRating, solved);
-        setRating(newRating);
-        setLastChange(change);
-
-        if (isAuthenticated) {
-            localStorage.setItem('puzzleRating', newRating.toString());
-            const newHistory = [...ratingHistory, newRating].slice(-50);
-            setRatingHistory(newHistory);
-            localStorage.setItem('puzzleRatingHistory', JSON.stringify(newHistory));
-        }
-
-        return newRating;
-    }, [rating, ratingHistory, isAuthenticated]);
-
     const handleCorrectMove = useCallback(async () => {
         setFeedbackStatus('correct');
         setPuzzlesSolved(prev => prev + 1);
         setPuzzlesAttempted(prev => prev + 1);
 
-        const newRating = updateRating(currentPuzzle.rating, true);
+        let newRating = rating;
+
+        if (isAuthenticated && currentPuzzle) {
+            try {
+                const res = await puzzleStatsService.recordAttempt({
+                    puzzleId: currentPuzzle.id,
+                    solved: true,
+                    puzzleRating: currentPuzzle.rating,
+                    themes: currentPuzzle.themes || [],
+                    mode: 'rated'
+                });
+                if (res.success) {
+                    newRating = res.data.newRating;
+                    setRating(newRating);
+                    setLastChange(res.data.ratingChange);
+                    if (res.data.peakRating > peakRating) {
+                        setPeakRating(res.data.peakRating);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to record attempt:', err);
+            }
+        } else {
+            // Guest mode - local calculation
+            const expectedScore = 1 / (1 + Math.pow(10, (currentPuzzle.rating - rating) / 400));
+            const change = Math.round(K_FACTOR * (1 - expectedScore));
+            newRating = rating + change;
+            setRating(newRating);
+            setLastChange(change);
+        }
 
         setTimeout(async () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(newRating);
         }, 800);
-    }, [loadNewPuzzle, updateRating, currentPuzzle]);
+    }, [loadNewPuzzle, currentPuzzle, isAuthenticated, rating, peakRating]);
 
-    const handleWrongMove = useCallback(() => {
+    const handleWrongMove = useCallback(async () => {
         setFeedbackStatus('wrong');
         setPuzzlesAttempted(prev => prev + 1);
 
@@ -150,13 +199,38 @@ const PuzzleRatedPage = () => {
             }
         }
 
-        const newRating = updateRating(currentPuzzle.rating, false);
+        let newRating = rating;
+
+        if (isAuthenticated && currentPuzzle) {
+            try {
+                const res = await puzzleStatsService.recordAttempt({
+                    puzzleId: currentPuzzle.id,
+                    solved: false,
+                    puzzleRating: currentPuzzle.rating,
+                    themes: currentPuzzle.themes || [],
+                    mode: 'rated'
+                });
+                if (res.success) {
+                    newRating = res.data.newRating;
+                    setRating(newRating);
+                    setLastChange(res.data.ratingChange);
+                }
+            } catch (err) {
+                console.error('Failed to record attempt:', err);
+            }
+        } else {
+            const expectedScore = 1 / (1 + Math.pow(10, (currentPuzzle.rating - rating) / 400));
+            const change = Math.round(K_FACTOR * (0 - expectedScore));
+            newRating = Math.max(100, rating + change);
+            setRating(newRating);
+            setLastChange(change);
+        }
 
         setTimeout(async () => {
             setFeedbackStatus(null);
             await loadNewPuzzle(newRating);
         }, 1000);
-    }, [loadNewPuzzle, updateRating, currentPuzzle, game, currentMoveIndex]);
+    }, [loadNewPuzzle, currentPuzzle, game, currentMoveIndex, isAuthenticated, rating]);
 
     const onDrop = useCallback((moveData) => {
         if (!sessionActive || !game || !currentPuzzle || isLoadingPuzzle) return false;
@@ -235,6 +309,92 @@ const PuzzleRatedPage = () => {
     const playerColor = orientation === 'white' ? 'White' : 'Black';
     const accuracy = puzzlesAttempted > 0 ? Math.round((puzzlesSolved / puzzlesAttempted) * 100) : 0;
 
+    if (sessionJustEnded) {
+        return (
+            <div className="puzzle-rated-page results">
+                <div className="rated-bg-aura"></div>
+                <div className="rated-bg-aura-2"></div>
+
+                <div className="results-container">
+                    <div className="results-header">
+                        <h1 className="results-title">Session Complete</h1>
+                        <p className="results-subtitle">Here's how you performed in this Skill Track session</p>
+                    </div>
+
+                    <div className="results-stats-grid">
+                        <div className="result-card rating">
+                            <div className="result-card-glow"></div>
+                            <TrophyIcon size={24} color="#fbbf24" />
+                            <span className="result-value">{rating}</span>
+                            <span className="result-label">Current Rating</span>
+                        </div>
+                        <div className="result-card accuracy">
+                            <TrendUpIcon size={24} color="#4ade80" />
+                            <span className="result-value">{accuracy}%</span>
+                            <span className="result-label">Accuracy</span>
+                        </div>
+                        <div className="result-card solved">
+                            <CheckIcon size={24} color="#60a5fa" />
+                            <span className="result-value">{puzzlesSolved}</span>
+                            <span className="result-label">Puzzles Solved</span>
+                        </div>
+                    </div>
+
+                    {isAuthenticated && (
+                        <div className="results-ai-section">
+                            <div className="ai-coach-header">
+                                <AIIcon size={20} />
+                                <h3>AI Coach Analysis</h3>
+                            </div>
+                            {loadingFeedback ? (
+                                <div className="ai-loading-skeleton">
+                                    <div className="skeleton-line"></div>
+                                    <div className="skeleton-line short"></div>
+                                </div>
+                            ) : aiFeedback ? (
+                                <div className="ai-feedback-box">
+                                    <p className="ai-summary-text">{aiFeedback.summary}</p>
+                                    <div className="ai-tips-grid">
+                                        {aiFeedback.tips?.map((tip, i) => (
+                                            <div key={i} className="ai-tip-item">
+                                                <span className="tip-dot"></span>
+                                                <p>{tip}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {aiFeedback.strength && (
+                                        <div className="ai-strength-tag">
+                                            <CheckIcon size={14} />
+                                            <span>Strength: {aiFeedback.strength}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <p className="ai-error-msg">Coach is busy right now. Try another session!</p>
+                            )}
+                        </div>
+                    )}
+
+                    {!isAuthenticated && (
+                        <div className="results-auth-nudge">
+                            <p>Sign in to get personalized AI tips and save your progress!</p>
+                            <Link to="/signin" className="nudge-signin-btn">Sign In Now</Link>
+                        </div>
+                    )}
+
+                    <div className="results-actions">
+                        <button className="btn-retry" onClick={() => { setSessionJustEnded(false); setAiFeedback(null); startSession(); }}>
+                            Start New Session
+                        </button>
+                        <Link to="/puzzles" className="btn-back">
+                            Back to Puzzles
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (!sessionActive) {
         return (
             <div className="puzzle-rated-page">
@@ -249,13 +409,13 @@ const PuzzleRatedPage = () => {
 
                 <div className="rated-hero">
                     <div className="rated-hero-content">
-                        <p className="rated-pretitle">Climb The Ladder</p>
+                        <p className="rated-pretitle">Track Your Progress</p>
                         <h1 className="rated-title">
-                            <span className="rated-gradient-text">Rated</span> Puzzles
+                            <span className="rated-gradient-text">Skill</span> Track
                         </h1>
                         <p className="rated-description">
-                            Challenge yourself with puzzles matched to your skill level. Solve correctly to gain rating points,
-                            miss and you lose some. The harder the puzzle, the more points you can earn!
+                            Measure your chess puzzle strength with ELO rating. Solve puzzles at your skill level—
+                            win to climb, miss to learn. Your rating persists forever!
                         </p>
 
                         <div className="rated-current-rating">
@@ -280,14 +440,31 @@ const PuzzleRatedPage = () => {
 
                         {!isAuthenticated && (
                             <div className="rated-auth-warning">
-                                <p>You're playing as a guest. Rating won't be saved!</p>
-                                <Link to="/signin" className="rated-signin-link">Sign in to save progress</Link>
+                                <div className="auth-warning-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <line x1="12" y1="8" x2="12" y2="12" />
+                                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                                    </svg>
+                                </div>
+                                <div className="auth-warning-content">
+                                    <p className="auth-warning-title">Playing as Guest</p>
+                                    <p className="auth-warning-text">Your rating won't be saved to your account</p>
+                                </div>
+                                <Link to="/signin" className="rated-signin-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                                        <polyline points="10 17 15 12 10 7" />
+                                        <line x1="15" y1="12" x2="3" y2="12" />
+                                    </svg>
+                                    Sign In
+                                </Link>
                             </div>
                         )}
 
                         <div className="rated-cta-wrapper">
                             <div className="rated-cta-glow"></div>
-                            <button className="rated-cta" onClick={startSession}>
+                            <button className="rated-cta" onClick={() => { setSessionJustEnded(false); setAiFeedback(null); startSession(); }}>
                                 Start Training
                             </button>
                         </div>
@@ -334,7 +511,7 @@ const PuzzleRatedPage = () => {
                         )}
 
                         {feedbackStatus === 'correct' && (
-                            <div className="feedback-overlay correct">✓</div>
+                            <div className="feedback-overlay correct"><CheckIcon size={64} /></div>
                         )}
                         {feedbackStatus === 'wrong' && (
                             <div className="feedback-overlay wrong">✗</div>

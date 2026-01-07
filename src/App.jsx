@@ -18,6 +18,8 @@ import PuzzleRushPage from "./Pages/PuzzleRushPage/PuzzleRushPage";
 import PuzzleSurvivalPage from "./Pages/PuzzleSurvivalPage/PuzzleSurvivalPage";
 import PuzzleRatedPage from "./Pages/PuzzleRatedPage/PuzzleRatedPage";
 import PuzzleThemedPage from "./Pages/PuzzleThemedPage/PuzzleThemedPage";
+import PuzzleStatsPage from "./Pages/PuzzleStatsPage/PuzzleStatsPage";
+import LeaderboardPage from "./Pages/LeaderboardPage/LeaderboardPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -54,6 +56,8 @@ export default function App() {
           <Route path="/puzzles/survival" element={<PuzzleSurvivalPage />} />
           <Route path="/puzzles/rating" element={<PuzzleRatedPage />} />
           <Route path="/puzzles/themed" element={<PuzzleThemedPage />} />
+          <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
+          <Route path="/puzzles/leaderboard" element={<LeaderboardPage />} />
         </Routes>
       </div>
       <Footer />

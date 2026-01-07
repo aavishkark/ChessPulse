@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
+import AICoachCard from '../../Components/AICoachCard/AICoachCard';
 import { puzzleService } from '../../services/puzzleService';
+import { TrophyIcon, TrendUpIcon } from '../../Components/Icons/Icons';
 import './puzzles.css';
 
 const PuzzlesPage = () => {
@@ -176,7 +178,15 @@ const PuzzlesPage = () => {
                             )}
                         </div>
                         {!isAuthenticated && (
-                            <p className="session-note">Sign in to save progress</p>
+                            <div className="session-note">
+                                <svg className="note-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                <span>Guest mode</span>
+                                <Link to="/signin" className="signin-btn-sm">Sign In</Link>
+                            </div>
                         )}
                     </div>
 
@@ -200,11 +210,16 @@ const PuzzlesPage = () => {
                         </div>
                     </div>
 
-                    {!isAuthenticated && (
-                        <div className="auth-card">
-                            <h4>Track Your Progress</h4>
-                            <p>Sign in to save stats, track rating, and compete on leaderboards</p>
-                            <Link to="/signin" className="signin-btn">Sign In</Link>
+                    <AICoachCard />
+
+                    {isAuthenticated && (
+                        <div className="quick-links">
+                            <Link to="/puzzles/stats" className="quick-link">
+                                <TrendUpIcon size={16} /> View Full Stats
+                            </Link>
+                            <Link to="/puzzles/leaderboard" className="quick-link">
+                                <TrophyIcon size={16} /> Leaderboard
+                            </Link>
                         </div>
                     )}
                 </div>

@@ -1,0 +1,460 @@
+.leaderboard-page {
+    min-height: calc(100vh - 80px);
+    padding: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.leaderboard-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    padding: 8px 14px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateX(-4px);
+}
+
+.leaderboard-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.leaderboard-header p {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-color: transparent;
+    color: var(--bg);
+}
+
+.tab-icon {
+    font-size: 1.2rem;
+}
+
+.user-rank-card {
+    position: relative;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 32px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-rank-card:hover {
+    border-color: rgba(251, 191, 36, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+.user-rank-glow {
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 140%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.user-rank-main {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+}
+
+.user-rank-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-rank-avatar {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.user-rank-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid #fbbf24;
+    padding: 3px;
+    background: var(--bg);
+    object-fit: cover;
+}
+
+.user-rank-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 28px;
+    height: 28px;
+    background: #fbbf24;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.user-rank-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.your-rank-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.your-rank-value {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #fbbf24;
+    margin: 0;
+    line-height: 1;
+}
+
+.user-rank-stats {
+    display: flex;
+    gap: 40px;
+}
+
+.rank-stat {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.rank-stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rank-stat-icon.solved {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+}
+
+.rank-stat-icon.percentile {
+    background: rgba(96, 165, 250, 0.1);
+    color: #60a5fa;
+}
+
+.rank-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+}
+
+.stat-lbl {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.auth-prompt {
+    text-align: center;
+    padding: 20px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.auth-prompt p {
+    margin: 0 0 12px 0;
+    color: var(--text-muted);
+}
+
+.signin-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--bg);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.signin-btn:hover {
+    transform: translateY(-2px);
+}
+
+.leaderboard-table {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 80px 1fr 120px 100px;
+    padding: 16px 20px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table-body {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 120px 100px;
+    padding: 14px 20px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.table-row:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.table-row.is-user {
+    background: rgba(251, 191, 36, 0.1);
+}
+
+.col-rank {
+    font-weight: 600;
+}
+
+.medal {
+    font-size: 1.5rem;
+}
+
+.rank-num {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.col-player {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.player-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+}
+
+.player-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.player-country {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-left: 8px;
+}
+
+.col-value {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 1.1rem;
+}
+
+.col-accuracy {
+    color: var(--text-muted);
+}
+
+.table-loading,
+.table-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    gap: 16px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.table-empty p {
+    color: var(--text-muted);
+}
+
+.leaderboard-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.leaderboard-footer p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+@media (max-width: 700px) {
+    .leaderboard-page {
+        padding: 16px;
+    }
+
+    .leaderboard-header h1 {
+        font-size: 2rem;
+    }
+
+    .leaderboard-tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab {
+        padding: 10px 16px;
+        font-size: 0.8rem;
+    }
+
+    .tab-label {
+        display: none;
+    }
+
+    .user-rank-card {
+        padding: 20px;
+    }
+
+    .user-rank-main {
+        flex-direction: column;
+        gap: 24px;
+        text-align: center;
+    }
+
+    .user-rank-profile {
+        flex-direction: column;
+    }
+
+    .user-rank-stats {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .rank-stat {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 60px 1fr 80px;
+    }
+
+    .col-accuracy {
+        display: none;
+    }
+
+    .col-value {
+        font-size: 0.95rem;
+    }
+}
