@@ -13,13 +13,13 @@ import SignInPage from "./Pages/SignInPage/SignInPage";
 import SignUpPage from "./Pages/SignUpPage/SignUpPage";
 import OAuthCallbackPage from "./Pages/OAuthCallbackPage/OAuthCallbackPage";
 import ProfilePage from "./Pages/ProfilePage/ProfilePage";
-import PuzzlesPage from "./Pages/PuzzlesPage/PuzzlesPage";
-import PuzzleRushPage from "./Pages/PuzzleRushPage/PuzzleRushPage";
-import PuzzleSurvivalPage from "./Pages/PuzzleSurvivalPage/PuzzleSurvivalPage";
-import PuzzleRatedPage from "./Pages/PuzzleRatedPage/PuzzleRatedPage";
-import PuzzleThemedPage from "./Pages/PuzzleThemedPage/PuzzleThemedPage";
+import PuzzlesPage from "./Pages/PuzzlesPage";
+import PuzzleRushPage from "./Pages/PuzzleRushPage";
+import PuzzleSurvivalPage from "./Pages/PuzzleSurvivalPage";
+import PuzzleRatedPage from "./Pages/PuzzleRatedPage";
+import PuzzleThemedPage from "./Pages/PuzzleThemedPage";
 import PuzzleStatsPage from "./Pages/PuzzleStatsPage";
-import LeaderboardPage from "./Pages/LeaderboardPage/LeaderboardPage";
+import LeaderboardPage from "./Pages/LeaderboardPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
