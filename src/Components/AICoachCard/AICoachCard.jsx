@@ -102,12 +102,17 @@ const AICoachCard = ({ onRefresh }) => {
                     </div>
                     <h3 className="ai-title">Pulse AI</h3>
                     <p className="ai-tagline">Your personal chess intelligence</p>
-                    <Link to="/signin" className="ai-cta">
-                        <span>Try</span>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </Link>
+                    <div className="coach-actions">
+                        <Link to="/puzzles/curated" className="ai-cta practice">
+                            <span>Free Session</span>
+                        </Link>
+                        <Link to="/signin" className="ai-cta">
+                            <span>Sign In</span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
@@ -184,6 +189,13 @@ const AICoachCard = ({ onRefresh }) => {
                         <span>{advice.weeklyGoal}</span>
                     </div>
                 )}
+
+                <Link to="/puzzles/curated" className="curated-practice-btn">
+                    <span>Start Curated Session</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </Link>
             </div>
         </div>
     );

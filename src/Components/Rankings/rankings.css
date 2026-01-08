@@ -10,10 +10,12 @@
 
   display: flex;
   flex-direction: column;
-  height: 85vh;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
   max-width: 900px;
   margin: 20px auto;
-  overflow: hidden;
+  overflow: visible !important;
   font-family: 'Inter', system-ui, sans-serif;
 }
 
@@ -92,31 +94,22 @@
   box-shadow: 0 2px 8px var(--card-glow);
 }
 
-.rankings-table-container {
-  flex: 1;
-  overflow-y: auto;
+.rankings-table-container,
+.table-body {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+  display: block !important;
   position: relative;
 }
 
-/* Custom Scrollbar */
-.rankings-table-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.rankings-table-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.rankings-table-container::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
-}
+/* Removed Custom Scrollbar */
 
 .table-row {
   display: grid;
   grid-template-columns: 50px 1fr 80px 80px;
   align-items: center;
-  padding: 8px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--border);
 }
 

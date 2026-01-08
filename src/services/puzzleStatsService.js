@@ -131,6 +131,16 @@ export const puzzleStatsService = {
             console.error('Error fetching session feedback:', error);
             throw error;
         }
+    },
+
+    getCurationPlan: async () => {
+        try {
+            const response = await puzzleStatsAPI.get('/curation-plan');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching curation plan:', error);
+            throw error;
+        }
     }
 };
 

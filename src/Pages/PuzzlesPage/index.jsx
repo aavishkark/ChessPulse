@@ -4,8 +4,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
 import AICoachCard from '../../Components/AICoachCard/AICoachCard';
 import { puzzleService } from '../../services/puzzleService';
-import { TrophyIcon, TrendUpIcon } from '../../Components/Icons/Icons';
+import { TrophyIcon, TrendUpIcon, UserIcon } from '../../Components/Icons/Icons';
 import './puzzles.css';
+
+const getTodayString = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
 
 const PuzzlesPage = () => {
     const { isAuthenticated } = useAuth();
@@ -15,18 +20,20 @@ const PuzzlesPage = () => {
     const [puzzleSolved, setPuzzleSolved] = useState(false);
 
     const [puzzleCount, setPuzzleCount] = useState(() => {
-        if (!isAuthenticated) return 0;
-        const today = new Date().toISOString().split('T')[0];
-        const saved = localStorage.getItem('puzzleStats');
-        if (saved) {
-            const stats = JSON.parse(saved);
-            if (stats.date === today) return stats.count;
+        const today = getTodayString();
+        try {
+            const saved = localStorage.getItem('puzzleStats');
+            if (saved) {
+                const stats = JSON.parse(saved);
+                if (stats.date === today) return stats.count;
+            }
+        } catch (e) {
+            console.error("Error loading puzzleStats:", e);
         }
         return 0;
     });
 
     const [streak, setStreak] = useState(() => {
-        if (!isAuthenticated) return 0;
         const saved = localStorage.getItem('puzzleStreak');
         return saved ? parseInt(saved, 10) : 0;
     });
@@ -36,12 +43,10 @@ const PuzzlesPage = () => {
     }, []);
 
     useEffect(() => {
-        if (isAuthenticated) {
-            const today = new Date().toISOString().split('T')[0];
-            localStorage.setItem('puzzleStats', JSON.stringify({ date: today, count: puzzleCount }));
-            localStorage.setItem('puzzleStreak', streak.toString());
-        }
-    }, [puzzleCount, streak, isAuthenticated]);
+        const today = getTodayString();
+        localStorage.setItem('puzzleStats', JSON.stringify({ date: today, count: puzzleCount }));
+        localStorage.setItem('puzzleStreak', streak.toString());
+    }, [puzzleCount, streak]);
 
     const loadPuzzle = useCallback(async (isFirst = false) => {
         try {
@@ -71,7 +76,6 @@ const PuzzlesPage = () => {
     const loadNextPuzzle = () => {
         loadPuzzle(false);
     };
-
     const puzzleModes = [
         {
             id: 'rush',
@@ -178,14 +182,13 @@ const PuzzlesPage = () => {
                             )}
                         </div>
                         {!isAuthenticated && (
-                            <div className="session-note">
-                                <svg className="note-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
-                                <span>Guest mode</span>
-                                <Link to="/signin" className="signin-btn-sm">Sign In</Link>
+                            <div className="guest-stats-cta">
+                                <div className="cta-header">
+                                    <UserIcon size={20} color="#fbbf24" />
+                                    <h4>Track Your Progress</h4>
+                                </div>
+                                <p className="cta-text">Sign in to save your ratings and track your improvement over time.</p>
+                                <Link to="/signin" className="cta-button">Sign In</Link>
                             </div>
                         )}
                     </div>
@@ -210,19 +213,35 @@ const PuzzlesPage = () => {
                         </div>
                     </div>
 
-                    <AICoachCard />
+                </div>
+            </div>
 
-                    {isAuthenticated && (
-                        <div className="quick-links">
+            <div className="puzzles-bottom-section">
+                <div className="ai-coach-wrapper">
+                    <AICoachCard />
+                </div>
+
+                {isAuthenticated && (
+                    <div className="quick-links-wrapper">
+                        <h3>Resources & Insights</h3>
+                        <div className="quick-links-grid">
                             <Link to="/puzzles/stats" className="quick-link">
-                                <TrendUpIcon size={16} /> View Full Stats
+                                <TrendUpIcon size={20} />
+                                <div className="link-text">
+                                    <span>View Full Stats</span>
+                                    <small>Track your performance over time</small>
+                                </div>
                             </Link>
                             <Link to="/puzzles/leaderboard" className="quick-link">
-                                <TrophyIcon size={16} /> Leaderboard
+                                <TrophyIcon size={20} />
+                                <div className="link-text">
+                                    <span>Leaderboard</span>
+                                    <small>See how you rank against others</small>
+                                </div>
                             </Link>
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
     );
