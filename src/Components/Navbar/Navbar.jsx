@@ -75,6 +75,9 @@ export default function Navbar() {
           <li role="none">
             <Link role="menuitem" to="/puzzles" className={location.pathname === "/puzzles" ? "active" : ""} onClick={handleLinkClick}>Puzzles</Link>
           </li>
+          <li role="none">
+            <Link role="menuitem" to="/bots" className={location.pathname.startsWith("/bots") ? "active" : ""} onClick={handleLinkClick}>Bots</Link>
+          </li>
           <li role="none"><a role="menuitem" href="/openings">Customize</a></li>
 
           <li
