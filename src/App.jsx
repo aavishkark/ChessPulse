@@ -21,6 +21,9 @@ import PuzzleThemedPage from "./Pages/PuzzleThemedPage";
 import PuzzleStatsPage from "./Pages/PuzzleStatsPage";
 import LeaderboardPage from "./Pages/LeaderboardPage";
 import PuzzleCuratedPage from "./Pages/PuzzleCuratedPage";
+import BotsPage from "./Pages/BotsPage";
+import BotGamePage from "./Pages/BotGamePage";
+import GameAnalysisPage from "./Pages/GameAnalysisPage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -60,6 +63,9 @@ export default function App() {
           <Route path="/puzzles/stats" element={<PuzzleStatsPage />} />
           <Route path="/puzzles/leaderboard" element={<LeaderboardPage />} />
           <Route path="/puzzles/curated" element={<PuzzleCuratedPage />} />
+          <Route path="/bots" element={<BotsPage />} />
+          <Route path="/bots/play/:botId" element={<BotGamePage />} />
+          <Route path="/bots/analysis" element={<GameAnalysisPage />} />
         </Routes>
       </div>
       <Footer />

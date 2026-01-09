@@ -4,10 +4,9 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { getGameByIndex } from '../../utils/pgnStream';
 import { parsePlayerNames, parsePlayerRatings, getCurrentFEN, getMoveList, getGameResult, parseClockInfo } from '../../utils/pgnParser';
+import { getStockfishService } from '../../services/stockfishService';
 import ChessLoader from '../../Components/ChessLoader/ChessLoader';
 import './game-view-page.css';
-
-const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
 export default function GameViewPage() {
     const { roundId, gameIndex } = useParams();
@@ -28,6 +27,18 @@ export default function GameViewPage() {
     const lastUpdateRef = useRef(Date.now());
     const turnRef = useRef('w');
     const abortControllerRef = useRef(null);
+    const engineRef = useRef(null);
+
+    useEffect(() => {
+        const initEngine = async () => {
+            try {
+                engineRef.current = await getStockfishService();
+            } catch (error) {
+                console.error('Failed to initialize Stockfish:', error);
+            }
+        };
+        initEngine();
+    }, []);
 
     const formatClock = useCallback((t) => {
         if (typeof t !== 'number' || Number.isNaN(t)) return '--:--';
@@ -211,9 +222,10 @@ export default function GameViewPage() {
 
     const fetchEvaluation = async (currentFen) => {
         try {
-            const response = await fetch(`${API}${encodeURIComponent(currentFen)}`);
-            const data = await response.json();
-            setEvaluation(data.evaluation || 0);
+            if (engineRef.current) {
+                const score = await engineRef.current.evaluatePosition(currentFen, 15);
+                setEvaluation(score);
+            }
         } catch (err) {
             console.error('Error fetching evaluation:', err);
         }

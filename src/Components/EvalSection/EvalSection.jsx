@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import "./evalsection.css";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
+import { getStockfishService, destroyStockfishService } from "../../services/stockfishService";
 
 function parsePGN(pgn) {
   const tags = {};
@@ -43,33 +44,44 @@ export default function EvalSection() {
   const [evaluation, setEvaluation] = useState(null);
   const [fillWidth, setFillWidth] = useState("50%");
   const [playing, setPlaying] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
   const playRef = useRef(null);
   const chessRef = useRef(null);
+  const engineRef = useRef(null);
 
   useEffect(() => {
+    const initEngine = async () => {
+      try {
+        engineRef.current = await getStockfishService();
+      } catch (error) {
+        console.error('Failed to initialize Stockfish:', error);
+      }
+    };
+    initEngine();
+
     return () => {
       if (playRef.current) clearInterval(playRef.current);
     };
   }, []);
 
-  function computeEvalForIndex(idx, movesArray, tagsObj) {
-    if (!movesArray || movesArray.length === 0) {
-      if (tagsObj && tagsObj.Result) {
-        if (tagsObj.Result === "1-0") return 2.0;
-        if (tagsObj.Result === "0-1") return -2.0;
-        if (tagsObj.Result === "1/2-1/2") return 0.0;
-      }
-      return 0.0;
+  const evaluateCurrentPosition = useCallback(async (fen) => {
+    if (!engineRef.current) return 0;
+
+    setIsEvaluating(true);
+    try {
+      const score = await engineRef.current.evaluatePosition(fen, 12);
+      return score;
+    } catch (error) {
+      console.error('Evaluation error:', error);
+      return 0;
+    } finally {
+      setIsEvaluating(false);
     }
-    const n = idx;
-    const raw = Math.sin(n * 0.45) * 1.75 + (n / Math.max(1, movesArray.length)) * 0.6;
-    const clamped = Math.max(-2, Math.min(2, raw));
-    return Math.round(clamped * 10) / 10;
-  }
+  }, []);
 
   function evalToWidth(evalNum) {
-    const clamped = Math.max(-2, Math.min(2, evalNum));
-    const pct = ((clamped + 2) / 4) * 100;
+    const clamped = Math.max(-5, Math.min(5, evalNum));
+    const pct = ((clamped + 5) / 10) * 90 + 5;
     return `${pct}%`;
   }
 
@@ -92,7 +104,7 @@ export default function EvalSection() {
     return list;
   };
 
-  const handleEvaluate = () => {
+  const handleEvaluate = async () => {
     const parsed = parsePGN(pgn);
     setTags(parsed.tags);
 
@@ -133,17 +145,25 @@ export default function EvalSection() {
     const idx = fenArr.length - 1;
     setCurrentIndex(idx >= 0 ? idx : 0);
 
-    const evalNum = computeEvalForIndex(idx, moveArray, parsed.tags);
+    const finalFen = fenArr[idx] || fenArr[fenArr.length - 1];
+    const evalNum = await evaluateCurrentPosition(finalFen);
     setEvaluation(evalNum);
     setFillWidth(evalToWidth(evalNum));
   };
 
   useEffect(() => {
-    if (!moves) return;
-    const evalNum = computeEvalForIndex(currentIndex, moves, tags);
-    setEvaluation(evalNum);
-    setFillWidth(evalToWidth(evalNum));
-  }, [currentIndex, moves, tags]);
+    if (!fenList || fenList.length === 0) return;
+
+    const fen = fenList[currentIndex];
+    if (!fen) return;
+
+    const doEval = async () => {
+      const evalNum = await evaluateCurrentPosition(fen);
+      setEvaluation(evalNum);
+      setFillWidth(evalToWidth(evalNum));
+    };
+    doEval();
+  }, [currentIndex, fenList, evaluateCurrentPosition]);
 
   const gotoIndex = (i) => {
     const clamped = Math.max(0, Math.min(fenList.length - 1, i));
@@ -180,7 +200,7 @@ export default function EvalSection() {
   };
 
   const position = fenList[currentIndex] || new Chess().fen();
-  const game = {position}
+  const game = { position }
 
   const boardWidth = (typeof window !== "undefined")
     ? Math.min(520, Math.max(260, Math.floor(window.innerWidth * 0.34)))
@@ -228,9 +248,14 @@ export default function EvalSection() {
           {evaluation !== null && (
             <div className="eval-result">
               <div className="eval-score-row">
-                <div className="eval-score-label">Eval</div>
+                <div className="eval-score-label">
+                  {isEvaluating ? "Analyzing..." : "Stockfish Eval"}
+                </div>
                 <div className="eval-score-value">
-                  {(evaluation >= 0 ? "+" : "") + evaluation.toFixed(1)}
+                  {isEvaluating ? "..." :
+                    evaluation >= 99 ? "+M" :
+                      evaluation <= -99 ? "-M" :
+                        (evaluation >= 0 ? "+" : "") + evaluation.toFixed(1)}
                 </div>
                 <div className="eval-current-move">Move {Math.max(0, currentIndex)}</div>
               </div>

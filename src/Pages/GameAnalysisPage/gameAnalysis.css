@@ -1,0 +1,495 @@
+.game-analysis-page {
+    min-height: calc(100vh - 80px);
+    background: var(--bg);
+    padding: 20px 24px;
+    position: relative;
+}
+
+.analysis-error {
+    text-align: center;
+    padding: 80px 24px;
+}
+
+.analysis-error h2 {
+    margin-bottom: 16px;
+}
+
+.analysis-error a {
+    color: var(--accent);
+}
+
+.analysis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 0 24px;
+}
+
+.analysis-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.analysis-mode-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    opacity: 0.7;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-btn.active {
+    background: var(--accent);
+    color: #fff;
+    opacity: 1;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(100, 246, 178, 0.3);
+}
+
+.analysis-badge {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    margin-left: 12px;
+    white-space: nowrap;
+}
+
+.start-analysis-prompt {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    margin: 16px 0;
+}
+
+.start-analysis-prompt p {
+    color: var(--text);
+    opacity: 0.8;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.analysis-content {
+    display: grid;
+    grid-template-columns: auto 360px;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+.analysis-board-section {
+    width: 100%;
+}
+
+.board-with-eval {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.analysis-eval-bar {
+    width: 32px;
+    background: #333;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.analysis-eval-bar .eval-bar-fill {
+    width: 100%;
+    background: linear-gradient(to top, #fff, #eee);
+    transition: height 0.3s ease;
+}
+
+.analysis-eval-bar .eval-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #888;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+
+.analysis-board-container {
+    position: relative;
+    width: 500px;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.variation-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(168, 85, 247, 0.9);
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+.variation-indicator button {
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: transparent;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.variation-indicator button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.board-center-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.analysis-controls {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.analysis-controls button {
+    width: 48px;
+    height: 48px;
+    border: none;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.analysis-controls button:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.analysis-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.game-info-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.player-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.player-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+}
+
+.player-color.white {
+    background: #fff;
+}
+
+.player-color.black {
+    background: #333;
+}
+
+.player-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.accuracy-badge {
+    padding: 4px 8px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.vs-text {
+    text-align: center;
+    color: var(--text);
+    opacity: 0.5;
+    font-size: 0.8rem;
+    margin: 8px 0;
+}
+
+.result-text {
+    text-align: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.analysis-status {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+}
+
+.analysis-status span {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.analyzing-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.moves-panel {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.moves-panel h3 {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: var(--text);
+    opacity: 0.7;
+}
+
+.moves-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.move-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text);
+    transition: all 0.15s;
+}
+
+.move-item:hover {
+    background: var(--border);
+}
+
+.move-item.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.move-number {
+    opacity: 0.6;
+    font-size: 0.75rem;
+    margin-right: 2px;
+}
+
+.move-symbol {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.move-san {
+    font-weight: 500;
+}
+
+.move-item.blunder {
+    border-left: 3px solid #ca3431;
+}
+
+.move-item.mistake {
+    border-left: 3px solid #e6912c;
+}
+
+.move-item.inaccuracy {
+    border-left: 3px solid #f7c631;
+}
+
+.move-item.best,
+.move-item.excellent {
+    border-left: 3px solid #96bc4b;
+}
+
+.variation-panel {
+    background: rgba(168, 85, 247, 0.1);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.variation-panel h4 {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    color: var(--accent);
+}
+
+.variation-moves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.variation-move {
+    padding: 4px 8px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.variation-eval {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--text);
+    opacity: 0.8;
+}
+
+.eval-graph-container {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.eval-graph-container h3 {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: var(--text);
+    opacity: 0.7;
+}
+
+
+
+@media (max-width: 1024px) {
+    .analysis-content {
+        grid-template-columns: 1fr;
+    }
+
+    .analysis-board-container {
+        width: 100%;
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 600px) {
+    .analysis-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .analysis-board-section {
+        flex-direction: column;
+    }
+
+    .analysis-eval-bar {
+        width: 100%;
+        height: 24px;
+        flex-direction: row;
+    }
+
+    .analysis-eval-bar .eval-bar-fill {
+        height: 100%;
+        width: 50%;
+    }
+
+    .analysis-eval-bar .eval-value {
+        writing-mode: horizontal-tb;
+    }
+}
