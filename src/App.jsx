@@ -24,6 +24,7 @@ import PuzzleCuratedPage from "./Pages/PuzzleCuratedPage";
 import BotsPage from "./Pages/BotsPage";
 import BotGamePage from "./Pages/BotGamePage";
 import GameAnalysisPage from "./Pages/GameAnalysisPage";
+import OnlineGamePage from "./Pages/OnlineGamePage";
 
 const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
 
@@ -36,7 +37,7 @@ export default function App() {
     const chess = new Chess();
     chess.loadPgn(pgn);
     const fen = chess.fen();
-    console.log(fen);
+
     const res = await axios.get(`${API}${encodeURIComponent(fen)}`);
     setEvaluation(res.data.evaluation);
   };
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/bots" element={<BotsPage />} />
           <Route path="/bots/play/:botId" element={<BotGamePage />} />
           <Route path="/bots/analysis" element={<GameAnalysisPage />} />
+          <Route path="/play/online" element={<OnlineGamePage />} />
         </Routes>
       </div>
       <Footer />

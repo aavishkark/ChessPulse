@@ -1,0 +1,79 @@
+.promotion-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.promotion-dialog {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    min-width: 400px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.promotion-dialog h3 {
+    color: var(--text);
+    text-align: center;
+    margin: 0 0 24px 0;
+    font-size: 1.3rem;
+}
+
+.promotion-pieces {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.promotion-piece-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.promotion-piece-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.05);
+}
+
+.piece-symbol {
+    font-size: 48px;
+    line-height: 1;
+}
+
+.piece-name {
+    color: var(--text);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.promotion-piece-btn:hover .piece-name {
+    color: #fff;
+}
+
+@media (max-width: 600px) {
+    .promotion-dialog {
+        min-width: 90%;
+        padding: 24px;
+    }
+
+    .promotion-pieces {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
