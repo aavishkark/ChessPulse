@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import socketService from '../../services/socketService';
+import { useAuth } from '../../contexts/AuthContext';
 import PromotionDialog from '../../Components/PromotionDialog/PromotionDialog';
 import './onlineGame.css';
 
 export default function OnlineGamePage() {
+    const { user } = useAuth();
     const [gameState, setGameState] = useState('idle');
     const [game, setGame] = useState(new Chess());
     const [playerColor, setPlayerColor] = useState(null);
@@ -24,13 +26,31 @@ export default function OnlineGamePage() {
     const [customIncrement, setCustomIncrement] = useState('0');
     const [challenges, setChallenges] = useState([]);
     const [myChallenge, setMyChallenge] = useState(null);
+    const [connectionStatus, setConnectionStatus] = useState('connected');
     const gameRef = useRef(new Chess());
     const timerRef = useRef(null);
 
     useEffect(() => {
         socketService.connect();
-        socketService.on('game_start', (data) => {
 
+        socketService.on('connect', () => {
+
+
+            const savedSession = localStorage.getItem('chess_session');
+            if (savedSession) {
+                const session = JSON.parse(savedSession);
+                if (Date.now() - session.timestamp < 3600000) {
+                    socketService.emit('rejoin_game', {
+                        roomId: session.roomId,
+                        oldSocketId: session.playerId
+                    });
+                } else {
+                    localStorage.removeItem('chess_session');
+                }
+            }
+        });
+
+        socketService.on('game_start', (data) => {
             setPlayerColor(data.color);
             setOpponent(data.opponent);
             setRoomId(data.roomId);
@@ -39,11 +59,63 @@ export default function OnlineGamePage() {
             gameRef.current = new Chess();
             setGame(new Chess());
             setMoveHistory([]);
+            setConnectionStatus('connected');
+
+            localStorage.setItem('chess_session', JSON.stringify({
+                roomId: data.roomId,
+                playerId: socketService.socket?.id,
+                timestamp: Date.now()
+            }));
 
             const [minutes, increment] = data.timeControl.split('+').map(Number);
             const initialTime = minutes * 60;
             setWhiteTime(initialTime);
             setBlackTime(initialTime);
+        });
+
+        socketService.on('game_rejoined', (data) => {
+            setPlayerColor(data.color);
+            setOpponent(data.opponent);
+            setRoomId(data.roomId);
+            setGameState('playing');
+            setSelectedTimeControl(data.timeControl);
+            setConnectionStatus('connected');
+
+            const newGame = new Chess();
+            data.moves.forEach(move => {
+                newGame.move(move);
+            });
+            gameRef.current = newGame;
+            setGame(new Chess(newGame.fen()));
+            setMoveHistory(data.moves);
+
+            const history = newGame.history({ verbose: true });
+            if (history.length > 0) {
+                const lastMoveData = history[history.length - 1];
+                setLastMove({ from: lastMoveData.from, to: lastMoveData.to });
+            }
+
+            setWhiteTime(data.whiteTime);
+            setBlackTime(data.blackTime);
+
+            localStorage.setItem('chess_session', JSON.stringify({
+                roomId: data.roomId,
+                playerId: socketService.socket?.id,
+                timestamp: Date.now()
+            }));
+        });
+
+        socketService.on('rejoin_error', (error) => {
+            localStorage.removeItem('chess_session');
+            setGameState('idle');
+        });
+
+        socketService.on('opponent_disconnected', (data) => {
+            setConnectionStatus('opponent_disconnected');
+        });
+
+        socketService.on('opponent_reconnected', (data) => {
+            setConnectionStatus('connected');
         });
 
         socketService.on('waiting_for_opponent', () => {
@@ -74,9 +146,9 @@ export default function OnlineGamePage() {
         });
 
         socketService.on('game_ended', ({ result, reason }) => {
-
             setGameResult({ result, reason });
             setGameState('game_over');
+            localStorage.removeItem('chess_session');
         });
 
         socketService.on('error', ({ message }) => {
@@ -100,7 +172,12 @@ export default function OnlineGamePage() {
         });
 
         return () => {
+            socketService.off('connect'); // Clean up connect listener
             socketService.off('game_start');
+            socketService.off('game_rejoined');
+            socketService.off('rejoin_error');
+            socketService.off('opponent_disconnected');
+            socketService.off('opponent_reconnected');
             socketService.off('waiting_for_opponent');
             socketService.off('opponent_move');
             socketService.off('game_ended');
@@ -167,7 +244,7 @@ export default function OnlineGamePage() {
         }
 
         socketService.emit('find_game', {
-            username: localStorage.getItem('username') || 'Guest',
+            username: user?.username || 'Guest',
             rating: 1200,
             timeControl
         });
@@ -186,7 +263,7 @@ export default function OnlineGamePage() {
         }
 
         socketService.emit('create_challenge', {
-            username: localStorage.getItem('username') || 'Guest',
+            username: user?.username || 'Guest',
             rating: 1200,
             timeControl
         });
@@ -468,6 +545,9 @@ export default function OnlineGamePage() {
                                     <span className="player-name">
                                         {opponent?.username}
                                         {opponent?.username !== 'Guest' && opponent?.rating && ` (${opponent.rating})`}
+                                        {connectionStatus === 'opponent_disconnected' && (
+                                            <span className="disconnect-badge">Disconnected (30s)</span>
+                                        )}
                                     </span>
                                     <div className={`player-clock ${playerColor === 'white' ? (blackTime < 20 ? 'low-time' : '') : (whiteTime < 20 ? 'low-time' : '')}`}>
                                         {playerColor === 'white' ? formatTime(blackTime) : formatTime(whiteTime)}
@@ -497,7 +577,7 @@ export default function OnlineGamePage() {
                                 <div className={`player-color-box ${playerColor}`}></div>
                                 <div className="player-details">
                                     <span className="player-name">
-                                        You ({playerColor})
+                                        {user?.username || 'Guest'} ({playerColor})
                                     </span>
                                     <div className={`player-clock ${playerColor === 'white' ? (whiteTime < 20 ? 'low-time' : '') : (blackTime < 20 ? 'low-time' : '')}`}>
                                         {playerColor === 'white' ? formatTime(whiteTime) : formatTime(blackTime)}

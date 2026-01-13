@@ -172,6 +172,7 @@
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 24px;
+    width: 100%;
 }
 
 .stats-header {
@@ -516,12 +517,30 @@
 
 @media (max-width: 1000px) {
     .puzzles-layout {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
         max-width: 600px;
+        margin: 0 auto;
     }
 
     .puzzle-sidebar {
-        order: -1;
+        display: contents;
+    }
+
+    .puzzle-main {
+        order: 1;
+    }
+
+    .modes-card {
+        order: 2;
+    }
+
+    .stats-card {
+        order: 3;
+    }
+
+    .quick-links-wrapper {
+        order: 4;
     }
 
     .modes-grid {

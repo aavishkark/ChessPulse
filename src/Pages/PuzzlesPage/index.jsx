@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
-import AICoachCard from '../../Components/AICoachCard/AICoachCard';
 import { puzzleService } from '../../services/puzzleService';
 import { TrophyIcon, TrendUpIcon, UserIcon } from '../../Components/Icons/Icons';
 import './puzzles.css';
@@ -119,8 +118,8 @@ const PuzzlesPage = () => {
     return (
         <div className="puzzles-page">
             <div className="puzzles-header">
-                <h1>Puzzle Training</h1>
-                <p>Sharpen your tactical skills with daily puzzles</p>
+                <h1>Solve Puzzles</h1>
+                <p>A new puzzle a day keeps the boredom away.</p>
             </div>
 
             <div className="puzzles-layout">
@@ -194,7 +193,7 @@ const PuzzlesPage = () => {
                     </div>
 
                     <div className="modes-card">
-                        <h3>Training Modes</h3>
+                        <h3>Different Modes</h3>
                         <div className="modes-grid">
                             {puzzleModes.map(mode => (
                                 <button
@@ -213,36 +212,32 @@ const PuzzlesPage = () => {
                         </div>
                     </div>
 
-                </div>
-            </div>
-
-            <div className="puzzles-bottom-section">
-                <div className="ai-coach-wrapper">
-                    <AICoachCard />
-                </div>
-
-                {isAuthenticated && (
-                    <div className="quick-links-wrapper">
-                        <h3>Resources & Insights</h3>
-                        <div className="quick-links-grid">
-                            <Link to="/puzzles/stats" className="quick-link">
-                                <TrendUpIcon size={20} />
-                                <div className="link-text">
-                                    <span>View Full Stats</span>
-                                    <small>Track your performance over time</small>
-                                </div>
-                            </Link>
-                            <Link to="/puzzles/leaderboard" className="quick-link">
-                                <TrophyIcon size={20} />
-                                <div className="link-text">
-                                    <span>Leaderboard</span>
-                                    <small>See how you rank against others</small>
-                                </div>
-                            </Link>
+                    {isAuthenticated && (
+                        <div className="quick-links-wrapper">
+                            <h3>Resources & Insights</h3>
+                            <div className="quick-links-grid">
+                                <Link to="/puzzles/stats" className="quick-link">
+                                    <TrendUpIcon size={20} />
+                                    <div className="link-text">
+                                        <span>View Full Stats</span>
+                                        <small>Track your performance over time</small>
+                                    </div>
+                                </Link>
+                                <Link to="/puzzles/leaderboard" className="quick-link">
+                                    <TrophyIcon size={20} />
+                                    <div className="link-text">
+                                        <span>Leaderboard</span>
+                                        <small>See how you rank against others</small>
+                                    </div>
+                                </Link>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+
+                </div>
             </div>
+
+
         </div>
     );
 };

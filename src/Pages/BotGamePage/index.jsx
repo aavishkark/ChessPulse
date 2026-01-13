@@ -177,11 +177,8 @@ const BotGamePage = () => {
             const move = game.move({ from, to, promotion });
 
             if (!move) {
-                console.log('Invalid move');
                 return false;
             }
-
-            console.log('Move successful:', move.san);
 
             const newGame = new Chess(game.fen());
             setGame(newGame);
@@ -204,19 +201,14 @@ const BotGamePage = () => {
         const targetSquare = moveData?.targetSquare || moveData?.to;
         const piece = moveData?.piece;
 
-        console.log('onDrop called:', { sourceSquare, targetSquare, piece });
-
         if (!sourceSquare || !targetSquare) {
-            console.log('Invalid move data');
             return false;
         }
 
         if (gameStatus !== 'playing') {
-            console.log('Game not in playing state');
             return false;
         }
         if (isThinking) {
-            console.log('Bot is thinking');
             return false;
         }
 
@@ -225,12 +217,10 @@ const BotGamePage = () => {
             (turn === 'b' && playerColor === 'black');
 
         if (!isPlayerTurn) {
-            console.log('Not player turn');
             return false;
         }
 
         if (sourceSquare === targetSquare) {
-            console.log('Source equals target - null move');
             return false;
         }
 
@@ -239,13 +229,9 @@ const BotGamePage = () => {
         const promotionRank = playerColor === 'white' ? '8' : '1';
         const isPromotion = isPawn && targetSquare[1] === promotionRank;
 
-        console.log('Promotion check:', { boardPiece, isPawn, isPromotion, targetRank: targetSquare[1], promotionRank });
-
         if (isPromotion) {
             const possibleMoves = game.moves({ square: sourceSquare, verbose: true });
             const isValidPromotion = possibleMoves.some(m => m.to === targetSquare && m.promotion);
-
-            console.log('Valid promotion check:', { possibleMoves, isValidPromotion });
 
             if (isValidPromotion) {
                 setPromotionMove({ from: sourceSquare, to: targetSquare });

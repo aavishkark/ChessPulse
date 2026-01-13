@@ -61,8 +61,6 @@ export default function GameAnalysisPage() {
             return;
         }
 
-        console.log('GameAnalysisPage received moves:', gameData.moves);
-
         const chess = new Chess();
         const fenList = [chess.fen()];
         const moveList = [];
@@ -73,16 +71,11 @@ export default function GameAnalysisPage() {
                 if (result) {
                     moveList.push(result.san);
                     fenList.push(chess.fen());
-                    console.log(`Parsed move ${move} -> FEN: ${chess.fen()}`);
-                } else {
-                    console.error('Move returned null:', move);
                 }
             } catch (e) {
                 console.error('Failed to parse move:', move, e.message);
             }
         }
-
-        console.log('Total moves parsed:', moveList.length, 'Total fens:', fenList.length);
 
         setMoves(moveList);
         setFens(fenList);

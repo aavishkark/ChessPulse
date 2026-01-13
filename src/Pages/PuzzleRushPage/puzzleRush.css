@@ -754,6 +754,8 @@
     font-size: 3rem;
     margin-bottom: 1rem;
     opacity: 0.3;
+    display: flex;
+    justify-content: center;
 }
 
 .results-title {
@@ -915,7 +917,6 @@
     color: var(--accent);
 }
 
-/* AI Feedback Section */
 .ai-feedback-section {
     width: 100%;
     max-width: 400px;
@@ -925,6 +926,7 @@
     padding: 1.25rem;
     margin-top: 1rem;
     text-align: left;
+    margin: auto;
 }
 
 .ai-feedback-title {

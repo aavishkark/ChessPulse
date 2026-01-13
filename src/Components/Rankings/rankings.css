@@ -103,17 +103,16 @@
   position: relative;
 }
 
-/* Removed Custom Scrollbar */
 
-.table-row {
+.rankings-row {
   display: grid;
-  grid-template-columns: 50px 1fr 80px 80px;
+  grid-template-columns: 60px 1fr 100px 100px;
   align-items: center;
   padding: 12px 24px;
   border-bottom: 1px solid var(--border);
 }
 
-.table-head {
+.rankings-head {
   position: sticky;
   top: 0;
   background: var(--bg-soft);
@@ -128,11 +127,11 @@
   border-bottom: 1px solid var(--border);
 }
 
-.player-row {
+.player-rankings-row {
   transition: background 0.15s ease;
 }
 
-.player-row:hover {
+.player-rankings-row:hover {
   background: var(--glass);
 }
 
@@ -162,7 +161,7 @@
   font-size: 15px;
 }
 
-.col-player {
+.rankings-col-player {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -196,19 +195,22 @@
   width: 100%;
 }
 
-.col-rating {
+.rankings-col-rating {
   font-family: 'Consolas', 'Monaco', monospace;
   font-weight: 700;
   font-size: 15px;
   color: var(--text);
   letter-spacing: -0.5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.col-diff {
-  text-align: right;
+.rankings-col-diff {
+  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
 }
 

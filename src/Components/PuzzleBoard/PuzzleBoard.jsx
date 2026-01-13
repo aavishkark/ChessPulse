@@ -20,21 +20,15 @@ const PuzzleBoard = ({
     useEffect(() => {
         if (!puzzle || !puzzle.fen) return;
 
-        console.log('Puzzle FEN:', puzzle.fen);
-        console.log('Current turn:', puzzle.fen.split(' ')[1]);
-        console.log('Solution moves:', puzzle.moves);
-
         const newGame = new Chess(puzzle.fen);
 
         if (puzzle.moves && puzzle.moves.length > 0) {
             const firstMove = puzzle.moves[0];
             const moveResult = makeUciMove(newGame, firstMove);
             if (moveResult) {
-                console.log('Auto-played opponent setup move:', firstMove);
                 setLastMove({ from: firstMove.substring(0, 2), to: firstMove.substring(2, 4) });
                 setCurrentMoveIndex(1);
             } else {
-                console.error('Failed to auto-play setup move:', firstMove);
                 setCurrentMoveIndex(0);
                 setLastMove(null);
             }
@@ -78,8 +72,6 @@ const PuzzleBoard = ({
         const targetSquare = moveData?.targetSquare || moveData?.to;
         const piece = moveData?.piece;
 
-        console.log('onDrop received:', moveData);
-        console.log('Extracted: from=', sourceSquare, 'to=', targetSquare);
 
         if (!sourceSquare || !targetSquare) {
             console.error('Invalid move data:', moveData);
@@ -101,8 +93,6 @@ const PuzzleBoard = ({
         const expectedMoveStr = expectedMove.substring(0, 4);
         const playerMoveWithPromo = promotion ? moveStr + promotion : moveStr;
 
-        console.log('Player move:', moveStr, 'Expected:', expectedMoveStr, 'Full expected:', expectedMove);
-
         if (moveStr === expectedMoveStr || playerMoveWithPromo === expectedMove) {
             try {
                 const move = game.move({
@@ -112,11 +102,9 @@ const PuzzleBoard = ({
                 });
 
                 if (!move) {
-                    console.log('chess.js rejected the move');
                     return false;
                 }
 
-                console.log('Move accepted!');
                 setGame(new Chess(game.fen()));
                 setLastMove({ from: sourceSquare, to: targetSquare });
 
@@ -145,11 +133,9 @@ const PuzzleBoard = ({
 
                 return true;
             } catch (err) {
-                console.error('Invalid move:', err);
                 return false;
             }
         } else {
-            console.log('Move mismatch! You played:', moveStr, 'but expected:', expectedMoveStr);
             setStatus('failed');
             if (onMoveAttempt) onMoveAttempt(false);
             if (onFail) onFail();

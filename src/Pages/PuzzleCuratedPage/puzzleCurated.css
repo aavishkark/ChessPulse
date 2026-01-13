@@ -505,7 +505,6 @@
     color: var(--error);
 }
 
-/* Results */
 .puzzle-curated-page.results {
     padding: 4rem 2rem;
     display: flex;
@@ -522,6 +521,7 @@
     padding: 3rem;
     text-align: center;
     z-index: 10;
+    margin: auto;
 }
 
 .results-title {
@@ -621,6 +621,7 @@
     display: flex;
     gap: 1rem;
     justify-content: center;
+    margin-top: 1.5rem;
 }
 
 .btn-retry,

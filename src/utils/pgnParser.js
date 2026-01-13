@@ -32,7 +32,6 @@ export const parseClockInfo = (pgn) => {
         const matches = [...moveText.matchAll(clockPattern)];
 
         if (matches.length === 0) {
-            console.log('GameView: No clock data found in PGN');
             return { white: 0, black: 0 };
         }
 
@@ -52,7 +51,6 @@ export const parseClockInfo = (pgn) => {
             whiteClock = parseInt(match[1]) * 3600 + parseInt(match[2]) * 60 + parseInt(match[3]);
         }
 
-        console.log('GameView: Parsed clocks -', { white: whiteClock, black: blackClock, totalMatches: matches.length });
         return { white: whiteClock, black: blackClock };
     } catch (error) {
         console.error('Error parsing clock info:', error);

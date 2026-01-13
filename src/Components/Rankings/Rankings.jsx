@@ -82,11 +82,11 @@ export default function Rankings() {
         </div>
       </header>
       <div className="rankings-table-container">
-        <div className="table-row table-head">
-          <div className="col-rank">#</div>
-          <div className="col-player">Player</div>
-          <div className="col-rating">Rating</div>
-          <div className="col-diff">Change</div>
+        <div className="rankings-row rankings-head">
+          <div className="rankings-col-rank">#</div>
+          <div className="rankings-col-player">Player</div>
+          <div className="rankings-col-rating">Rating</div>
+          <div className="rankings-col-diff">Change</div>
         </div>
         {loading && (
           <div className="skeleton-container">
@@ -107,15 +107,15 @@ export default function Rankings() {
               const displayCountry = isFide ? "FIDE" : p.country_name;
 
               return (
-                <div key={p.fideid || Math.random()} className="table-row player-row">
+                <div key={p.fideid || Math.random()} className="rankings-row player-rankings-row">
 
-                  <div className="col-rank">
+                  <div className="rankings-col-rank">
                     <span className={`rank-number rank-${p.live_pos}`}>
                       {p.live_pos}
                     </span>
                   </div>
 
-                  <div className="col-player">
+                  <div className="rankings-col-player">
                     <img
                       className="player-flag"
                       src={flagSrc}
@@ -132,11 +132,11 @@ export default function Rankings() {
                     </div>
                   </div>
 
-                  <div className="col-rating">
+                  <div className="rankings-col-rating">
                     {p.raiting}
                   </div>
 
-                  <div className="col-diff">
+                  <div className="rankings-col-diff">
                     <span className={`diff-tag ${p.raitingDiff > 0 ? "up" : p.raitingDiff < 0 ? "down" : "neutral"
                       }`}>
                       {p.raitingDiff > 0 ? `+${p.raitingDiff}` : p.raitingDiff}
