@@ -40,18 +40,22 @@
     font-size: 16px;
     font-weight: 600;
     opacity: 0.8;
-    animation: pulse 2s ease-in-out infinite;
+    animation: textPulse 2s ease-in-out infinite;
     margin: 0;
+    letter-spacing: 0.5px;
 }
 
-@keyframes pulse {
+@keyframes textPulse {
 
     0%,
     100% {
-        opacity: 0.8;
+        opacity: 0.5;
+        transform: scale(0.98);
     }
 
     50% {
-        opacity: 0.4;
+        opacity: 1;
+        transform: scale(1);
+        text-shadow: 0 0 16px var(--accent);
     }
 }

@@ -447,6 +447,17 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.disconnect-badge {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 8px;
+    border: 1px solid rgba(255, 68, 68, 0.3);
+    animation: pulse 2s infinite;
+}
+
 .player-color-box.white {
     background: linear-gradient(135deg, #ffffff, #f0f0f0);
 }
@@ -779,7 +790,8 @@
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .player-card {
+    .player-card,
+    .board-container {
         max-width: 100%;
     }
 

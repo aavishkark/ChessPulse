@@ -22,7 +22,6 @@ class StockfishService {
                     // Engine is ready
                     if (message === 'uciok') {
                         this.isReady = true;
-                        console.log('Stockfish engine ready');
                     }
 
                     // Best move found

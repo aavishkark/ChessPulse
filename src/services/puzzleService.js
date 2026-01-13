@@ -78,13 +78,6 @@ function buildIndices() {
             }
         }
     });
-
-    console.log('Puzzle indices built:', {
-        total: puzzleData.length,
-        ratingBuckets: Object.entries(puzzleIndex.byRating).map(([k, v]) => `${k}: ${v.length}`).join(', '),
-        themes: Object.keys(puzzleIndex.byTheme).length,
-        difficulties: Object.entries(puzzleIndex.byDifficulty).map(([k, v]) => `${k}: ${v.length}`).join(', ')
-    });
 }
 
 buildIndices();

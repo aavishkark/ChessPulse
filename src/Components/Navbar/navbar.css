@@ -293,6 +293,8 @@
 
 .user-menu-container {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .user-avatar-btn {
@@ -302,6 +304,9 @@
   padding: 0;
   border-radius: 50%;
   transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .user-avatar-btn:hover {
@@ -477,5 +482,10 @@ body[data-theme="light"] .signup-btn {
     width: 100%;
     text-align: center;
     display: block;
+  }
+
+  .user-menu-container {
+    flex-direction: column;
+    width: 100%;
   }
 }

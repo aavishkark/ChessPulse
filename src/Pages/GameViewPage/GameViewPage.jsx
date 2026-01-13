@@ -88,8 +88,6 @@ export default function GameViewPage() {
         const gamePgn = getGameByIndex(pgnText, parseInt(gameIndex));
 
         if (gamePgn) {
-            console.log('Processing PGN, length:', gamePgn.length);
-
             const playerNames = parsePlayerNames(gamePgn);
             setPlayers(playerNames);
 
@@ -103,7 +101,6 @@ export default function GameViewPage() {
 
             const oldFen = previousFenRef.current;
             const currentFen = getCurrentFEN(gamePgn);
-            console.log('Setting FEN:', currentFen.substring(0, 50));
             setFen(currentFen);
             previousFenRef.current = currentFen;
 
@@ -114,12 +111,10 @@ export default function GameViewPage() {
 
             const moveSquares = getLastMoveSquares(oldFen, currentFen);
             if (moveSquares) {
-                console.log('Last move:', moveSquares);
                 setLastMove(moveSquares);
             }
 
             const moveList = getMoveList(gamePgn);
-            console.log('Move list length:', moveList.length);
             setMoves(moveList);
 
             const gameResult = getGameResult(gamePgn);

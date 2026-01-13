@@ -79,6 +79,9 @@ export default function Navbar() {
             <Link role="menuitem" to="/bots" className={location.pathname.startsWith("/bots") ? "active" : ""} onClick={handleLinkClick}>Bots</Link>
           </li>
           <li role="none">
+            <Link role="menuitem" to="/puzzles/curated" className={location.pathname === "/puzzles/curated" ? "active" : ""} onClick={handleLinkClick}>Pulse AI</Link>
+          </li>
+          <li role="none">
             <Link role="menuitem" to="/play/online" className={location.pathname === "/play/online" ? "active" : ""} onClick={handleLinkClick}>Play</Link>
           </li>
 
@@ -97,7 +100,15 @@ export default function Navbar() {
                 onClick={(e) => { e.stopPropagation(); setUserMenuOpen(!userMenuOpen); }}
                 aria-label="User menu"
               >
-                <img src={user?.avatar} alt={user?.username} className="user-avatar" />
+                <img
+                  src={user?.avatar || `https://ui-avatars.com/api/?name=${user?.username}&background=random`}
+                  alt={user?.username}
+                  className="user-avatar"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://ui-avatars.com/api/?name=${user?.username}&background=random`;
+                  }}
+                />
               </button>
 
               {userMenuOpen && (
