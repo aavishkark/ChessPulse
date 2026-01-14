@@ -94,6 +94,21 @@
   margin: 4px 0;
   background: var(--accent);
   border-radius: 2px;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.chess-navbar.slide-open .chess-navbar__toggle .bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.chess-navbar.slide-open .chess-navbar__toggle .bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.chess-navbar.slide-open .chess-navbar__toggle .bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .chess-navbar__links {
@@ -257,11 +272,13 @@
     transition: transform 260ms cubic-bezier(.2, .9, .2, 1);
     box-shadow: -8px 0 30px rgba(0, 0, 0, 0.45);
     z-index: 300;
+    pointer-events: none;
   }
 
   .chess-navbar__links.active {
     transform: translateX(0);
     background-color: var(--bg);
+    pointer-events: auto;
   }
 
   .chess-navbar__links a,

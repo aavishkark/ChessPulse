@@ -1,5 +1,8 @@
 import { useAuth } from '../../contexts/AuthContext';
-import { Container, Heading, Text, VStack, Box } from '@chakra-ui/react';
+import { Container, Heading, Text, VStack, Box, Tabs, Flex, Tag, Avatar } from '@chakra-ui/react';
+import { Calendar, MapPin, Shield } from 'lucide-react';
+import GameStatsView from './GameStatsView';
+import PuzzleStatsView from './PuzzleStatsView';
 import './profile.css';
 
 const ProfilePage = () => {
@@ -8,8 +11,8 @@ const ProfilePage = () => {
     if (!user) {
         return (
             <div className="profile-page">
-                <Container maxW="800px">
-                    <Text>Loading...</Text>
+                <Container maxW="1200px" py={12}>
+                    <Text className="loading-text">Loading profile...</Text>
                 </Container>
             </div>
         );
@@ -17,40 +20,62 @@ const ProfilePage = () => {
 
     return (
         <div className="profile-page">
-            <Container maxW="800px" py={8}>
-                <VStack spacing={6} align="stretch">
-                    <Box className="profile-header">
-                        <img
-                            src={user.avatar}
-                            alt={user.username}
-                            className="profile-avatar"
-                        />
-                        <Heading size="xl" mt={4}>{user.username}</Heading>
-                        <Text color="gray.500" fontSize="lg">{user.email}</Text>
-                    </Box>
+            <Container maxW="1200px" py={8}>
+                <Box className="profile-header-card" mb={8}>
+                    <Flex direction={{ base: 'column', md: 'row' }} align="center" gap={8}>
+                        <Box className="avatar-wrapper">
+                            <Avatar.Root size="2xl" className="profile-avatar-lg">
+                                <Avatar.Fallback name={user.username} />
+                                <Avatar.Image src={user.avatar} />
+                            </Avatar.Root>
+                            <Box className="online-indicator" />
+                        </Box>
 
-                    <Box className="profile-card">
-                        <Heading size="md" mb={4}>Account Information</Heading>
-                        <VStack align="stretch" spacing={3}>
-                            <Box className="profile-info-row">
-                                <Text fontWeight="600">Provider:</Text>
-                                <Text>{user.provider || 'Local'}</Text>
-                            </Box>
-                            <Box className="profile-info-row">
-                                <Text fontWeight="600">Country:</Text>
-                                <Text>{user.country || 'Not set'}</Text>
-                            </Box>
-                            <Box className="profile-info-row">
-                                <Text fontWeight="600">Member since:</Text>
-                                <Text>{new Date(user.createdAt).toLocaleDateString()}</Text>
-                            </Box>
-                            <Box className="profile-info-row">
-                                <Text fontWeight="600">Last login:</Text>
-                                <Text>{new Date(user.lastLogin).toLocaleDateString()}</Text>
-                            </Box>
+                        <VStack align={{ base: 'center', md: 'start' }} gap={3} flex={1}>
+                            <Heading size="2xl" className="profile-username">{user.username}</Heading>
+
+                            <Flex gap={4} wrap="wrap" justify={{ base: 'center', md: 'start' }}>
+                                {user.country && (
+                                    <Tag.Root size="lg" variant="subtle" colorPalette="purple">
+                                        <Tag.StartElement>
+                                            <MapPin size={14} />
+                                        </Tag.StartElement>
+                                        <Tag.Label>{user.country}</Tag.Label>
+                                    </Tag.Root>
+                                )}
+                                <Tag.Root size="lg" variant="subtle" colorPalette="blue">
+                                    <Tag.StartElement>
+                                        <Calendar size={14} />
+                                    </Tag.StartElement>
+                                    <Tag.Label>Joined {new Date(user.createdAt).toLocaleDateString()}</Tag.Label>
+                                </Tag.Root>
+                                <Tag.Root size="lg" variant="subtle" colorPalette="green">
+                                    <Tag.StartElement>
+                                        <Shield size={14} />
+                                    </Tag.StartElement>
+                                    <Tag.Label>{user.provider || 'Local'} Account</Tag.Label>
+                                </Tag.Root>
+                            </Flex>
                         </VStack>
-                    </Box>
-                </VStack>
+                    </Flex>
+                </Box>
+                <Tabs.Root variant="enclosed" colorPalette="purple" defaultValue="game">
+                    <Tabs.List className="profile-tabs" borderBottom="1px solid rgba(255,255,255,0.1)">
+                        <Tabs.Trigger value="game" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
+                            Game Stats
+                        </Tabs.Trigger>
+                        <Tabs.Trigger value="puzzle" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
+                            Puzzle Training
+                        </Tabs.Trigger>
+                    </Tabs.List>
+
+                    <Tabs.Content value="game" mt={6} p={0}>
+                        <GameStatsView ratings={user.ratings} />
+                    </Tabs.Content>
+                    <Tabs.Content value="puzzle" mt={6} p={0}>
+                        <PuzzleStatsView />
+                    </Tabs.Content>
+                </Tabs.Root>
             </Container>
         </div>
     );

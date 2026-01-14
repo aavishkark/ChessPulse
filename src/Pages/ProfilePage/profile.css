@@ -1,42 +1,134 @@
+/* Profile Page Styles */
 .profile-page {
-    min-height: calc(100vh - 200px);
-    padding: 40px 20px;
-    background: linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 100%);
+    min-height: calc(100vh - 64px);
+    background: radial-gradient(circle at top center, rgba(80, 50, 120, 0.15), transparent 60%);
+    padding-bottom: 40px;
 }
 
-.profile-header {
+/* Loading Text */
+.loading-text {
     text-align: center;
-    padding: 40px;
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
-    border-radius: 24px;
+    color: var(--text);
+    opacity: 0.7;
+    font-size: 1.2rem;
+    margin-top: 40px;
 }
 
-.profile-avatar {
-    width: 128px;
-    height: 128px;
-    border-radius: 50%;
-    border: 4px solid var(--accent);
-    object-fit: cover;
-    margin: 0 auto;
-}
-
-.profile-card {
+/* Header Card */
+.profile-header-card {
     background: var(--glass);
-    backdrop-filter: blur(20px);
     border: 1px solid var(--border);
-    border-radius: 24px;
+    border-radius: 20px;
     padding: 32px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-.profile-info-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
+.avatar-wrapper {
+    position: relative;
+    width: 96px;
+    height: 96px;
 }
 
-.profile-info-row:last-child {
-    border-bottom: none;
+.profile-avatar-lg {
+    width: 100% !important;
+    height: 100% !important;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: #4ade80;
+    border: 3px solid #1a1a1a;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+    z-index: 2;
+}
+
+.profile-username {
+    background: linear-gradient(to right, white, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+}
+
+.profile-tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent !important;
+}
+
+.profile-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+[role="tab"] {
+    font-weight: 600 !important;
+    border-radius: 8px 8px 0 0 !important;
+    border: 1px solid transparent !important;
+    transition: all 0.2s !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+    padding: 12px 24px !important;
+    border-bottom: none !important;
+    background: transparent !important;
+}
+
+[role="tab"]:hover {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+[role="tab"][data-selected] {
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    border-bottom-color: transparent !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(5px);
+}
+
+.tab-item {
+    background: transparent !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.tab-item[data-selected] {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.game-stats-grid,
+.puzzle-stats-grid {
+    animation: fadeIn 0.4s ease;
+}
+
+@media (max-width: 768px) {
+    .profile-header-card {
+        padding: 24px;
+        text-align: center;
+    }
+
+    .avatar-wrapper {
+        margin: 0 auto;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

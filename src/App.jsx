@@ -66,7 +66,7 @@ export default function App() {
           <Route path="/puzzles/curated" element={<PuzzleCuratedPage />} />
           <Route path="/bots" element={<BotsPage />} />
           <Route path="/bots/play/:botId" element={<BotGamePage />} />
-          <Route path="/bots/analysis" element={<GameAnalysisPage />} />
+          <Route path="/analysis" element={<GameAnalysisPage />} />
           <Route path="/play/online" element={<OnlineGamePage />} />
         </Routes>
       </div>

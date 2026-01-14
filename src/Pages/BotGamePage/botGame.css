@@ -423,10 +423,6 @@
     transition: all 0.2s;
 }
 
-.resign-btn:hover {
-    background: rgba(239, 68, 68, 0.1);
-}
-
 .leave-btn {
     width: 100%;
     padding: 12px;

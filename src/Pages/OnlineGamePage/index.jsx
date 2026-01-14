@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import socketService from '../../services/socketService';
@@ -7,7 +8,8 @@ import PromotionDialog from '../../Components/PromotionDialog/PromotionDialog';
 import './onlineGame.css';
 
 export default function OnlineGamePage() {
-    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { user, refreshUser } = useAuth();
     const [gameState, setGameState] = useState('idle');
     const [game, setGame] = useState(new Chess());
     const [playerColor, setPlayerColor] = useState(null);
@@ -27,15 +29,46 @@ export default function OnlineGamePage() {
     const [challenges, setChallenges] = useState([]);
     const [myChallenge, setMyChallenge] = useState(null);
     const [connectionStatus, setConnectionStatus] = useState('connected');
+    const [myRating, setMyRating] = useState(1200);
+    const [activeTab, setActiveTab] = useState('moves');
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatInput, setChatInput] = useState('');
+    const chatEndRef = useRef(null);
+    const [showResignModal, setShowResignModal] = useState(false);
+    const [showDrawOfferBubble, setShowDrawOfferBubble] = useState(false);
+    const [drawOffered, setDrawOffered] = useState(false);
+    const [gameNotification, setGameNotification] = useState(null);
+    const [chatBubble, setChatBubble] = useState(null);
+
+    const getRatingCategory = (timeControl) => {
+        const [minutes, increment = 0] = timeControl.split('+').map(Number);
+        const estimatedTime = minutes + (increment * 40 / 60);
+        if (estimatedTime < 3) return 'bullet';
+        if (estimatedTime < 10) return 'blitz';
+        return 'rapid';
+    };
+
+    useEffect(() => {
+        if (refreshUser) {
+            refreshUser();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (user && selectedTimeControl) {
+            const category = getRatingCategory(selectedTimeControl);
+            const userRating = user.ratings?.[category]?.rating;
+            if (userRating) setMyRating(userRating);
+        }
+    }, [user, selectedTimeControl]);
+
     const gameRef = useRef(new Chess());
     const timerRef = useRef(null);
 
     useEffect(() => {
         socketService.connect();
 
-        socketService.on('connect', () => {
-
-
+        const checkRejoin = () => {
             const savedSession = localStorage.getItem('chess_session');
             if (savedSession) {
                 const session = JSON.parse(savedSession);
@@ -48,6 +81,16 @@ export default function OnlineGamePage() {
                     localStorage.removeItem('chess_session');
                 }
             }
+        };
+
+        if (socketService.socket?.connected) {
+            socketService.emit('get_challenges');
+            checkRejoin();
+        }
+
+        socketService.on('connect', () => {
+            socketService.emit('get_challenges');
+            checkRejoin();
         });
 
         socketService.on('game_start', (data) => {
@@ -71,12 +114,17 @@ export default function OnlineGamePage() {
             const initialTime = minutes * 60;
             setWhiteTime(initialTime);
             setBlackTime(initialTime);
+
+            setDrawOffered(false);
+            setShowDrawOfferBubble(false);
+            setShowResignModal(false);
         });
 
         socketService.on('game_rejoined', (data) => {
             setPlayerColor(data.color);
             setOpponent(data.opponent);
             setRoomId(data.roomId);
+            setMyRating(data.myRating || 1200);
             setGameState('playing');
             setSelectedTimeControl(data.timeControl);
             setConnectionStatus('connected');
@@ -88,6 +136,7 @@ export default function OnlineGamePage() {
             gameRef.current = newGame;
             setGame(new Chess(newGame.fen()));
             setMoveHistory(data.moves);
+            setChatMessages(data.chatHistory || []);
 
             const history = newGame.history({ verbose: true });
             if (history.length > 0) {
@@ -103,6 +152,20 @@ export default function OnlineGamePage() {
                 playerId: socketService.socket?.id,
                 timestamp: Date.now()
             }));
+        });
+
+        socketService.on('receive_chat', (message) => {
+            setChatMessages(prev => {
+                const isDuplicate = prev.some(m => m.timestamp === message.timestamp && m.sender === message.sender && m.message === message.message);
+                if (isDuplicate) return prev;
+
+                if (message.sender !== (user?.username || 'Guest')) {
+                    setChatBubble(message.message);
+                    setTimeout(() => setChatBubble(null), 5000);
+                }
+
+                return [...prev, message];
+            });
         });
 
         socketService.on('rejoin_error', (error) => {
@@ -145,10 +208,11 @@ export default function OnlineGamePage() {
             }
         });
 
-        socketService.on('game_ended', ({ result, reason }) => {
-            setGameResult({ result, reason });
+        socketService.on('game_ended', ({ result, reason, ratingChanges }) => {
+            setGameResult({ result, reason, ratingChanges });
             setGameState('game_over');
             localStorage.removeItem('chess_session');
+            if (refreshUser) refreshUser();
         });
 
         socketService.on('error', ({ message }) => {
@@ -157,8 +221,18 @@ export default function OnlineGamePage() {
         });
 
         socketService.on('challenge_list_updated', (challengeList) => {
+            const myId = socketService.socket?.id;
+            const myOwn = challengeList.find(c => c.playerId === myId);
 
-            setChallenges(challengeList.filter(c => c.playerId !== socketService.socket?.id));
+            if (myOwn) {
+                setMyChallenge(myOwn);
+                setGameState('searching');
+            } else {
+                setMyChallenge(null);
+                setGameState(prev => prev === 'searching' ? 'idle' : prev);
+            }
+
+            setChallenges(challengeList.filter(c => c.playerId !== myId));
         });
 
         socketService.on('challenge_created', ({ challengeId, challenge }) => {
@@ -171,8 +245,25 @@ export default function OnlineGamePage() {
             setMyChallenge(null);
         });
 
+        socketService.on('draw_offered', () => {
+            setShowDrawOfferBubble(true);
+        });
+
+        socketService.on('draw_declined', () => {
+            setDrawOffered(false);
+            setShowDrawOfferBubble(false);
+            setGameNotification("Draw Declined");
+            setTimeout(() => setGameNotification(null), 3000);
+        });
+
         return () => {
-            socketService.off('connect'); // Clean up connect listener
+            socketService.off('connect');
+            socketService.off('game_start');
+            socketService.off('game_rejoined');
+            socketService.off('rejoin_error');
+            socketService.off('opponent_disconnected');
+            socketService.off('opponent_reconnected');
+            socketService.off('waiting_for_opponent');
             socketService.off('game_start');
             socketService.off('game_rejoined');
             socketService.off('rejoin_error');
@@ -180,11 +271,14 @@ export default function OnlineGamePage() {
             socketService.off('opponent_reconnected');
             socketService.off('waiting_for_opponent');
             socketService.off('opponent_move');
+            socketService.off('receive_chat');
             socketService.off('game_ended');
             socketService.off('error');
             socketService.off('challenge_list_updated');
             socketService.off('challenge_created');
             socketService.off('challenge_cancelled');
+            socketService.off('draw_offered');
+            socketService.off('draw_declined');
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, []);
@@ -233,6 +327,18 @@ export default function OnlineGamePage() {
         };
     }, [gameState, roomId]);
 
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [chatMessages, activeTab]);
+
+    const sendChat = (e) => {
+        e.preventDefault();
+        if (!chatInput.trim()) return;
+
+        socketService.emit('send_chat', { roomId, message: chatInput });
+        setChatInput('');
+    };
+
     const findGame = () => {
         setGameState('searching');
 
@@ -243,14 +349,22 @@ export default function OnlineGamePage() {
             timeControl = `${mins}+${inc}`;
         }
 
+        const ratingCategory = getRatingCategory(timeControl);
+        const userRating = user?.ratings?.[ratingCategory]?.rating || 1200;
+        setMyRating(userRating);
+
         socketService.emit('find_game', {
             username: user?.username || 'Guest',
-            rating: 1200,
+            rating: userRating,
+            avatar: user?.avatar,
             timeControl
         });
     };
 
     const cancelSearch = () => {
+        if (myChallenge) {
+            socketService.emit('cancel_challenge', { challengeId: myChallenge.id });
+        }
         setGameState('idle');
     };
 
@@ -262,15 +376,29 @@ export default function OnlineGamePage() {
             timeControl = `${mins}+${inc}`;
         }
 
+        const ratingCategory = getRatingCategory(timeControl);
+        const userRating = user?.ratings?.[ratingCategory]?.rating || 1200;
+        setMyRating(userRating);
+
         socketService.emit('create_challenge', {
             username: user?.username || 'Guest',
-            rating: 1200,
+            rating: userRating,
+            avatar: user?.avatar,
             timeControl
         });
     };
 
-    const acceptChallenge = (challengeId) => {
-        socketService.emit('accept_challenge', { challengeId });
+    const acceptChallenge = (challenge) => {
+        const ratingCategory = getRatingCategory(challenge.timeControl);
+        const userRating = user?.ratings?.[ratingCategory]?.rating || 1200;
+        setMyRating(userRating);
+
+        socketService.emit('accept_challenge', {
+            challengeId: challenge.id,
+            username: user?.username || 'Guest',
+            rating: userRating,
+            avatar: user?.avatar
+        });
     };
 
     const cancelChallenge = () => {
@@ -348,6 +476,7 @@ export default function OnlineGamePage() {
                 });
             }
 
+            setShowDrawOfferBubble(false);
             return true;
         } catch (error) {
 
@@ -389,9 +518,27 @@ export default function OnlineGamePage() {
     };
 
     const resign = () => {
-        if (window.confirm('Are you sure you want to resign?')) {
-            socketService.emit('resign', { roomId });
-        }
+        setShowResignModal(true);
+    };
+
+    const confirmResign = () => {
+        socketService.emit('resign', { roomId });
+        setShowResignModal(false);
+    };
+
+    const handleOfferDraw = () => {
+        socketService.emit('offer_draw', { roomId });
+        setDrawOffered(true);
+    };
+
+    const handleAcceptDraw = () => {
+        socketService.emit('accept_draw', { roomId });
+        setShowDrawOfferBubble(false);
+    };
+
+    const handleDeclineDraw = () => {
+        socketService.emit('decline_draw', { roomId });
+        setShowDrawOfferBubble(false);
     };
 
     const playAgain = () => {
@@ -406,8 +553,11 @@ export default function OnlineGamePage() {
     };
 
     const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
+        const val = Number(seconds);
+        if (isNaN(val)) return '0:00';
+        const totalSeconds = Math.floor(val);
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
@@ -511,7 +661,7 @@ export default function OnlineGamePage() {
                                                     <td>
                                                         <button
                                                             className="accept-btn"
-                                                            onClick={() => acceptChallenge(challenge.id)}
+                                                            onClick={() => acceptChallenge(challenge)}
                                                         >
                                                             Accept
                                                         </button>
@@ -522,6 +672,17 @@ export default function OnlineGamePage() {
                                     </table>
                                 </div>
                             )}
+                        </div>
+
+                        <div className="bots-promo-section">
+                            <div className="bots-promo-content">
+                                <div className="bots-promo-text">
+                                    <p>New to the game? We’ve got a bot for that. Master of the board? We’ve got one for you too</p>
+                                </div>
+                                <Link to="/bots" className="bots-promo-btn">
+                                    Play Bots
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -540,7 +701,30 @@ export default function OnlineGamePage() {
                     <div className="game-content">
                         <div className="left-section">
                             <div className="player-card opponent-card">
-                                <div className={`player-color-box ${playerColor === 'white' ? 'black' : 'white'}`}></div>
+                                <img
+                                    src={opponent?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${opponent?.username || 'opponent'}`}
+                                    alt="Opponent"
+                                    className="player-avatar"
+                                />
+                                {showDrawOfferBubble && (
+                                    <div className="draw-offer-bubble">
+                                        <div className="bubble-text">Wanna draw?</div>
+                                        <div className="bubble-actions">
+                                            <button onClick={handleAcceptDraw} className="bubble-btn accept">Yes</button>
+                                            <button onClick={handleDeclineDraw} className="bubble-btn decline">No</button>
+                                        </div>
+                                    </div>
+                                )}
+                                {gameNotification && (
+                                    <div className="notification-bubble">
+                                        {gameNotification}
+                                    </div>
+                                )}
+                                {chatBubble && (
+                                    <div className="chat-bubble-overhead">
+                                        {chatBubble}
+                                    </div>
+                                )}
                                 <div className="player-details">
                                     <span className="player-name">
                                         {opponent?.username}
@@ -574,10 +758,14 @@ export default function OnlineGamePage() {
                             </div>
 
                             <div className="player-card your-card">
-                                <div className={`player-color-box ${playerColor}`}></div>
+                                <img
+                                    src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'guest'}`}
+                                    alt="You"
+                                    className="player-avatar"
+                                />
                                 <div className="player-details">
                                     <span className="player-name">
-                                        {user?.username || 'Guest'} ({playerColor})
+                                        {user?.username || 'Guest'} ({myRating})
                                     </span>
                                     <div className={`player-clock ${playerColor === 'white' ? (whiteTime < 20 ? 'low-time' : '') : (blackTime < 20 ? 'low-time' : '')}`}>
                                         {playerColor === 'white' ? formatTime(whiteTime) : formatTime(blackTime)}
@@ -587,31 +775,84 @@ export default function OnlineGamePage() {
                         </div>
 
                         <div className="right-section">
-                            <div className="moves-panel">
-                                <h3>Moves</h3>
-                                <div className="moves-list">
-                                    {moveHistory.length === 0 ? (
-                                        <p className="no-moves">No moves yet</p>
-                                    ) : (
-                                        <div className="moves-grid">
-                                            {moveHistory.reduce((pairs, move, index) => {
-                                                if (index % 2 === 0) {
-                                                    pairs.push([move, moveHistory[index + 1]]);
-                                                }
-                                                return pairs;
-                                            }, []).map((pair, i) => (
-                                                <div key={i} className="move-pair">
-                                                    <span className="move-number">{i + 1}.</span>
-                                                    <span className="move white-move">{pair[0]}</span>
-                                                    {pair[1] && <span className="move black-move">{pair[1]}</span>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                            <div className="tabs-header">
+                                <button
+                                    className={`tab-btn ${activeTab === 'moves' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('moves')}
+                                >
+                                    Moves
+                                </button>
+                                <button
+                                    className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('chat')}
+                                >
+                                    Chat
+                                </button>
                             </div>
 
+                            {activeTab === 'moves' ? (
+                                <div className="moves-panel">
+                                    <div className="moves-list">
+                                        {moveHistory.length === 0 ? (
+                                            <p className="no-moves">No moves yet</p>
+                                        ) : (
+                                            <div className="moves-grid">
+                                                {moveHistory.reduce((pairs, move, index) => {
+                                                    if (index % 2 === 0) {
+                                                        pairs.push([move, moveHistory[index + 1]]);
+                                                    }
+                                                    return pairs;
+                                                }, []).map((pair, i) => (
+                                                    <div key={i} className="move-pair">
+                                                        <span className="move-number">{i + 1}.</span>
+                                                        <span className="move white-move">{pair[0]}</span>
+                                                        {pair[1] && <span className="move black-move">{pair[1]}</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="chat-panel">
+                                    <div className="chat-messages">
+                                        {chatMessages.length === 0 ? (
+                                            <p className="no-messages">No messages yet</p>
+                                        ) : (
+                                            chatMessages.map((msg, i) => (
+                                                <div key={i} className={`chat-message ${msg.sender === (user?.username || 'Guest') ? 'mine' : 'theirs'}`}>
+                                                    <span className="msg-sender">{msg.sender}</span>
+                                                    <span className="msg-text">{msg.message}</span>
+                                                </div>
+                                            ))
+                                        )}
+                                        <div ref={chatEndRef} />
+                                    </div>
+                                    <form onSubmit={sendChat} className="chat-input-area">
+                                        <input
+                                            type="text"
+                                            value={chatInput}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            placeholder="Type a message..."
+                                        />
+                                        <button type="submit">Send</button>
+                                    </form>
+                                </div>
+                            )}
+
                             <div className="controls-panel">
+                                <button
+                                    className="draw-btn"
+                                    onClick={handleOfferDraw}
+                                    disabled={drawOffered || moveHistory.length < 2}
+                                    title={
+                                        drawOffered
+                                            ? "Draw offered"
+                                            : (moveHistory.length < 2 ? "Draw available after 2 moves" : "Offer draw")
+                                    }
+                                >
+                                    {drawOffered ? 'Draw Offered' : '½ Offer Draw'}
+                                </button>
                                 <button className="resign-btn" onClick={resign}>
                                     Resign
                                 </button>
@@ -634,6 +875,20 @@ export default function OnlineGamePage() {
                             <button className="play-again-btn" onClick={playAgain}>
                                 Play Again
                             </button>
+                            <button
+                                className="analyze-btn"
+                                onClick={() => navigate('/analysis', {
+                                    state: {
+                                        moves: moveHistory,
+                                        playerColor,
+                                        opponentName: opponent?.username,
+                                        source: 'online',
+                                        result: gameResult?.result === playerColor ? 'win' : gameResult?.result === 'draw' ? 'draw' : 'loss'
+                                    }
+                                })}
+                            >
+                                Analyze Game
+                            </button>
                         </div>
                     </div>
                 )}
@@ -644,6 +899,19 @@ export default function OnlineGamePage() {
                     color={playerColor}
                     onSelect={handlePromotionSelect}
                 />
+            )}
+
+            {showResignModal && (
+                <div className="modal-backdrop">
+                    <div className="modal-content">
+                        <h3>Resign Game?</h3>
+                        <p>Are you sure you want to resign this game?</p>
+                        <div className="modal-actions">
+                            <button className="modal-btn secondary" onClick={() => setShowResignModal(false)}>Cancel</button>
+                            <button className="modal-btn danger" onClick={confirmResign}>Resign</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -368,7 +368,7 @@ const BotGamePage = () => {
                                     <div className="result-actions">
                                         <button
                                             className="analyze-btn"
-                                            onClick={() => navigate('/bots/analysis', {
+                                            onClick={() => navigate('/analysis', {
                                                 state: {
                                                     moves: moveHistory,
                                                     playerColor,

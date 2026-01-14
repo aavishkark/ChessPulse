@@ -300,10 +300,14 @@ export default function GameAnalysisPage() {
         );
     }
 
+    const backLink = gameData.source === 'online' ? '/play/online' : '/bots';
+    const backText = gameData.source === 'online' ? '← Back to Online' : '← Back to Bots';
+    const opponentName = gameData.opponentName || gameData.botName || 'Opponent';
+
     return (
         <div className="game-analysis-page">
             <div className="analysis-header">
-                <Link to="/bots" className="back-link">← Back to Bots</Link>
+                <Link to={backLink} className="back-link">{backText}</Link>
                 <div className="analysis-mode-selector">
                     <button
                         className={`mode-btn ${analysisMode === 'manual' ? 'active' : ''}`}
@@ -373,7 +377,7 @@ export default function GameAnalysisPage() {
                         <div className="player-row">
                             <span className="player-color white" />
                             <span className="player-name">
-                                {gameData.playerColor === 'white' ? 'You' : gameData.botName || 'Bot'}
+                                {gameData.playerColor === 'white' ? 'You' : opponentName}
                             </span>
                             {analysisMode === 'stockfish' && analysisComplete && (
                                 <span className="accuracy-badge">{accuracy.white}%</span>
@@ -383,7 +387,7 @@ export default function GameAnalysisPage() {
                         <div className="player-row">
                             <span className="player-color black" />
                             <span className="player-name">
-                                {gameData.playerColor === 'black' ? 'You' : gameData.botName || 'Bot'}
+                                {gameData.playerColor === 'black' ? 'You' : opponentName}
                             </span>
                             {analysisMode === 'stockfish' && analysisComplete && (
                                 <span className="accuracy-badge">{accuracy.black}%</span>
@@ -391,7 +395,7 @@ export default function GameAnalysisPage() {
                         </div>
                         <div className="result-text">
                             {gameData.result === 'win' ? 'You Won!' :
-                                gameData.result === 'loss' ? `${gameData.botName} Won` : 'Draw'}
+                                gameData.result === 'loss' ? `${opponentName} Won` : 'Draw'}
                         </div>
                     </div>
 

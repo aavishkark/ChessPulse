@@ -105,6 +105,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await authService.verifyToken();
+      if (response.data && response.data.data && response.data.data.user) {
+        setUser(response.data.data.user);
+        return response.data.data.user;
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+    return null;
+  };
+
   const value = {
     user,
     token,
@@ -112,7 +125,8 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     register,
     login,
-    logout
+    logout,
+    refreshUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
