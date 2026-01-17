@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
+import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
+import { playSound, getMoveSound } from '../../utils/sounds';
 import { puzzleService } from '../../services/puzzleService';
 import { puzzleStatsService } from '../../services/puzzleStatsService';
 import { DiceIcon, SeedlingIcon, TrendUpIcon, FlameIcon, CrownIcon, AIIcon, TimerIcon, CheckIcon } from '../../Components/Icons/Icons';
@@ -26,6 +28,7 @@ const PuzzleRushPage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { isAuthenticated } = useAuth();
+    const { highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
     const timeMode = searchParams.get('time') || '5';
 
     const [gameState, setGameState] = useState('ready');
@@ -254,6 +257,10 @@ const PuzzleRushPage = () => {
                 setGame(new Chess(game.fen()));
                 setLastMove({ from: sourceSquare, to: targetSquare });
 
+                // Play sound
+                const soundType = getMoveSound(move, move.captured, game.isCheck(), move.san.includes('O-'), move.promotion);
+                playSound(soundType, soundTheme, soundEnabled);
+
                 const nextMoveIndex = currentMoveIndex + 1;
                 setCurrentMoveIndex(nextMoveIndex);
 
@@ -289,8 +296,8 @@ const PuzzleRushPage = () => {
 
     const customSquareStyles = {};
     if (lastMove) {
-        customSquareStyles[lastMove.from] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
-        customSquareStyles[lastMove.to] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
+        customSquareStyles[lastMove.from] = { backgroundColor: highlightColor };
+        customSquareStyles[lastMove.to] = { backgroundColor: highlightColor };
     }
 
     if (gameState === 'ready') {

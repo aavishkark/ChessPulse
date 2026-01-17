@@ -202,43 +202,53 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  flex: 1;
+  min-height: 200px;
 }
 
 .moves-head {
   font-weight: 700;
   margin-bottom: 6px;
-  color: var(--text);
+  color: var(--accent);
+  font-size: 1.1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
 }
 
 .moves-empty {
   color: var(--text);
   opacity: 0.6;
-  background: var(--glass);
   padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
 }
 
 .moves-list {
   margin: 0;
-  padding-left: 14px;
-  max-height: 220px;
-  overflow: auto;
+  padding: 0;
+  overflow-y: auto;
   display: block;
+  flex: 1;
+  max-height: 400px;
 }
 
 .move-item {
-  margin: 6px 0;
+  margin: 2px 0;
   color: var(--text);
   font-weight: 600;
   cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 8px;
-  transition: background 0.12s ease;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  gap: 8px;
 }
 
 .move-item:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
 }
 
 .active-move {
