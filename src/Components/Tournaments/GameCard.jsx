@@ -1,9 +1,12 @@
 import React, { useMemo } from "react";
 import { Chessboard } from "react-chessboard";
+import { useBoardCustomization } from "../../contexts/BoardCustomizationContext";
+import { getCustomPieces } from "../../utils/pieceSets";
 import { pgnToFEN, formatResult, getMoveCount } from "../../utils/pgnParser";
 import "./game-card.css";
 
-export default function GameCard({ game }) {
+export default function GameCard({ game, onClick }) {
+    const { darkSquareColor, lightSquareColor, pieceSet } = useBoardCustomization();
     const { white, black, result, site, pgn } = game;
 
     const fen = useMemo(() => pgnToFEN(pgn || ""), [pgn]);
@@ -23,11 +26,17 @@ export default function GameCard({ game }) {
 
             <div className="game-card-board">
                 <Chessboard
-                    position={fen}
-                    boardWidth={250}
-                    arePiecesDraggable={false}
-                    customLightSquareStyle={{ backgroundColor: "#f0efe8" }}
-                    customDarkSquareStyle={{ backgroundColor: "#7a9b57" }}
+                    id={`game-${gameId}`}
+                    options={{
+                        position: fen,
+                        arePiecesDraggable: false,
+                        boardOrientation: "white",
+                        showNotation: false,
+                        darkSquareStyle: { backgroundColor: darkSquareColor },
+                        lightSquareStyle: { backgroundColor: lightSquareColor },
+                        customPieces: getCustomPieces(pieceSet)
+                    }}
+                    boardWidth={180}
                 />
             </div>
 

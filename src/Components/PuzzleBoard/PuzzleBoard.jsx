@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Chessboard } from 'react-chessboard';
+import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
+import { getCustomPieces } from '../../utils/pieceSets';
+import { playSound, getMoveSound } from '../../utils/sounds';
 import { Chess } from 'chess.js';
 import './PuzzleBoard.css';
 
@@ -13,6 +16,9 @@ const PuzzleBoard = ({
     const [game, setGame] = useState(null);
     const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
     const [status, setStatus] = useState('playing');
+    const [promoting, setPromoting] = useState(false);
+    const [promotionSquares, setPromotionSquares] = useState(null);
+    const { darkSquareColor, lightSquareColor, showNotation, pieceSet, animationSpeed, highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
     const [orientation, setOrientation] = useState('white');
     const [lastMove, setLastMove] = useState(null);
     const [showTurnOverlay, setShowTurnOverlay] = useState(false);
@@ -105,6 +111,10 @@ const PuzzleBoard = ({
                     return false;
                 }
 
+                // Play sound
+                const soundType = getMoveSound(move, move.captured, game.isCheck(), move.san.includes('O-'), move.promotion);
+                playSound(soundType, soundTheme, soundEnabled);
+
                 setGame(new Chess(game.fen()));
                 setLastMove({ from: sourceSquare, to: targetSquare });
 
@@ -192,12 +202,12 @@ const PuzzleBoard = ({
         setStatus('playing');
     }, [puzzle]);
 
-    const customSquareStyles = useMemo(() => {
+    const highlightedSquares = useMemo(() => {
         const styles = {};
 
         if (lastMove) {
-            styles[lastMove.from] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
-            styles[lastMove.to] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
+            styles[lastMove.from] = { backgroundColor: highlightColor };
+            styles[lastMove.to] = { backgroundColor: highlightColor };
         }
 
         if (showHint && puzzle?.moves?.[currentMoveIndex]) {
@@ -233,12 +243,15 @@ const PuzzleBoard = ({
                     id="puzzle-board"
                     options={{
                         position: game.fen(),
-                        allowDragging: status === 'playing',
                         onPieceDrop: onDrop,
-                        animationDurationInMs: 200,
+                        animationDurationInMs: animationSpeed,
                         boardOrientation: orientation,
-                        squareStyles: customSquareStyles,
-                        showNotation: true
+                        arePremovesAllowed: false,
+                        squareStyles: highlightedSquares,
+                        showNotation,
+                        darkSquareStyle: { backgroundColor: darkSquareColor },
+                        lightSquareStyle: { backgroundColor: lightSquareColor },
+                        customPieces: getCustomPieces(pieceSet)
                     }}
                 />
 

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
+import { getCustomPieces } from '../../utils/pieceSets';
 import { getGameByIndex } from '../../utils/pgnStream';
 import { parsePlayerNames, parsePlayerRatings, getCurrentFEN, getMoveList, getGameResult, parseClockInfo } from '../../utils/pgnParser';
 import { getStockfishService } from '../../services/stockfishService';
@@ -20,8 +22,9 @@ export default function GameViewPage() {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [lastMove, setLastMove] = useState(null);
+    const [arrows, setArrows] = useState([]);
     const [boardOrientation, setBoardOrientation] = useState('white');
+    const { darkSquareColor, lightSquareColor, showNotation, pieceSet, animationSpeed, arrowColor } = useBoardCustomization();
     const previousFenRef = useRef(null);
     const baseClockRef = useRef({ w: 0, b: 0 });
     const lastUpdateRef = useRef(Date.now());
@@ -111,7 +114,13 @@ export default function GameViewPage() {
 
             const moveSquares = getLastMoveSquares(oldFen, currentFen);
             if (moveSquares) {
-                setLastMove(moveSquares);
+                setArrows([{
+                    startSquare: moveSquares.from,
+                    endSquare: moveSquares.to,
+                    color: arrowColor
+                }]);
+            } else {
+                setArrows([]);
             }
 
             const moveList = getMoveList(gamePgn);
@@ -125,7 +134,7 @@ export default function GameViewPage() {
         } else {
             console.log('No game found at index:', gameIndex);
         }
-    }, [gameIndex, calcDisplayClock, getLastMoveSquares]);
+    }, [gameIndex, calcDisplayClock, getLastMoveSquares, arrowColor]);
 
     useEffect(() => {
         if (!roundId || gameIndex === undefined) {
@@ -226,28 +235,20 @@ export default function GameViewPage() {
         }
     };
 
-    const moveArrows = useMemo(() => {
-        if (!lastMove) return [];
-        return [{
-            startSquare: lastMove.from,
-            endSquare: lastMove.to,
-            color: 'rgba(15, 240, 252, 0.7)'
-        }];
-    }, [lastMove]);
-
     const customSquareStyles = useMemo(() => {
-        if (!lastMove) return {};
+        if (!arrows || arrows.length === 0) return {};
+        const lastMove = arrows[0];
         return {
-            [lastMove.from]: {
+            [lastMove.startSquare]: {
                 backgroundColor: 'rgba(15, 240, 252, 0.25)',
                 boxShadow: 'inset 0 0 20px rgba(15, 240, 252, 0.3)'
             },
-            [lastMove.to]: {
+            [lastMove.endSquare]: {
                 backgroundColor: 'rgba(15, 240, 252, 0.35)',
                 boxShadow: 'inset 0 0 25px rgba(15, 240, 252, 0.4)'
             }
         };
-    }, [lastMove]);
+    }, [arrows]);
 
     if (loading) {
         return (
@@ -308,21 +309,26 @@ export default function GameViewPage() {
 
                     <div className="chessboard-container">
                         <Chessboard
-                            id="game-view-board"
+                            id="gameview-board"
                             options={{
                                 position: fen,
-                                allowDragging: false,
-                                animationDurationInMs: 300,
-                                showNotation: true,
+                                arePiecesDraggable: false,
+                                animationDurationInMs: animationSpeed,
                                 boardOrientation: boardOrientation,
-                                arrows: moveArrows,
+                                arrows: arrows,
+                                arrowOptions: {
+                                    color: arrowColor,
+                                    opacity: 0.65
+                                },
+                                showNotation,
                                 squareStyles: customSquareStyles,
-                                lightSquareStyle: { backgroundColor: "#f0d9b5" },
-                                darkSquareStyle: { backgroundColor: "#b58863" },
+                                darkSquareStyle: { backgroundColor: darkSquareColor },
+                                lightSquareStyle: { backgroundColor: lightSquareColor },
                                 boardStyle: {
                                     borderRadius: '12px',
                                     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
-                                }
+                                },
+                                customPieces: getCustomPieces(pieceSet)
                             }}
                         />
                     </div>

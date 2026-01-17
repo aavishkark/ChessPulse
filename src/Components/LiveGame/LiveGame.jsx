@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Chessboard } from "react-chessboard";
+import { getCustomPieces } from '../../utils/pieceSets';
+import { useBoardCustomization } from "../../contexts/BoardCustomizationContext";
 import { Chess } from "chess.js";
 import "./livegame.css";
+import React from 'react';
 
 
 export default function LiveGame() {
@@ -28,6 +31,8 @@ const LiveGameCard = React.memo(function LiveGameCard({ speed, cardId }) {
   const [black, setBlack] = useState({ name: "-", elo: "-" });
   const [displayClock, setDisplayClock] = useState({ w: 0, b: 0 });
   const [gameId, setGameId] = useState(null);
+  const [arrows, setArrows] = useState([]);
+  const { darkSquareColor, lightSquareColor, showNotation, pieceSet, animationSpeed, arrowColor } = useBoardCustomization();
   const [error, setError] = useState(null);
   const [lastMove, setLastMove] = useState(null);
 
@@ -253,15 +258,23 @@ const LiveGameCard = React.memo(function LiveGameCard({ speed, cardId }) {
 
       <div className="card-board">
         <Chessboard
-          id={`live-board-${cardId}`}
-          options={chessboardOptions}
-          boardWidth={boardWidth}
-          arePiecesDraggable={false}
-          animationDuration={300}
-          showBoardNotation={true}
+          id={`live-board-${gameId}`}
+          options={{
+            position: fen,
+            arePiecesDraggable: false,
+            boardOrientation: 'white',
+            arrows: arrows,
+            arrowOptions: {
+              color: arrowColor,
+              opacity: 0.65
+            },
+            animationDurationInMs: animationSpeed,
+            darkSquareStyle: { backgroundColor: darkSquareColor },
+            lightSquareStyle: { backgroundColor: lightSquareColor },
+            customPieces: getCustomPieces(pieceSet)
+          }}
+          boardWidth={300}
           customSquareStyles={customSquareStyles}
-          customLightSquareStyle={{ backgroundColor: "#f0d9b5" }}
-          customDarkSquareStyle={{ backgroundColor: "#b58863" }}
           customBoardStyle={{
             borderRadius: '8px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'

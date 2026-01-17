@@ -81,6 +81,9 @@ export default function Navbar() {
           <li role="none">
             <Link role="menuitem" to="/play/online" className={location.pathname === "/play/online" ? "active" : ""} onClick={handleLinkClick}>Play</Link>
           </li>
+          <li role="none">
+            <Link role="menuitem" to="/customize" className={location.pathname === "/customize" ? "active" : ""} onClick={handleLinkClick}>Customize</Link>
+          </li>
 
           <li
             onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); }}

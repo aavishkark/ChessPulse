@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
+import { getCustomPieces } from '../../utils/pieceSets';
+import { playSound, getMoveSound } from '../../utils/sounds';
 import { useAuth } from '../../contexts/AuthContext';
 import { getBotById, getRandomCatchphrase } from '../../data/botProfiles';
 import { getStockfishService, destroyStockfishService } from '../../services/stockfishService';
@@ -55,6 +58,9 @@ const BotGamePage = () => {
             if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
         };
     }, []);
+    const [boardWidth, setBoardWidth] = useState(480);
+    const { darkSquareColor, lightSquareColor, showNotation, pieceSet, animationSpeed, highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
+    const { boardStyle: board3DStyle, customPieces, darkSquareStyle, lightSquareStyle } = use3DBoard(enable3D, darkSquareColor, lightSquareColor);
 
     const showBotMessage = (text) => {
         if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
@@ -185,6 +191,9 @@ const BotGamePage = () => {
             setLastMove({ from, to });
             setMoveHistory(prev => [...prev, move.san]);
 
+            const soundType = getMoveSound(move, move.captured, newGame.isCheck(), move.san.includes('O-'), move.promotion);
+            playSound(soundType, soundTheme, soundEnabled);
+
             if (!checkGameEnd(newGame)) {
                 setTimeout(() => makeBotMove(newGame), 500);
             }
@@ -194,7 +203,7 @@ const BotGamePage = () => {
             console.error('Move error:', err);
             return false;
         }
-    }, [game, checkGameEnd, makeBotMove]);
+    }, [game, checkGameEnd, makeBotMove, soundEnabled, soundTheme]);
 
     const onDrop = useCallback((moveData) => {
         const sourceSquare = moveData?.sourceSquare || moveData?.from;
@@ -273,8 +282,8 @@ const BotGamePage = () => {
 
     const customSquareStyles = {};
     if (lastMove) {
-        customSquareStyles[lastMove.from] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
-        customSquareStyles[lastMove.to] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
+        customSquareStyles[lastMove.from] = { backgroundColor: highlightColor };
+        customSquareStyles[lastMove.to] = { backgroundColor: highlightColor };
     }
 
     if (!bot) {
@@ -299,10 +308,13 @@ const BotGamePage = () => {
                                 position: game.fen(),
                                 allowDragging: gameStatus === 'playing' && !isThinking && !promotionMove,
                                 onPieceDrop: onDrop,
-                                animationDurationInMs: 150,
+                                animationDurationInMs: animationSpeed,
                                 boardOrientation: orientation,
                                 squareStyles: customSquareStyles,
-                                showNotation: true
+                                showNotation,
+                                darkSquareStyle: { backgroundColor: darkSquareColor },
+                                lightSquareStyle: { backgroundColor: lightSquareColor },
+                                customPieces: getCustomPieces(pieceSet)
                             }}
                         />
 

@@ -3,6 +3,9 @@ import "./evalsection.css";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { getStockfishService, destroyStockfishService } from "../../services/stockfishService";
+import { greatestGames } from "../../data/greatestGames";
+import { useBoardCustomization } from "../../contexts/BoardCustomizationContext";
+import { getCustomPieces } from "../../utils/pieceSets";
 
 function parsePGN(pgn) {
   const tags = {};
@@ -48,6 +51,7 @@ export default function EvalSection() {
   const playRef = useRef(null);
   const chessRef = useRef(null);
   const engineRef = useRef(null);
+  const { darkSquareColor, lightSquareColor, showNotation, pieceSet } = useBoardCustomization();
 
   useEffect(() => {
     const initEngine = async () => {
@@ -104,8 +108,14 @@ export default function EvalSection() {
     return list;
   };
 
-  const handleEvaluate = async () => {
-    const parsed = parsePGN(pgn);
+  const handleEvaluate = async (pgnOverride = null) => {
+    const textToParse = (typeof pgnOverride === 'string') ? pgnOverride : pgn;
+
+    if (typeof pgnOverride === 'string') {
+      setPgn(pgnOverride);
+    }
+
+    const parsed = parsePGN(textToParse);
     setTags(parsed.tags);
 
     let chess;
@@ -115,9 +125,9 @@ export default function EvalSection() {
       chess = new Chess();
       let loaded = false;
       if (typeof chess.loadPgn === "function") {
-        loaded = chess.loadPgn(pgn);
+        loaded = chess.loadPgn(textToParse);
       } else if (typeof chess.load_pgn === "function") {
-        loaded = chess.load_pgn(pgn);
+        loaded = chess.load_pgn(textToParse);
       }
       if (loaded) {
         moveArray = chess.history();
@@ -134,8 +144,8 @@ export default function EvalSection() {
 
     try {
       const g2 = new Chess();
-      if (typeof g2.loadPgn === "function") g2.loadPgn(pgn);
-      else if (typeof g2.load_pgn === "function") g2.load_pgn(pgn);
+      if (typeof g2.loadPgn === "function") g2.loadPgn(textToParse);
+      else if (typeof g2.load_pgn === "function") g2.load_pgn(textToParse);
       chessRef.current = g2;
     } catch (err) {
       chessRef.current = null;
@@ -149,6 +159,11 @@ export default function EvalSection() {
     const evalNum = await evaluateCurrentPosition(finalFen);
     setEvaluation(evalNum);
     setFillWidth(evalToWidth(evalNum));
+  };
+
+  const loadRandomGame = () => {
+    const randomGame = greatestGames[Math.floor(Math.random() * greatestGames.length)];
+    handleEvaluate(randomGame.pgn);
   };
 
   useEffect(() => {
@@ -221,8 +236,11 @@ export default function EvalSection() {
           />
 
           <div className="eval-controls">
-            <button className="eval-btn" onClick={handleEvaluate}>
-              Load & Evaluate
+            <button className="eval-btn" onClick={() => handleEvaluate()}>
+              Load Your Game
+            </button>
+            <button className="eval-btn famous-btn" onClick={loadRandomGame} style={{ marginLeft: '10px' }}>
+              Load Random Game
             </button>
             <button
               className="eval-clear"
@@ -271,12 +289,32 @@ export default function EvalSection() {
               </div>
 
               <div className="eval-meta-line">
-                <div className="meta-pill">moves: {moves.length}</div>
-                <div className="meta-pill">result: {tags.Result || "—"}</div>
-                <div className="meta-pill">event: {tags.Event || "—"}</div>
+                <div className="meta-pill">Moves : {moves.length}</div>
               </div>
             </div>
           )}
+
+          <div className="moves-area" style={{ marginTop: 'auto' }}>
+            <div className="moves-head">Moves</div>
+            {moves.length === 0 ? (
+              <div className="moves-empty">No moves parsed yet</div>
+            ) : (
+              <ol className="moves-list">
+                {moves.map((m, i) => {
+                  const isActive = i === currentIndex - 1;
+                  return (
+                    <li
+                      key={i}
+                      className={`move-item ${isActive ? "active-move" : ""}`}
+                      onClick={() => { gotoIndex(i + 1); }}
+                    >
+                      <span className="move-index">{i + 1}.</span> <span className="move-san">{m}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+          </div>
         </div>
 
         <aside className="eval-right">
@@ -295,33 +333,19 @@ export default function EvalSection() {
             <div className="chessboard-container">
               <Chessboard
                 id="eval-chessboard"
-                options={game}
+                options={{
+                  ...game,
+                  darkSquareStyle: { backgroundColor: darkSquareColor },
+                  lightSquareStyle: { backgroundColor: lightSquareColor },
+                  customPieces: getCustomPieces(pieceSet)
+                }}
                 arePiecesDraggable={false}
                 boardWidth={boardWidth}
+                showBoardNotation={showNotation}
               />
             </div>
 
-            <div className="moves-area">
-              <div className="moves-head">Moves</div>
-              {moves.length === 0 ? (
-                <div className="moves-empty">No moves parsed yet</div>
-              ) : (
-                <ol className="moves-list">
-                  {moves.map((m, i) => {
-                    const isActive = i === currentIndex - 1;
-                    return (
-                      <li
-                        key={i}
-                        className={`move-item ${isActive ? "active-move" : ""}`}
-                        onClick={() => { gotoIndex(i + 1); }}
-                      >
-                        <span className="move-index">{i + 1}.</span> <span className="move-san">{m}</span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
-            </div>
+
           </div>
 
           <div className="right-footer">

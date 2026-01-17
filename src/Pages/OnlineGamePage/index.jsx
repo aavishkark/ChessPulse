@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
+import { getCustomPieces } from '../../utils/pieceSets';
+import { playSound, getMoveSound } from '../../utils/sounds';
 import socketService from '../../services/socketService';
 import { useAuth } from '../../contexts/AuthContext';
 import PromotionDialog from '../../Components/PromotionDialog/PromotionDialog';
@@ -10,6 +13,7 @@ import './onlineGame.css';
 export default function OnlineGamePage() {
     const navigate = useNavigate();
     const { user, refreshUser } = useAuth();
+    const { darkSquareColor, lightSquareColor, showNotation: showNotationFromCustomization, pieceSet, animationSpeed, highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
     const [gameState, setGameState] = useState('idle');
     const [game, setGame] = useState(new Chess());
     const [playerColor, setPlayerColor] = useState(null);
@@ -741,18 +745,21 @@ export default function OnlineGamePage() {
 
                             <div className="board-container">
                                 <Chessboard
-                                    id="online-board"
+                                    id="online-game-board"
+                                    boardOrientation={playerColor}
                                     options={{
                                         position: game.fen(),
                                         onPieceDrop: onDrop,
-                                        boardOrientation: playerColor,
-                                        animationDurationInMs: 200,
+                                        animationDurationInMs: animationSpeed,
                                         allowDragging: true,
-                                        showNotation: true,
+                                        showNotation: showNotationFromCustomization,
                                         squareStyles: lastMove ? {
-                                            [lastMove.from]: { backgroundColor: 'rgba(255, 255, 0, 0.4)' },
-                                            [lastMove.to]: { backgroundColor: 'rgba(255, 255, 0, 0.4)' }
-                                        } : {}
+                                            [lastMove.from]: { backgroundColor: highlightColor },
+                                            [lastMove.to]: { backgroundColor: highlightColor }
+                                        } : {},
+                                        darkSquareStyle: { backgroundColor: darkSquareColor },
+                                        lightSquareStyle: { backgroundColor: lightSquareColor },
+                                        customPieces: getCustomPieces(pieceSet)
                                     }}
                                 />
                             </div>

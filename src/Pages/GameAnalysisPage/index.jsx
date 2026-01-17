@@ -4,6 +4,8 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { getStockfishService } from '../../services/stockfishService';
+import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
+import { getCustomPieces } from '../../utils/pieceSets';
 import './gameAnalysis.css';
 
 function classifyMove(cpLoss) {
@@ -48,6 +50,7 @@ export default function GameAnalysisPage() {
 
     const engineRef = useRef(null);
     const fensRef = useRef([]);
+    const { darkSquareColor, lightSquareColor, showNotation, pieceSet, animationSpeed, highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
 
     const currentFen = inVariation ? game.fen() : (fens[currentIndex] || 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
 
@@ -347,10 +350,13 @@ export default function GameAnalysisPage() {
                                     options={{
                                         position: currentFen,
                                         onPieceDrop: onDrop,
-                                        animationDurationInMs: 150,
+                                        animationDurationInMs: animationSpeed,
                                         boardOrientation: gameData.playerColor || 'white',
                                         allowDragging: true,
-                                        showNotation: true
+                                        showNotation,
+                                        darkSquareStyle: { backgroundColor: darkSquareColor },
+                                        lightSquareStyle: { backgroundColor: lightSquareColor },
+                                        customPieces: getCustomPieces(pieceSet)
                                     }}
                                 />
                                 {inVariation && (
