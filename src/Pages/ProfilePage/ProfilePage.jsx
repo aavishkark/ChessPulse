@@ -1,8 +1,10 @@
 import { useAuth } from '../../contexts/AuthContext';
 import { Container, Heading, Text, VStack, Box, Tabs, Flex, Tag, Avatar } from '@chakra-ui/react';
-import { Calendar, MapPin, Shield } from 'lucide-react';
+import { Calendar, MapPin, Shield, Search } from 'lucide-react';
 import GameStatsView from './GameStatsView';
 import PuzzleStatsView from './PuzzleStatsView';
+import LichessUserCard from '../../Components/LichessUserCard';
+import ChesscomUserCard from '../../Components/ChesscomUserCard';
 import './profile.css';
 
 const ProfilePage = () => {
@@ -67,6 +69,14 @@ const ProfilePage = () => {
                         <Tabs.Trigger value="puzzle" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
                             Puzzle Training
                         </Tabs.Trigger>
+                        <Tabs.Trigger value="lichess" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
+                            <Search size={14} style={{ marginRight: '6px' }} />
+                            Lichess Lookup
+                        </Tabs.Trigger>
+                        <Tabs.Trigger value="chesscom" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
+                            <Search size={14} style={{ marginRight: '6px' }} />
+                            Chess.com Lookup
+                        </Tabs.Trigger>
                     </Tabs.List>
 
                     <Tabs.Content value="game" mt={6} p={0}>
@@ -74,6 +84,16 @@ const ProfilePage = () => {
                     </Tabs.Content>
                     <Tabs.Content value="puzzle" mt={6} p={0}>
                         <PuzzleStatsView />
+                    </Tabs.Content>
+                    <Tabs.Content value="lichess" mt={6} p={0}>
+                        <Box display="flex" justifyContent="center">
+                            <LichessUserCard />
+                        </Box>
+                    </Tabs.Content>
+                    <Tabs.Content value="chesscom" mt={6} p={0}>
+                        <Box display="flex" justifyContent="center">
+                            <ChesscomUserCard />
+                        </Box>
                     </Tabs.Content>
                 </Tabs.Root>
             </Container>
