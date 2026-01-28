@@ -568,135 +568,149 @@ export default function OnlineGamePage() {
     return (
         <div className="online-game-page">
             <div className="online-game-container">
-                <h1>Play Online</h1>
 
                 {gameState === 'idle' && (
-                    <div className="idle-state">
-                        <p>Jump into a quick match!</p>
+                    <div className="online-dashboard">
+                        <div className="dashboard-header">
+                            <h2>Ready to Pulse?</h2>
+                            <p>Select your pace or challenge a friend.</p>
+                        </div>
 
-                        <div className="time-control-selector">
-                            <h4>Time Control</h4>
-                            <div className="time-controls">
-                                {['3+0', '5+0', '10+0', '15+10', 'custom'].map(tc => (
+                        <div className="dashboard-grid">
+                            <div className="time-control-card bullet" onClick={() => setSelectedTimeControl('3+0')}>
+                                <div className="card-icon">🚀</div>
+                                <div className="card-content">
+                                    <h3>Bullet</h3>
+                                    <span className="time-label">3+0</span>
+                                </div>
+                                <div className={`selection-indicator ${selectedTimeControl === '3+0' ? 'active' : ''}`} />
+                            </div>
+
+                            <div className="time-control-card blitz" onClick={() => setSelectedTimeControl('5+0')}>
+                                <div className="card-icon">⚡</div>
+                                <div className="card-content">
+                                    <h3>Blitz</h3>
+                                    <span className="time-label">5+0</span>
+                                </div>
+                                <div className={`selection-indicator ${selectedTimeControl === '5+0' ? 'active' : ''}`} />
+                            </div>
+
+                            <div className="time-control-card rapid" onClick={() => setSelectedTimeControl('10+0')}>
+                                <div className="card-icon">🐢</div>
+                                <div className="card-content">
+                                    <h3>Rapid</h3>
+                                    <span className="time-label">10+0</span>
+                                </div>
+                                <div className={`selection-indicator ${selectedTimeControl === '10+0' ? 'active' : ''}`} />
+                            </div>
+
+                            <div className="mini-controls">
+                                {['15+10', 'custom'].map(tc => (
                                     <button
                                         key={tc}
-                                        className={`time-control-btn ${selectedTimeControl === tc ? 'selected' : ''}`}
+                                        className={`mini-control-btn ${selectedTimeControl === tc ? 'selected' : ''}`}
                                         onClick={() => {
                                             setSelectedTimeControl(tc);
-                                            if (tc === 'custom') {
-                                                setShowCustomTime(true);
-                                            } else {
-                                                setShowCustomTime(false);
-                                            }
+                                            setShowCustomTime(tc === 'custom');
                                         }}
                                     >
                                         {tc === 'custom' ? 'Custom' : tc}
                                     </button>
                                 ))}
                             </div>
-
-                            {showCustomTime && (
-                                <div className="custom-time-inputs">
-                                    <div className="time-input-group">
-                                        <label>Minutes</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="180"
-                                            value={customMinutes}
-                                            onChange={(e) => setCustomMinutes(e.target.value)}
-                                            placeholder="5"
-                                        />
-                                    </div>
-                                    <div className="time-input-group">
-                                        <label>Increment</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            max="60"
-                                            value={customIncrement}
-                                            onChange={(e) => setCustomIncrement(e.target.value)}
-                                            placeholder="0"
-                                        />
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
-                        {myChallenge ? (
-                            <div className="my-challenge-banner">
-                                <p>Looking for someone brave enough to take you on...</p>
-                                <button className="cancel-challenge-btn" onClick={cancelChallenge}>
-                                    Cancel Challenge
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="action-buttons">
-                                <button className="find-game-btn" onClick={findGame}>
-                                    Quick Play
-                                </button>
-                                <button className="create-challenge-btn" onClick={createChallenge}>
-                                    Create Challenge
-                                </button>
+                        {showCustomTime && (
+                            <div className="custom-config-panel">
+                                <div className="time-input-group">
+                                    <label>Minutes</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="180"
+                                        value={customMinutes}
+                                        onChange={(e) => setCustomMinutes(e.target.value)}
+                                    />
+                                </div>
+                                <div className="time-input-group">
+                                    <label>Increment</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="60"
+                                        value={customIncrement}
+                                        onChange={(e) => setCustomIncrement(e.target.value)}
+                                    />
+                                </div>
                             </div>
                         )}
 
-                        <div className="challenges-section">
-                            <h3>Open Challenges</h3>
-                            {challenges.length === 0 ? (
-                                <p className="no-challenges">No challenges available</p>
-                            ) : (
-                                <div className="challenges-table">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Time</th>
-                                                <th>Player</th>
-                                                <th>Rating</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {challenges.map(challenge => (
-                                                <tr key={challenge.id}>
-                                                    <td>{challenge.timeControl}</td>
-                                                    <td>{challenge.username}</td>
-                                                    <td>{challenge.username === 'Guest' ? '-' : challenge.rating}</td>
-                                                    <td>
-                                                        <button
-                                                            className="accept-btn"
-                                                            onClick={() => acceptChallenge(challenge)}
-                                                        >
-                                                            Accept
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                        <div className="action-bar">
+                            <button className="primary-action-btn pulse-glow" onClick={findGame}>
+                                <span>Find Opponent</span>
+                                <div className="btn-glow"></div>
+                            </button>
+                            <button className="secondary-action-btn" onClick={createChallenge}>
+                                Create Challenge
+                            </button>
                         </div>
 
-                        <div className="bots-promo-section">
-                            <div className="bots-promo-content">
-                                <div className="bots-promo-text">
-                                    <p>New to the game? We’ve got a bot for that. Master of the board? We’ve got one for you too</p>
-                                </div>
-                                <Link to="/bots" className="bots-promo-btn">
-                                    Play Bots
-                                </Link>
+                        <div className="challenges-feed">
+                            <div className="feed-header">
+                                <h3>Open Challenges</h3>
+                                <span className="live-dot"></span>
                             </div>
+
+                            {myChallenge && (
+                                <div className="my-challenge-card">
+                                    <div className="pulse-ring"></div>
+                                    <span>Waiting for challenger...</span>
+                                    <button onClick={cancelChallenge}>Cancel</button>
+                                </div>
+                            )}
+
+                            <div className="challenges-list">
+                                {challenges.length === 0 ? (
+                                    <div className="empty-feed">
+                                        <p>No active challenges right now.</p>
+                                        <span className="sub-text">Be the first to create one!</span>
+                                    </div>
+                                ) : (
+                                    challenges.map(challenge => (
+                                        <div key={challenge.id} className="challenge-item">
+                                            <div className="challenge-info">
+                                                <span className="c-time">{challenge.timeControl}</span>
+                                                <span className="c-player">{challenge.username}</span>
+                                                <span className="c-rating">{challenge.username === 'Guest' ? '' : `(${challenge.rating})`}</span>
+                                            </div>
+                                            <button className="accept-challenge-btn" onClick={() => acceptChallenge(challenge)}>
+                                                Accept
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bots-teaser" onClick={() => navigate('/bots')}>
+                            <div className="teaser-content">
+                                <h3>Train with Bots</h3>
+                                <p>Sharpen your skills against AI opponents.</p>
+                            </div>
+                            <div className="teaser-arrow">→</div>
                         </div>
                     </div>
                 )}
 
                 {gameState === 'searching' && (
-                    <div className="searching-state">
-                        <div className="spinner"></div>
-                        <p>Searching for opponent...</p>
-                        <button className="cancel-btn" onClick={cancelSearch}>
-                            Cancel
+                    <div className="searching-container">
+                        <div className="radar-animation">
+                            <div className="radar-sweep"></div>
+                        </div>
+                        <h2>Scanning for Opponents</h2>
+                        <p>{selectedTimeControl} • {myRating} Rating</p>
+                        <button className="cancel-search-btn" onClick={cancelSearch}>
+                            Cancel Search
                         </button>
                     </div>
                 )}

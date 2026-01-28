@@ -399,80 +399,155 @@
     margin-bottom: 16px;
 }
 
+/* Cinematic Grid (2x2) */
 .modes-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
+    padding: 16px 0;
 }
 
+/* Cinematic Tile */
 .mode-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 18px;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
+    justify-content: flex-end;
+    padding: 24px;
+    min-height: 140px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 16px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: left;
-    position: relative;
     overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    isolation: isolate;
+    margin: 0;
 }
 
+/* Background Reveal - Diagonal Slice */
 .mode-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--mode-gradient);
+    inset: 0;
+    background: linear-gradient(135deg, var(--mode-color), transparent 80%);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transform: translateY(100%);
+    transition: all 0.4s ease;
+    z-index: -1;
 }
 
+/* Hover Actions */
 .mode-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    border-color: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    padding-left: 24px;
+    /* Reset shift */
 }
 
 .mode-card:hover::before {
+    opacity: 0.2;
+    transform: translateY(0);
+}
+
+/* Floating Icon - Top Right */
+.mode-icon-wrapper {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mode-color);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
     opacity: 1;
+    transform: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.02);
 }
 
-.mode-card.locked {
-    opacity: 0.6;
+.mode-icon-wrapper svg {
+    width: 20px;
+    height: 20px;
 }
 
-.mode-icon {
-    font-size: 1.5rem;
+.mode-card:hover .mode-icon-wrapper {
+    background: var(--mode-color);
+    color: #000;
+    transform: rotate(10deg);
+    right: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Content Typography - Editorial */
+.mode-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 1;
 }
 
 .mode-title {
-    font-size: 0.95rem;
-    font-weight: 700;
+    display: block;
+    font-size: 1.15rem;
+    font-weight: 800;
+    /* Extra bold */
+    letter-spacing: -0.03em;
+    /* Tight tracking */
     color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 2px;
 }
 
 .mode-desc {
-    font-size: 0.75rem;
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
     color: var(--text-muted);
     line-height: 1.4;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
 }
 
+.mode-card:hover .mode-desc {
+    opacity: 1;
+    color: var(--text);
+}
+
+/* Locked State */
+.mode-card.locked {
+    opacity: 0.5;
+    filter: grayscale(1);
+    cursor: default;
+}
+
+.mode-card.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Lock Badge - Glassy */
 .lock-badge {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 0.6rem;
-    padding: 3px 8px;
-    background: rgba(250, 176, 5, 0.2);
-    color: #fab005;
-    border-radius: 4px;
-    font-weight: 600;
+    top: 12px;
+    right: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.4);
+    color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    z-index: 2;
 }
 
 .auth-card {

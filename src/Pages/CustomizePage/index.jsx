@@ -1,21 +1,20 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
+import { Link } from 'react-router-dom';
+import { ChevronLeft, Palette, Music, Layout, Sliders, Check } from 'lucide-react';
 import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
 import { PIECE_SETS, getCustomPieces } from '../../utils/pieceSets';
 import { SOUND_THEMES, playSound } from '../../utils/sounds';
 import './customize.css';
-import { Link } from 'react-router-dom';
 
-
-
-const PRESET_COLORS = [
-    { name: 'Classic Green', dark: '#779952', light: '#edeed1' },
-    { name: 'Blue Ocean', dark: '#5b7c99', light: '#d3d9da' },
-    { name: 'Purple Dream', dark: '#9c27b0', light: '#e1bee7' },
-    { name: 'Brown Wood', dark: '#b58863', light: '#f0d9b5' },
-    { name: 'Gray Modern', dark: '#6c757d', light: '#dee2e6' },
-    { name: 'Red Ember', dark: '#c62828', light: '#ffcdd2' },
+const PRESET_THEMES = [
+    { name: 'Emerald Forest', dark: '#779952', light: '#edeed1', highlight: '#ffff0066' },
+    { name: 'Deep Ocean', dark: '#4b7399', light: '#d3d9da', highlight: '#00ccff66' },
+    { name: 'Midnight Purple', dark: '#7c3aed', light: '#e9d5ff', highlight: '#dfb3ff66' },
+    { name: 'Royal Crimson', dark: '#be1e2d', light: '#ffcece', highlight: '#ff000066' },
+    { name: 'Classic Wood', dark: '#b58863', light: '#f0d9b5', highlight: '#f5c95866' },
+    { name: 'Slate Modern', dark: '#475569', light: '#e2e8f0', highlight: '#94a3b866' },
 ];
 
 export default function CustomizePage() {
@@ -33,253 +32,240 @@ export default function CustomizePage() {
         resetToDefaults,
     } = useBoardCustomization();
 
-    console.log('[CustomizePage] Current pieceSet:', pieceSet);
+    const [game, setGame] = useState(new Chess('rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'));
 
-    const [previewGame] = useState(() => {
-        const game = new Chess();
-        game.load('rnbqkb1r/pp2pppp/3p1n2/2p5/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 4');
-        return game;
-    });
+    function onPieceDrop(sourceSquare, targetSquare) {
+        try {
+            const newGame = new Chess(game.fen());
+            const move = newGame.move({
+                from: sourceSquare,
+                to: targetSquare,
+                promotion: 'q',
+            });
 
-    const handlePresetColor = (preset) => {
+            if (move === null) return false;
+
+            setGame(newGame);
+
+            if (soundEnabled) {
+                const isCapture = move.flags.includes('c') || move.flags.includes('e');
+                const isPromote = move.flags.includes('p');
+                const isCheck = newGame.inCheck();
+                let type = 'move';
+                if (isCheck) type = 'check';
+                else if (isCapture) type = 'capture';
+                else if (isPromote) type = 'promote';
+
+                playSound(type, soundTheme, true);
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    const handleSoundThemeChange = (themeId) => {
+        updateBoardSettings({ soundTheme: themeId });
+        if (soundEnabled && themeId !== 'silent') {
+            playSound('move', themeId, true);
+        }
+    };
+
+    const handlePresetClick = (preset) => {
         updateBoardSettings({
             darkSquareColor: preset.dark,
             lightSquareColor: preset.light,
+            highlightColor: preset.highlight
         });
     };
 
     return (
         <div className="customize-page">
             <div className="customize-container">
-                <div className="customize-header">
-                    <Link to="/" className="back-link">← Back</Link>
-                    <h1>Customize Your Board</h1>
-                    <p className="customize-subtitle">Personalize all chessboards across the site</p>
-                </div>
-
-                <div className="customize-content">
-                    <div className="customize-settings">
-                        <section className="setting-section">
-                            <h2>Color Presets</h2>
-                            <div className="preset-grid">
-                                {PRESET_COLORS.map((preset) => (
-                                    <button
-                                        key={preset.name}
-                                        className="preset-button"
-                                        onClick={() => handlePresetColor(preset)}
-                                        title={preset.name}
-                                    >
-                                        <div className="preset-preview">
-                                            <div className="preset-square" style={{ backgroundColor: preset.dark }} />
-                                            <div className="preset-square" style={{ backgroundColor: preset.light }} />
-                                        </div>
-                                        <span className="preset-name">{preset.name}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-
-                        <section className="setting-section">
-                            <h2>Custom Colors</h2>
-                            <div className="color-pickers">
-                                <div className="color-picker-item">
-                                    <label htmlFor="dark-square-color">Dark Squares</label>
-                                    <div className="color-input-wrapper">
-                                        <input
-                                            id="dark-square-color"
-                                            type="color"
-                                            value={darkSquareColor}
-                                            onChange={(e) => updateBoardSettings({ darkSquareColor: e.target.value })}
-                                            className="color-input"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={darkSquareColor}
-                                            onChange={(e) => updateBoardSettings({ darkSquareColor: e.target.value })}
-                                            className="color-text-input"
-                                            placeholder="#779952"
-                                        />
+                <div className="customize-sidebar">
+                    <div className="sidebar-header">
+                        <Link to="/" className="back-link">
+                            <ChevronLeft size={16} /> Back to dashboard
+                        </Link>
+                        <h1>Studio</h1>
+                        <p className="sidebar-subtitle">Craft your perfect chess atmosphere.</p>
+                    </div>
+                    <div className="control-group">
+                        <h3><Palette size={14} style={{ display: 'inline', marginRight: 8 }} /> Moods</h3>
+                        <div className="presets-grid">
+                            {PRESET_THEMES.map((preset) => (
+                                <button
+                                    key={preset.name}
+                                    className="preset-card"
+                                    onClick={() => handlePresetClick(preset)}
+                                >
+                                    <div className="preset-swatch">
+                                        <div style={{ background: preset.dark }} />
+                                        <div style={{ background: preset.light }} />
                                     </div>
-                                </div>
-
-                                <div className="color-picker-item">
-                                    <label htmlFor="light-square-color">Light Squares</label>
-                                    <div className="color-input-wrapper">
-                                        <input
-                                            id="light-square-color"
-                                            type="color"
-                                            value={lightSquareColor}
-                                            onChange={(e) => updateBoardSettings({ lightSquareColor: e.target.value })}
-                                            className="color-input"
-                                        />
-                                        <input
-                                            type="text"
-                                            value={lightSquareColor}
-                                            onChange={(e) => updateBoardSettings({ lightSquareColor: e.target.value })}
-                                            className="color-text-input"
-                                            placeholder="#edeed1"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section className="setting-section">
-                            <h2>Piece Set</h2>
-                            <p className="section-description">Choose the style of your chess pieces.</p>
-                            <div className="piece-set-grid">
-                                {PIECE_SETS.map((set) => (
-                                    <button
-                                        key={set.id}
-                                        className={`piece-set-button ${pieceSet === set.id ? 'active' : ''}`}
-                                        onClick={() => updateBoardSettings({ pieceSet: set.id })}
-                                    >
-                                        {set.name}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-
-                        <section className="setting-section">
-                            <h2>Animation Speed</h2>
-                            <p className="section-description">Control how fast pieces move on the board.</p>
-                            <div className="piece-set-grid">
-                                {[
-                                    { id: 0, name: 'Instant' },
-                                    { id: 100, name: 'Fast' },
-                                    { id: 200, name: 'Normal' },
-                                    { id: 400, name: 'Slow' },
-                                ].map((speed) => (
-                                    <button
-                                        key={speed.id}
-                                        className={`piece-set-button ${animationSpeed === speed.id ? 'active' : ''}`}
-                                        onClick={() => updateBoardSettings({ animationSpeed: speed.id })}
-                                    >
-                                        {speed.name}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-
-                        <section className="setting-section">
-                            <h2>Move Highlights & Arrows</h2>
-                            <p className="section-description">Customize how moves are highlighted on the board.</p>
-                            <div className="color-pickers">
-                                <div className="color-picker-item">
-                                    <label htmlFor="highlight-color">Last Move Highlight</label>
-                                    <div className="color-input-wrapper">
-                                        <input
-                                            id="highlight-color"
-                                            type="color"
-                                            value={highlightColor.startsWith('rgba') ? '#ffff00' : highlightColor.slice(0, 7)}
-                                            onInput={(e) => updateBoardSettings({ highlightColor: e.target.value + '66' })}
-                                            onChange={(e) => updateBoardSettings({ highlightColor: e.target.value + '66' })}
-                                            className="color-input"
-                                        />
-                                        <span className="color-text-input" style={{ background: highlightColor, border: '1px solid var(--border)' }}></span>
-                                    </div>
-                                </div>
-                                <div className="color-picker-item">
-                                    <label htmlFor="arrow-color">Arrow Color</label>
-                                    <div className="color-input-wrapper">
-                                        <input
-                                            id="arrow-color"
-                                            type="color"
-                                            value={arrowColor.startsWith('rgba') ? '#ffaa00' : arrowColor.slice(0, 7)}
-                                            onInput={(e) => updateBoardSettings({ arrowColor: e.target.value + 'cc' })}
-                                            onChange={(e) => updateBoardSettings({ arrowColor: e.target.value + 'cc' })}
-                                            className="color-input"
-                                        />
-                                        <span className="color-text-input" style={{ background: arrowColor, border: '1px solid var(--border)' }}></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section className="setting-section">
-                            <h2>Sounds</h2>
-                            <p className="section-description">Enable move sounds and choose a theme.</p>
-                            <div className="toggle-options">
-                                <label className="toggle-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={soundEnabled}
-                                        onChange={(e) => updateBoardSettings({ soundEnabled: e.target.checked })}
-                                        className="toggle-input"
-                                    />
-                                    <span className="toggle-text">Enable move sounds</span>
-                                </label>
-                            </div>
-                            {soundEnabled && (
-                                <div className="piece-set-grid" style={{ marginTop: '16px' }}>
-                                    {SOUND_THEMES.map((theme) => (
-                                        <button
-                                            key={theme.id}
-                                            className={`piece-set-button ${soundTheme === theme.id ? 'active' : ''}`}
-                                            onClick={() => {
-                                                updateBoardSettings({ soundTheme: theme.id });
-                                                if (theme.id !== 'silent') {
-                                                    playSound('move', theme.id, true);
-                                                }
-                                            }}
-                                        >
-                                            {theme.name}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
-                        <section className="setting-section">
-                            <h2>Display Options</h2>
-                            <div className="toggle-options">
-                                <label className="toggle-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={showNotation}
-                                        onChange={(e) => updateBoardSettings({ showNotation: e.target.checked })}
-                                        className="toggle-input"
-                                    />
-                                    <span className="toggle-text">Show board notation (a-h, 1-8)</span>
-                                </label>
-                            </div>
-                        </section>
-
-                        <div className="customize-actions">
-                            <button className="reset-button" onClick={resetToDefaults}>
-                                Reset to Defaults
-                            </button>
+                                    <div className="preset-name">{preset.name}</div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="control-group">
+                        <h3><Sliders size={14} style={{ display: 'inline', marginRight: 8 }} /> Colors</h3>
+                        <div className="color-pickers">
+                            <label className="color-input-group">
+                                <span className="color-preview-dot" style={{ background: darkSquareColor }}></span>
+                                <span className="color-label">Dark Squares</span>
+                                <span className="color-hex">{darkSquareColor}</span>
+                                <input
+                                    type="color"
+                                    value={darkSquareColor}
+                                    onInput={(e) => updateBoardSettings({ darkSquareColor: e.target.value })}
+                                    onChange={(e) => updateBoardSettings({ darkSquareColor: e.target.value })}
+                                    className="hidden-color-input"
+                                />
+                            </label>
+                            <label className="color-input-group" style={{ marginTop: 8 }}>
+                                <span className="color-preview-dot" style={{ background: lightSquareColor }}></span>
+                                <span className="color-label">Light Squares</span>
+                                <span className="color-hex">{lightSquareColor}</span>
+                                <input
+                                    type="color"
+                                    value={lightSquareColor}
+                                    onInput={(e) => updateBoardSettings({ lightSquareColor: e.target.value })}
+                                    onChange={(e) => updateBoardSettings({ lightSquareColor: e.target.value })}
+                                    className="hidden-color-input"
+                                />
+                            </label>
                         </div>
                     </div>
 
-                    <div className="customize-preview">
-                        <h2>Live Preview</h2>
-                        <p className="preview-subtitle">Changes apply instantly to all boards</p>
-                        <div className="preview-board-container">
-                            <Chessboard
-                                key={pieceSet}
-                                id="customize-preview-board"
-                                options={{
-                                    position: previewGame.fen(),
-                                    arePiecesDraggable: false,
-                                    showNotation: showNotation,
-                                    darkSquareStyle: { backgroundColor: darkSquareColor },
-                                    lightSquareStyle: { backgroundColor: lightSquareColor },
-                                    customPieces: getCustomPieces(pieceSet)
+                    <div className="control-group">
+                        <h3><Layout size={14} style={{ display: 'inline', marginRight: 8 }} /> Assets</h3>
+
+                        <div className="option-row">
+                            <span className="option-label">Piece Set</span>
+                            <select
+                                value={pieceSet}
+                                onChange={(e) => updateBoardSettings({ pieceSet: e.target.value })}
+                                style={{
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: 'none',
+                                    color: 'white',
+                                    padding: '4px 8px',
+                                    borderRadius: 6,
+                                    cursor: 'pointer'
                                 }}
-                                boardWidth={Math.min(500, window.innerWidth * 0.4)}
+                            >
+                                {PIECE_SETS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="option-row">
+                            <span className="option-label">Show Notation</span>
+                            <input
+                                type="checkbox"
+                                checked={showNotation}
+                                onChange={(e) => updateBoardSettings({ showNotation: e.target.checked })}
+                                className="option-toggle"
                             />
                         </div>
-                        <div className="preview-info">
-                            <div className="info-badge">
-                                <span className="info-label">Dark:</span>
-                                <span className="info-value">{darkSquareColor}</span>
-                            </div>
-                            <div className="info-badge">
-                                <span className="info-label">Light:</span>
-                                <span className="info-value">{lightSquareColor}</span>
-                            </div>
+
+                        <div className="option-row">
+                            <span className="option-label">Animation Speed</span>
+                            <select
+                                value={animationSpeed}
+                                onChange={(e) => updateBoardSettings({ animationSpeed: Number(e.target.value) })}
+                                style={{
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: 'none',
+                                    color: 'white',
+                                    padding: '4px 8px',
+                                    borderRadius: 6,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value={0}>Instant</option>
+                                <option value={100}>Fast</option>
+                                <option value={200}>Normal</option>
+                                <option value={300}>Relaxed</option>
+                                <option value={500}>Cinematic</option>
+                            </select>
                         </div>
+                    </div>
+
+                    <div className="control-group">
+                        <h3><Music size={14} style={{ display: 'inline', marginRight: 8 }} /> Audio</h3>
+                        <div className="option-row">
+                            <span className="option-label">Sound Effects</span>
+                            <input
+                                type="checkbox"
+                                checked={soundEnabled}
+                                onChange={(e) => updateBoardSettings({ soundEnabled: e.target.checked })}
+                                className="option-toggle"
+                            />
+                        </div>
+
+                        {soundEnabled && (
+                            <div className="presets-grid" style={{ marginTop: 12 }}>
+                                {SOUND_THEMES.map((theme) => (
+                                    <button
+                                        key={theme.id}
+                                        className={`preset-card ${soundTheme === theme.id ? 'active' : ''}`}
+                                        onClick={() => handleSoundThemeChange(theme.id)}
+                                        style={{
+                                            textAlign: 'center',
+                                            padding: '12px',
+                                            borderColor: soundTheme === theme.id ? 'var(--accent)' : ''
+                                        }}
+                                    >
+                                        <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{theme.name}</div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="customize-actions">
+                        <button
+                            className="reset-button"
+                            onClick={resetToDefaults}
+                            style={{ opacity: 0.6, fontSize: '0.9rem' }}
+                        >
+                            Reset all preferences
+                        </button>
+                    </div>
+                </div>
+
+                <div className="customize-preview-area">
+                    <div className="preview-board-wrapper" style={{ width: '80%', maxWidth: '800px', margin: '0 auto' }}>
+                        <Chessboard
+                            id="studio-preview-board"
+                            key={`${pieceSet}-${darkSquareColor}-${lightSquareColor}-${animationSpeed}`}
+                            options={{
+                                position: game.fen(),
+                                arePiecesDraggable: true,
+                                showNotation: showNotation,
+                                customPieces: getCustomPieces(pieceSet),
+                                animationDurationInMs: animationSpeed,
+                                darkSquareStyle: { backgroundColor: darkSquareColor },
+                                lightSquareStyle: { backgroundColor: lightSquareColor },
+                                arrowOptions: {
+                                    color: arrowColor,
+                                    opacity: 0.8
+                                },
+                                onPieceDrop: onPieceDrop
+                            }}
+                            onPieceDrop={onPieceDrop}
+                            boardWidth={600}
+                            customBoardStyle={{
+                                borderRadius: '4px',
+                                boxShadow: '0 5px 15px rgba(0,0,0,0.5)'
+                            }}
+                        />
+                    </div>
+
+                    <div className="floating-badge">
+                        <Check size={16} color="#4ade80" />
+                        <span>Auto-saving changes</span>
                     </div>
                 </div>
             </div>

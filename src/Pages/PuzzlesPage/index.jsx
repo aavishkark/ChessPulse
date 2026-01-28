@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
 import { puzzleService } from '../../services/puzzleService';
-import { TrophyIcon, TrendUpIcon, UserIcon } from '../../Components/Icons/Icons';
+import { TrophyIcon, TrendUpIcon, UserIcon, LightningIcon, FlameIcon, TargetIcon } from '../../Components/Icons/Icons';
 import './puzzles.css';
 
 const getTodayString = () => {
@@ -81,6 +81,8 @@ const PuzzlesPage = () => {
             title: 'Puzzle Rush',
             description: 'Solve as many as you can before time runs out',
             gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
+            icon: <LightningIcon size={22} />,
+            color: '#ff6b6b',
             path: '/puzzles/rush'
         },
         {
@@ -88,6 +90,8 @@ const PuzzlesPage = () => {
             title: 'Survival',
             description: '3 lives - how far can you go?',
             gradient: 'linear-gradient(135deg, #845ef7, #7048e8)',
+            icon: <FlameIcon size={22} />,
+            color: '#845ef7',
             path: '/puzzles/survival'
         },
         {
@@ -95,6 +99,8 @@ const PuzzlesPage = () => {
             title: 'Rated Puzzles',
             description: 'Climb the rating ladder with matched puzzles',
             gradient: 'linear-gradient(135deg, #20c997, #12b886)',
+            icon: <TrendUpIcon size={22} />,
+            color: '#20c997',
             path: '/puzzles/rating',
             requiresAuth: true
         },
@@ -103,6 +109,8 @@ const PuzzlesPage = () => {
             title: 'Themed Practice',
             description: 'Master specific tactics like forks, pins & mates',
             gradient: 'linear-gradient(135deg, #fab005, #f59e0b)',
+            icon: <TargetIcon size={22} />,
+            color: '#fab005',
             path: '/puzzles/themed'
         }
     ];
@@ -193,17 +201,22 @@ const PuzzlesPage = () => {
                     </div>
 
                     <div className="modes-card">
-                        <h3>Different Modes</h3>
+                        <h3>Modes</h3>
                         <div className="modes-grid">
                             {puzzleModes.map(mode => (
                                 <button
                                     key={mode.id}
                                     className={`mode-card ${mode.requiresAuth && !isAuthenticated ? 'locked' : ''}`}
-                                    style={{ '--mode-gradient': mode.gradient }}
+                                    style={{ '--mode-color': mode.color }}
                                     onClick={() => handleModeClick(mode)}
                                 >
-                                    <span className="mode-title">{mode.title}</span>
-                                    <span className="mode-desc">{mode.description}</span>
+                                    <div className="mode-icon-wrapper">
+                                        {mode.icon}
+                                    </div>
+                                    <div className="mode-content">
+                                        <span className="mode-title">{mode.title}</span>
+                                        <span className="mode-desc">{mode.description}</span>
+                                    </div>
                                     {mode.requiresAuth && !isAuthenticated && (
                                         <span className="lock-badge">Sign in</span>
                                     )}
