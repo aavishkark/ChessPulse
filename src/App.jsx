@@ -53,12 +53,14 @@ export default function App() {
         <Navbar />
         <div className="main-content">
           <Routes>
+            <Route path="/auth-success" element={<OAuthCallbackPage />} />
             <Route path="/" element={<Home />} />
             <Route path="/tournaments" element={<TournamentsPage />} />
             <Route path="/game/:roundId/:gameIndex" element={<GameViewPage />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
-            <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
+            <Route path="/signin" element={<SignInPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/puzzles" element={<PuzzlesPage />} />
             <Route path="/puzzles/rush" element={<PuzzleRushPage />} />
@@ -80,6 +82,7 @@ export default function App() {
             <Route path="/analysis" element={<GameAnalysisPage />} />
             <Route path="/play/online" element={<OnlineGamePage />} />
             <Route path="/customize" element={<CustomizePage />} />
+            <Route path="*" element={<Home />} />
           </Routes>
         </div>
         <Footer />

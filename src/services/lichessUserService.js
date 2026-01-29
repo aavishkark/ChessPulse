@@ -10,13 +10,14 @@ const lichessAxios = axios.create({
 });
 
 /**
- * Fetch a Lichess user's public data
- * @param {string} username - Lichess username
- * @returns {Promise<Object>} User data including ratings, game counts, etc.
+ * @param {string} username
+ * @returns {Promise<Object>}
  */
 export async function getLichessUser(username) {
+    const cleanUsername = username.replace(/^(?:https?:\/\/)?(?:www\.|en\.)?lichess\.org\/@\/([^/?#]+).*$/, '$1');
+
     try {
-        const response = await lichessAxios.get(`/user/${username}`);
+        const response = await lichessAxios.get(`/user/${cleanUsername}`);
         return response.data;
     } catch (error) {
         if (error.response?.status === 404) {
@@ -30,25 +31,46 @@ export async function getLichessUser(username) {
 }
 
 /**
- * Fetch a Lichess user's recent games
- * @param {string} username - Lichess username
- * @param {number} max - Maximum number of games to fetch (default: 10)
- * @returns {Promise<Array>} Array of recent games
+ * 
+ * @param {string} username
+ * @param {number} max
+ * @returns {Promise<Array>}
  */
-export async function getUserRecentGames(username, max = 10) {
+export async function getUserRecentGames(username, max = 5) {
+    const cleanUsername = username.replace(/^(?:https?:\/\/)?(?:www\.|en\.)?lichess\.org\/@\/([^/?#]+).*$/, '$1');
+
     try {
-        const response = await lichessAxios.get(`/user/${username}/rating-history`);
-        return response.data;
+        const response = await lichessAxios.get(`/games/user/${cleanUsername}`, {
+            params: {
+                max: max,
+                perfType: 'bullet,blitz,rapid,classical',
+                opening: true
+            },
+            headers: {
+                'Accept': 'application/x-ndjson'
+            },
+            responseType: 'text'
+        });
+
+        if (!response.data) return [];
+
+        return response.data.trim().split('\n').map(line => {
+            try {
+                return JSON.parse(line);
+            } catch (e) {
+                return null;
+            }
+        }).filter(g => g !== null);
+
     } catch (error) {
-        console.error('Failed to fetch rating history:', error);
+        console.error('Failed to fetch recent games:', error);
         return [];
     }
 }
 
 /**
- * Fetch user's activity feed
- * @param {string} username - Lichess username
- * @returns {Promise<Array>} Activity data
+ * @param {string} username
+ * @returns {Promise<Array>}
  */
 export async function getUserActivity(username) {
     try {

@@ -10,8 +10,10 @@ const chesscomAxios = axios.create({
 });
 
 export async function getChesscomUser(username) {
+    const cleanUsername = username.replace(/^(?:https?:\/\/)?(?:www\.)?chess\.com\/member\/([^/?#]+).*$/, '$1');
+
     try {
-        const response = await chesscomAxios.get(`/player/${username.toLowerCase()}`);
+        const response = await chesscomAxios.get(`/player/${cleanUsername.toLowerCase()}`);
         return response.data;
     } catch (error) {
         if (error.response?.status === 404) {
@@ -25,8 +27,10 @@ export async function getChesscomUser(username) {
 }
 
 export async function getChesscomStats(username) {
+    const cleanUsername = username.replace(/^(?:https?:\/\/)?(?:www\.)?chess\.com\/member\/([^/?#]+).*$/, '$1');
+
     try {
-        const response = await chesscomAxios.get(`/player/${username.toLowerCase()}/stats`);
+        const response = await chesscomAxios.get(`/player/${cleanUsername.toLowerCase()}/stats`);
         return response.data;
     } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -34,16 +38,39 @@ export async function getChesscomStats(username) {
     }
 }
 
+export async function getRecentGames(username, max = 10) {
+    const cleanUsername = username.replace(/^(?:https?:\/\/)?(?:www\.)?chess\.com\/member\/([^/?#]+).*$/, '$1').toLowerCase();
+
+    try {
+        const archivesRes = await chesscomAxios.get(`/player/${cleanUsername}/games/archives`);
+        const archives = archivesRes.data.archives;
+
+        if (!archives || archives.length === 0) return [];
+
+        const lastArchiveUrl = archives[archives.length - 1];
+
+        const gamesRes = await axios.get(lastArchiveUrl);
+        const games = gamesRes.data.games;
+
+        return games.reverse().slice(0, max);
+    } catch (error) {
+        console.error('Failed to fetch recent games:', error);
+        return [];
+    }
+}
+
 export async function getChesscomUserFull(username) {
-    const [profile, stats] = await Promise.all([
+    const [profile, stats, games] = await Promise.all([
         getChesscomUser(username),
-        getChesscomStats(username)
+        getChesscomStats(username),
+        getRecentGames(username)
     ]);
-    return { profile, stats };
+    return { profile, stats, games };
 }
 
 export const chesscomUserService = {
     getChesscomUser,
     getChesscomStats,
+    getRecentGames,
     getChesscomUserFull
 };

@@ -1,7 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { authService } from '../services/authService';
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext(null);
 
@@ -22,12 +20,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('accessToken');
-
       if (storedToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         try {
           const response = await authService.verifyToken();
-
           if (response.data && response.data.data && response.data.data.user) {
             setUser(response.data.data.user);
           }
@@ -42,13 +37,6 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
-    }
-  }, [token]);
 
   const register = async (email, username, password) => {
     try {
@@ -101,7 +89,6 @@ export const AuthProvider = ({ children }) => {
       setToken(null);
       setRefreshToken(null);
       setUser(null);
-      delete axios.defaults.headers.common['Authorization'];
     }
   };
 

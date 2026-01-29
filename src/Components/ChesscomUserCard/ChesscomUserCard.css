@@ -3,7 +3,6 @@
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 24px;
-    max-width: 480px;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
     position: relative;
@@ -138,65 +137,175 @@
 
 .chesscom-stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
     margin-bottom: 20px;
 }
 
-.chesscom-stat-box {
+.chesscom-stat-card {
     background: var(--glass);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
     transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.chesscom-stat-box:hover {
+.chesscom-stat-card:hover {
     transform: translateY(-2px);
     border-color: #81b64c;
 }
 
-.chesscom-stat-label {
+.stat-card-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.stat-label {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: var(--text);
     opacity: 0.6;
-    margin-bottom: 4px;
+    font-weight: 700;
 }
 
-.chesscom-stat-value {
-    font-size: 22px;
-    font-weight: 700;
+.stat-best {
+    font-size: 9px;
+    color: #81b64c;
+    background: rgba(129, 182, 76, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.rating-display {
+    margin-bottom: 12px;
+}
+
+.current-rating {
+    font-size: 24px;
+    font-weight: 800;
     color: var(--text);
 }
 
-.chesscom-stat-value.bullet {
+.current-rating.bullet {
     color: #fbbf24;
 }
 
-.chesscom-stat-value.blitz {
+.current-rating.blitz {
     color: #38bdf8;
 }
 
-.chesscom-stat-value.rapid {
+.current-rating.rapid {
     color: #4ade80;
 }
 
-.chesscom-stat-value.daily {
+.current-rating.daily {
     color: #a855f7;
 }
 
-.chesscom-stat-value.tactics {
+.current-rating.tactics {
     color: #f472b6;
 }
 
-.chesscom-stat-record {
-    font-size: 11px;
+.current-rating.puzzle-rush {
+    color: #f59e0b;
+}
+
+.chart-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.donut-chart {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.donut-chart::after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: var(--bg-soft);
+    border-radius: 50%;
+}
+
+.chart-center {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+}
+
+.chart-center span {
+    font-size: 14px;
+    font-weight: 800;
     color: var(--text);
-    opacity: 0.5;
-    margin-top: 2px;
+}
+
+.chart-center small {
+    font-size: 8px;
+    opacity: 0.6;
+    text-transform: uppercase;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+.legend-item .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.legend-item.win .dot {
+    background: #4ade80;
+}
+
+.legend-item.loss .dot {
+    background: #f87171;
+}
+
+.legend-item.draw .dot {
+    background: #94a3b8;
+}
+
+.chesscom-stat-card.simple {
+    padding: 20px;
+    justify-content: center;
+}
+
+.chesscom-stat-card.simple .rating-display {
+    margin-bottom: 0;
 }
 
 .chesscom-profile-link {
@@ -250,6 +359,28 @@
     opacity: 0.6;
 }
 
+.country-flag {
+    font-size: 16px;
+    cursor: help;
+}
+
+.avatar-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-section .country-flag {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: var(--bg-soft);
+    border-radius: 50%;
+    padding: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 @media (max-width: 480px) {
     .chesscom-user-card {
         padding: 16px;
@@ -258,13 +389,5 @@
     .chesscom-stats-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
-    }
-
-    .chesscom-stat-box {
-        padding: 12px;
-    }
-
-    .chesscom-stat-value {
-        font-size: 18px;
     }
 }

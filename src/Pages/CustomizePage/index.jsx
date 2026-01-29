@@ -146,14 +146,7 @@ export default function CustomizePage() {
                             <select
                                 value={pieceSet}
                                 onChange={(e) => updateBoardSettings({ pieceSet: e.target.value })}
-                                style={{
-                                    background: 'rgba(255,255,255,0.1)',
-                                    border: 'none',
-                                    color: 'white',
-                                    padding: '4px 8px',
-                                    borderRadius: 6,
-                                    cursor: 'pointer'
-                                }}
+                                className="customize-select"
                             >
                                 {PIECE_SETS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
@@ -174,14 +167,7 @@ export default function CustomizePage() {
                             <select
                                 value={animationSpeed}
                                 onChange={(e) => updateBoardSettings({ animationSpeed: Number(e.target.value) })}
-                                style={{
-                                    background: 'rgba(255,255,255,0.1)',
-                                    border: 'none',
-                                    color: 'white',
-                                    padding: '4px 8px',
-                                    borderRadius: 6,
-                                    cursor: 'pointer'
-                                }}
+                                className="customize-select"
                             >
                                 <option value={0}>Instant</option>
                                 <option value={100}>Fast</option>

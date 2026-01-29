@@ -1,22 +1,26 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { getLichessUser } from '../../services/lichessUserService';
 import './LichessUserCard.css';
 
 export default function LichessUserCard({ initialUsername = '' }) {
-    const [username, setUsername] = useState(initialUsername);
+    const [username, setUsername] = useState(initialUsername || '');
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const fetchUser = useCallback(async () => {
-        if (!username.trim()) return;
+        if (!username?.trim()) return;
 
         setLoading(true);
         setError(null);
 
         try {
-            const data = await getLichessUser(username.trim());
-            setUserData(data);
+            const [userResponse, gamesResponse] = await Promise.all([
+                getLichessUser(username.trim()),
+                import('../../services/lichessUserService').then(m => m.getUserRecentGames(username.trim())).catch(() => [])
+            ]);
+
+            setUserData({ ...userResponse, games: gamesResponse || [] });
         } catch (err) {
             setError(err.message);
             setUserData(null);
@@ -24,6 +28,12 @@ export default function LichessUserCard({ initialUsername = '' }) {
             setLoading(false);
         }
     }, [username]);
+
+    useEffect(() => {
+        if (initialUsername) {
+            fetchUser();
+        }
+    }, []);
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') {
@@ -106,38 +116,72 @@ export default function LichessUserCard({ initialUsername = '' }) {
                         </div>
                     </div>
 
-                    <div className="lichess-stats-grid">
-                        {['bullet', 'blitz', 'rapid', 'classical', 'puzzle'].map((type) => {
-                            const data = getRatingData(userData.perfs, type);
-                            if (!data) return null;
-                            return (
-                                <div key={type} className="lichess-stat-box">
-                                    <div className="lichess-stat-label">{type}</div>
-                                    <div className={`lichess-stat-value ${type}`}>{data.rating}</div>
-                                    <div className="lichess-stat-games">{formatNumber(data.games)} games</div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
                     {userData.count && (
-                        <div className="lichess-game-counts">
-                            <div className="lichess-game-stat wins">
-                                <div className="count">{formatNumber(userData.count.win)}</div>
-                                <div className="label">Wins</div>
+                        <div className="lichess-global-stats">
+                            <div className="global-chart-section">
+                                {(() => {
+                                    const { win, loss, draw, all } = userData.count;
+                                    const winDeg = (win / all) * 360;
+                                    const lossDeg = (loss / all) * 360;
+                                    const chartStyle = {
+                                        background: `conic-gradient(
+                                            #4ade80 0deg ${winDeg}deg,
+                                            #f87171 ${winDeg}deg ${winDeg + lossDeg}deg,
+                                            #94a3b8 ${winDeg + lossDeg}deg 360deg
+                                        )`
+                                    };
+                                    return (
+                                        <div className="global-donut-wrapper">
+                                            <div className="donut-chart large" style={chartStyle}>
+                                                <div className="chart-center">
+                                                    <span>{all}</span>
+                                                    <small>Games</small>
+                                                </div>
+                                            </div>
+                                            <div className="global-legend">
+                                                <div className="g-item"><span className="dot win"></span> {win} Wins</div>
+                                                <div className="g-item"><span className="dot loss"></span> {loss} Losses</div>
+                                                <div className="g-item"><span className="dot draw"></span> {draw} Draws</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
-                            <div className="lichess-game-stat losses">
-                                <div className="count">{formatNumber(userData.count.loss)}</div>
-                                <div className="label">Losses</div>
-                            </div>
-                            <div className="lichess-game-stat draws">
-                                <div className="count">{formatNumber(userData.count.draw)}</div>
-                                <div className="label">Draws</div>
-                            </div>
-                            <div className="lichess-game-stat">
-                                <div className="count">{formatNumber(userData.count.all)}</div>
-                                <div className="label">Total</div>
-                            </div>
+                        </div>
+                    )}
+
+                    {userData.perfs && (
+                        <div className="lichess-stats-grid">
+                            {[
+                                { key: 'bullet', label: 'Bullet', className: 'bullet' },
+                                { key: 'blitz', label: 'Blitz', className: 'blitz' },
+                                { key: 'rapid', label: 'Rapid', className: 'rapid' },
+                                { key: 'classical', label: 'Classical', className: 'classical' },
+                                { key: 'puzzle', label: 'Puzzles', className: 'puzzle' }
+                            ].map(({ key, label, className }) => {
+                                const perf = userData.perfs[key];
+                                if (!perf || perf.games === 0) return null;
+
+                                return (
+                                    <div key={key} className="lichess-stat-card">
+                                        <div className="stat-card-header">
+                                            <span className="stat-label">{label}</span>
+                                        </div>
+                                        <div className="stat-card-body">
+                                            <div className={`current-rating ${className}`}>{perf.rating}</div>
+                                            <div className="games-count-bar">
+                                                <span className="count-label">{perf.games} games</span>
+                                                <div className="progress-bg">
+                                                    <div
+                                                        className={`progress-fill ${className}`}
+                                                        style={{ width: `${Math.min((perf.games / 2000) * 100, 100)}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
 
@@ -151,6 +195,6 @@ export default function LichessUserCard({ initialUsername = '' }) {
                     </a>
                 </>
             )}
-        </div>
+        </div >
     );
 }

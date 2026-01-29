@@ -1,36 +1,28 @@
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
-
-const authAPI = axios.create({
-  baseURL: `${API_BASE_URL}/auth`,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+import api from '../config/api';
 
 export const authService = {
   register: async (email, username, password) => {
-    const response = await authAPI.post('/register', { email, username, password });
+    const response = await api.post('/auth/register', { email, username, password });
     return response.data;
   },
 
   login: async (email, password) => {
-    const response = await authAPI.post('/login', { email, password });
+    const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
 
   logout: async (refreshToken) => {
-    const response = await authAPI.post('/logout', { refreshToken });
+    const response = await api.post('/auth/logout', { refreshToken });
     return response.data;
   },
 
   verifyToken: async () => {
-    const response = await axios.get(`${API_BASE_URL}/auth/verify`);
+    const response = await api.get('/auth/verify');
     return response;
   },
 
   refreshToken: async (refreshToken) => {
-    const response = await authAPI.post('/refresh', { refreshToken });
+    const response = await api.post('/auth/refresh', { refreshToken });
     return response.data;
   }
 };

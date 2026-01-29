@@ -81,9 +81,6 @@ export default function Navbar() {
           <li role="none">
             <Link role="menuitem" to="/play/online" className={location.pathname === "/play/online" ? "active" : ""} onClick={handleLinkClick}>Play</Link>
           </li>
-          <li role="none">
-            <Link role="menuitem" to="/customize" className={location.pathname === "/customize" ? "active" : ""} onClick={handleLinkClick}>Customize</Link>
-          </li>
 
           <li
             onClick={() => { setTheme(theme === "dark" ? "light" : "dark"); }}
@@ -123,6 +120,9 @@ export default function Navbar() {
                   <div className="dropdown-divider"></div>
                   <Link to="/profile" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
                     Profile
+                  </Link>
+                  <Link to="/customize" className="dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                    Customize
                   </Link>
                   <button className="dropdown-item logout-btn" onClick={handleLogout}>
                     Logout

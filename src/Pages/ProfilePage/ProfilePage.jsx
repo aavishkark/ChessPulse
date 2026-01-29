@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Container, Heading, Text, VStack, Box, Tabs, Flex, Tag, Avatar } from '@chakra-ui/react';
-import { Calendar, MapPin, Shield, Search } from 'lucide-react';
+import { Container, Heading, Text, VStack, Box, Tabs, Flex, Tag, Avatar, Button } from '@chakra-ui/react';
+import { Calendar, MapPin, Shield, Search, Edit2 } from 'lucide-react';
 import GameStatsView from './GameStatsView';
 import PuzzleStatsView from './PuzzleStatsView';
 import LichessUserCard from '../../Components/LichessUserCard';
 import ChesscomUserCard from '../../Components/ChesscomUserCard';
+import EditProfileDialog from './components/EditProfileDialog';
 import './profile.css';
 
 const ProfilePage = () => {
     const { user } = useAuth();
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
     if (!user) {
         return (
@@ -34,7 +37,21 @@ const ProfilePage = () => {
                         </Box>
 
                         <VStack align={{ base: 'center', md: 'start' }} gap={3} flex={1}>
-                            <Heading size="2xl" className="profile-username">{user.username}</Heading>
+                            <Flex width="100%" justify={{ base: 'center', md: 'space-between' }} align="center" gap={4}>
+                                <Heading size="2xl" className="profile-username">{user.username}</Heading>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    colorPalette="purple"
+                                    onClick={() => setIsEditDialogOpen(true)}
+                                    color="white"
+                                    borderColor="rgba(255,255,255,0.2)"
+                                    _hover={{ bg: 'rgba(255,255,255,0.1)' }}
+                                >
+                                    <Edit2 size={14} style={{ marginRight: '6px' }} />
+                                    Edit Profile
+                                </Button>
+                            </Flex>
 
                             <Flex gap={4} wrap="wrap" justify={{ base: 'center', md: 'start' }}>
                                 {user.country && (
@@ -71,11 +88,11 @@ const ProfilePage = () => {
                         </Tabs.Trigger>
                         <Tabs.Trigger value="lichess" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
                             <Search size={14} style={{ marginRight: '6px' }} />
-                            Lichess Lookup
+                            {user.lichessUsername ? 'Lichess Stats' : 'Lichess Lookup'}
                         </Tabs.Trigger>
                         <Tabs.Trigger value="chesscom" _selected={{ color: 'white', bg: 'var(--accent)', borderColor: 'var(--accent)' }} className="tab-item">
                             <Search size={14} style={{ marginRight: '6px' }} />
-                            Chess.com Lookup
+                            {user.chesscomUsername ? 'Chess.com Stats' : 'Chess.com Lookup'}
                         </Tabs.Trigger>
                     </Tabs.List>
 
@@ -86,16 +103,23 @@ const ProfilePage = () => {
                         <PuzzleStatsView />
                     </Tabs.Content>
                     <Tabs.Content value="lichess" mt={6} p={0}>
-                        <Box display="flex" justifyContent="center">
-                            <LichessUserCard />
-                        </Box>
+                        <LichessUserCard
+                            key={user.lichessUsername || 'lichess-empty'}
+                            initialUsername={user.lichessUsername}
+                        />
                     </Tabs.Content>
                     <Tabs.Content value="chesscom" mt={6} p={0}>
-                        <Box display="flex" justifyContent="center">
-                            <ChesscomUserCard />
-                        </Box>
+                        <ChesscomUserCard
+                            key={user.chesscomUsername || 'chesscom-empty'}
+                            initialUsername={user.chesscomUsername}
+                        />
                     </Tabs.Content>
                 </Tabs.Root>
+
+                <EditProfileDialog
+                    isOpen={isEditDialogOpen}
+                    onClose={() => setIsEditDialogOpen(false)}
+                />
             </Container>
         </div>
     );
