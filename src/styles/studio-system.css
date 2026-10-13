@@ -1,0 +1,230 @@
+/* ==========================================================================
+   CHESSPULSE — UNIFIED STUDIO DESIGN SYSTEM (LUMORA × SODA TELEMETRY)
+   Synchronizes Arena themes, Editorial Chapter Headers, and Specular Surfaces
+   ========================================================================== */
+
+:root,
+body[data-arena="blitz"] {
+  --arena-accent: #a855f7;
+  --arena-accent-2: #06b6d4;
+  --arena-rgb: 168, 85, 247;
+  --arena-rgb-2: 6, 182, 212;
+  --arena-glow: rgba(168, 85, 247, 0.16);
+  --arena-surface-tint: rgba(59, 7, 100, 0.16);
+}
+
+body[data-arena="classic"] {
+  --arena-accent: #10b981;
+  --arena-accent-2: #06b6d4;
+  --arena-rgb: 16, 185, 129;
+  --arena-rgb-2: 6, 182, 212;
+  --arena-glow: rgba(16, 185, 129, 0.16);
+  --arena-surface-tint: rgba(6, 78, 59, 0.18);
+}
+
+body[data-arena="gold"] {
+  --arena-accent: #f59e0b;
+  --arena-accent-2: #ef4444;
+  --arena-rgb: 245, 158, 11;
+  --arena-rgb-2: 239, 68, 68;
+  --arena-glow: rgba(245, 158, 11, 0.16);
+  --arena-surface-tint: rgba(120, 53, 15, 0.18);
+}
+
+/* ==========================================================================
+   LUMORA-STYLE EDITORIAL CHAPTER HEADERS
+   ========================================================================== */
+
+.cp-chapter-header {
+  display: grid;
+  grid-template-columns: 240px 1fr auto;
+  align-items: end;
+  gap: 2rem;
+  padding-bottom: 1.75rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+}
+
+body[data-theme="light"] .cp-chapter-header {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+.cp-chapter-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 140px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--arena-accent), transparent);
+}
+
+.cp-chapter-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cp-chapter-index {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--arena-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-chapter-index-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--arena-accent);
+  box-shadow: 0 0 10px var(--arena-accent);
+}
+
+.cp-chapter-subtag {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.cp-chapter-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cp-chapter-title {
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  color: var(--text);
+  margin: 0;
+}
+
+.cp-chapter-title-accent {
+  background: linear-gradient(135deg, var(--arena-accent) 0%, var(--arena-accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cp-chapter-desc {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 58ch;
+  line-height: 1.6;
+}
+
+.cp-chapter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   SPECULAR MONOLITH & STUDIO CONSOLE CHROME
+   ========================================================================== */
+
+.cp-studio-section {
+  position: relative;
+  padding: 5.5rem 1.5rem;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, var(--arena-surface-tint) 0%, transparent 70%),
+    #07090f;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: background 0.8s ease;
+}
+
+body[data-theme="light"] .cp-studio-section {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(var(--arena-rgb), 0.05) 0%, transparent 70%),
+    #f8fafc;
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+.cp-studio-container {
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.cp-console-window {
+  background: linear-gradient(165deg, rgba(19, 25, 42, 0.85) 0%, rgba(9, 12, 22, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 22px;
+  box-shadow:
+    0 24px 60px -15px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+body[data-theme="light"] .cp-console-window {
+  background: linear-gradient(165deg, #ffffff 0%, #f8fafc 100%);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow:
+    0 20px 50px -15px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 #ffffff;
+}
+
+.cp-window-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.5rem;
+  background: rgba(0, 0, 0, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-wrap: wrap;
+}
+
+body[data-theme="light"] .cp-window-topbar {
+  background: #f1f5f9;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+.cp-window-dots {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.cp-window-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.cp-window-dot.red { background: #ef4444; opacity: 0.8; }
+.cp-window-dot.amber { background: #f59e0b; opacity: 0.8; }
+.cp-window-dot.green { background: #10b981; opacity: 0.8; }
+
+.cp-window-title {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 960px) {
+  .cp-chapter-header {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}

@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { ChakraProvider, defaultSystem } from '@chakra-ui/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element not found');
@@ -12,9 +13,12 @@ if (!rootElement) throw new Error('Root element not found');
 createRoot(rootElement).render(
     <BrowserRouter>
         <ChakraProvider value={defaultSystem}>
-            <AuthProvider>
-                <App />
-            </AuthProvider>
+            <ThemeProvider>
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            </ThemeProvider>
         </ChakraProvider>
     </BrowserRouter>
 );
+

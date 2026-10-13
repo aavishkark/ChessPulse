@@ -1,0 +1,241 @@
+/* ==========================================================================
+   CHESSPULSE — SHARED SUBPAGE ATMOSPHERIC HEADER & AMBIENT LAYER
+   Matches the Hero & Landing Page Lumora × Soda Studio Aesthetic
+   ========================================================================== */
+
+.cp-page-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  --amb-primary: #10b981;
+  --amb-secondary: #06b6d4;
+  --amb-glow: rgba(16, 185, 129, 0.14);
+}
+
+.cp-page-ambient.theme-blitz {
+  --amb-primary: #a855f7;
+  --amb-secondary: #06b6d4;
+  --amb-glow: rgba(168, 85, 247, 0.15);
+}
+
+.cp-page-ambient.theme-gold {
+  --amb-primary: #f59e0b;
+  --amb-secondary: #ef4444;
+  --amb-glow: rgba(245, 158, 11, 0.14);
+}
+
+.cp-ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.85;
+  transition: background 0.8s ease;
+}
+
+.cp-ambient-glow-1 {
+  top: -12%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 820px;
+  height: 420px;
+  background: radial-gradient(ellipse at center, var(--amb-glow) 0%, transparent 70%);
+}
+
+.cp-ambient-glow-2 {
+  bottom: -15%;
+  right: -8%;
+  width: 560px;
+  height: 560px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+}
+
+.cp-ambient-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 65% at 50% 25%, black 10%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 25%, black 10%, transparent 80%);
+}
+
+body[data-theme="light"] .cp-ambient-grid {
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+}
+
+.cp-ambient-watermark {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: clamp(4.5rem, 11vw, 10rem);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.018);
+  white-space: nowrap;
+  user-select: none;
+}
+
+body[data-theme="light"] .cp-ambient-watermark {
+  color: rgba(15, 23, 42, 0.025);
+}
+
+/* ==========================================================================
+   LUMORA-STYLE EDITORIAL SPLIT PAGE HEADER
+   ========================================================================== */
+
+.cp-page-header {
+  position: relative;
+  z-index: 2;
+  max-width: 1320px;
+  margin: 0 auto 2rem;
+  padding: 24px 24px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  --hdr-accent: #10b981;
+  --hdr-accent-2: #06b6d4;
+  --hdr-rgb: 16, 185, 129;
+}
+
+body[data-theme="light"] .cp-page-header {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+.cp-page-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 24px;
+  width: 150px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--hdr-accent), transparent);
+}
+
+.cp-page-header.theme-blitz {
+  --hdr-accent: #a855f7;
+  --hdr-accent-2: #06b6d4;
+  --hdr-rgb: 168, 85, 247;
+}
+
+.cp-page-header.theme-gold {
+  --hdr-accent: #f59e0b;
+  --hdr-accent-2: #fbbf24;
+  --hdr-rgb: 245, 158, 11;
+}
+
+.cp-page-header-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.cp-header-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cp-back-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[data-theme="light"] .cp-back-pill {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+}
+
+.cp-back-pill:hover {
+  border-color: var(--hdr-accent);
+  color: var(--hdr-accent);
+  transform: translateX(-3px);
+}
+
+.cp-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: rgba(var(--hdr-rgb), 0.1);
+  border: 1px solid rgba(var(--hdr-rgb), 0.28);
+  color: var(--hdr-accent);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.cp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--hdr-accent);
+  box-shadow: 0 0 10px var(--hdr-accent);
+}
+
+.cp-page-header-split {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: end;
+  gap: 2rem;
+}
+
+.cp-page-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: clamp(2rem, 3.6vw, 3.1rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.06;
+  color: var(--text);
+  margin: 0;
+}
+
+.cp-page-title-accent {
+  background: linear-gradient(135deg, var(--hdr-accent) 0%, var(--hdr-accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cp-page-subtitle {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  max-width: 54ch;
+  justify-self: end;
+}
+
+@media (max-width: 900px) {
+  .cp-page-header-split {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+  .cp-page-subtitle {
+    justify-self: start;
+  }
+}

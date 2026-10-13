@@ -1,12 +1,11 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { Box, Button, Heading, Input, Stack, Text } from "@chakra-ui/react";
 import Navbar from "./Components/Navbar/Navbar";
-import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
 import { Footer } from "./Components/Footer/Footer";
-import axios from "axios";
-import { Chess } from "chess.js";
+import ProtectedRoute from "./Components/ProtectedRoute/ProtectedRoute";
+import RecruiterSandboxModal from "./Components/Sandbox/RecruiterSandboxModal";
 import './index.css';
+
 import Home from "./Pages/Home/Home";
 import TournamentsPage from "./Pages/TournamentsPage/TournamentsPage";
 import GameViewPage from "./Pages/GameViewPage/GameViewPage";
@@ -29,36 +28,19 @@ import OnlineGamePage from "./Pages/OnlineGamePage";
 import CustomizePage from "./Pages/CustomizePage";
 import { BoardCustomizationProvider } from "./contexts/BoardCustomizationContext";
 
-const API = "https://chesspulse-backend.onrender.com/evaluate?fen=";
-
 export default function App() {
-  const [pgn, setPgn] = useState("");
-  const [evaluation, setEvaluation] = useState(null);
-
-  const handleEvaluate = async () => {
-    if (!pgn.trim()) return;
-    const chess = new Chess();
-    chess.loadPgn(pgn);
-    const fen = chess.fen();
-
-    const res = await axios.get(`${API}${encodeURIComponent(fen)}`);
-    setEvaluation(res.data.evaluation);
-  };
-
-  const width = evaluation === null ? "50%" : `${50 + Math.max(-5, Math.min(5, evaluation)) * 10}%`;
+  const [sandboxOpen, setSandboxOpen] = useState(false);
 
   return (
     <BoardCustomizationProvider>
       <div className="app-container">
-        <Navbar />
+        <Navbar onOpenSandbox={() => setSandboxOpen(true)} />
         <div className="main-content">
           <Routes>
+            <Route path="/" element={<Home onOpenSandbox={() => setSandboxOpen(true)} />} />
             <Route path="/auth-success" element={<OAuthCallbackPage />} />
-            <Route path="/" element={<Home />} />
             <Route path="/tournaments" element={<TournamentsPage />} />
             <Route path="/game/:roundId/:gameIndex" element={<GameViewPage />} />
-            <Route path="/signin" element={<SignInPage />} />
-            <Route path="/signup" element={<SignUpPage />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/profile" element={<ProfilePage />} />
@@ -82,10 +64,14 @@ export default function App() {
             <Route path="/analysis" element={<GameAnalysisPage />} />
             <Route path="/play/online" element={<OnlineGamePage />} />
             <Route path="/customize" element={<CustomizePage />} />
-            <Route path="*" element={<Home />} />
+            <Route path="*" element={<Home onOpenSandbox={() => setSandboxOpen(true)} />} />
           </Routes>
         </div>
         <Footer />
+        <RecruiterSandboxModal
+          isOpen={sandboxOpen}
+          onClose={() => setSandboxOpen(false)}
+        />
       </div>
     </BoardCustomizationProvider>
   );
