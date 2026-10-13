@@ -30,10 +30,22 @@ export const FlameIcon = ({ size = 16, color = 'currentColor' }) => (
     </svg>
 );
 
+export const PulseBrandMark = ({ size = 24, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" stroke={color} strokeWidth="1.75" strokeOpacity="0.45" />
+        <path
+            d="M5.5 12H8.5L10.5 7.5L13.5 16.5L15.5 12H18.5"
+            stroke={color}
+            strokeWidth="2.1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+    </svg>
+);
+
 export const CrownIcon = ({ size = 16, color = 'currentColor' }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 17l2-10 5 4 3-6 3 6 5-4 2 10z" />
-        <path d="M2 17h20v3H2z" />
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
 );
 

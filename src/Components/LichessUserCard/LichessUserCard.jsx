@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getLichessUser } from '../../services/lichessUserService';
+import { getLichessUser, getUserRecentGames } from '../../services/lichessUserService';
 import './LichessUserCard.css';
 
 export default function LichessUserCard({ initialUsername = '' }) {
@@ -17,7 +17,7 @@ export default function LichessUserCard({ initialUsername = '' }) {
         try {
             const [userResponse, gamesResponse] = await Promise.all([
                 getLichessUser(username.trim()),
-                import('../../services/lichessUserService').then(m => m.getUserRecentGames(username.trim())).catch(() => [])
+                getUserRecentGames(username.trim()).catch(() => [])
             ]);
 
             setUserData({ ...userResponse, games: gamesResponse || [] });

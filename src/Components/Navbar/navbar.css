@@ -1,79 +1,188 @@
 .chess-navbar {
-  backdrop-filter: blur(8px);
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 10px 16px;
-  background: var(--bg);
-  border-bottom: 2px solid var(--border);
-  color: var(--text);
   position: sticky;
   top: 0;
-  z-index: 200;
+  z-index: 250;
+  background: rgba(11, 15, 25, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+body[data-theme="light"] .chess-navbar {
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.chess-navbar__inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .chess-navbar__left {
-  flex: 1 1;
   display: flex;
   align-items: center;
 }
 
-.chess-navbar__logo {
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: var(--accent);
-  padding-left: 4px;
-}
-
-.search-box {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  display: flex;
-  justify-content: center;
-}
-
-.search-box input {
-  width: min(46vw, 360px);
-  max-width: 360px;
-  min-width: 120px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--glass);
-  border: 1px solid transparent;
-  border-color: var(--border);
+.chess-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
   color: var(--text);
-  outline: none;
-  transition: width 0.22s ease, border-color 0.18s ease;
+  transition: transform 0.2s ease;
 }
 
-.search-box input:focus {
-  width: min(64vw, 540px);
-  border-color: var(--accent-faint);
+.chess-navbar__brand:hover {
+  transform: translateY(-1px);
 }
 
-.search-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(46vw, 360px);
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
-  animation: fadeIn 160ms ease;
-  z-index: 250;
+.chess-navbar__emblem {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.search-item {
-  padding: 10px 12px;
+.chess-navbar__logo-text {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.chess-navbar__logo-accent {
+  background: linear-gradient(135deg, #10b981 0%, #06b6d4 55%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.chess-navbar__telemetry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #10b981;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.chess-navbar__telemetry-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.chess-navbar__right {
+  display: flex;
+  align-items: center;
+}
+
+.chess-navbar__links {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 6px;
+}
+
+.chess-navbar__links a:not(.auth-btn):not(.dropdown-item) {
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chess-navbar__links a:not(.auth-btn):not(.dropdown-item):hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+body[data-theme="light"] .chess-navbar__links a:not(.auth-btn):not(.dropdown-item):hover {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.chess-navbar__links a:not(.auth-btn):not(.dropdown-item).active {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.12);
+}
+
+.navbar-sandbox-pill {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.18), rgba(6, 182, 212, 0.14));
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
 }
 
-.search-item:hover {
-  background: var(--accent-faint);
+body[data-theme="light"] .navbar-sandbox-pill {
+  color: #6d28d9;
+}
+
+.navbar-sandbox-pill:hover {
+  border-color: #8b5cf6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.28);
+}
+
+.theme-toggle-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-icon {
+  font-size: 0.95rem;
+  line-height: 1;
 }
 
 .chess-navbar__toggle {
@@ -82,7 +191,7 @@
   border: none;
   cursor: pointer;
   padding: 6px;
-  border-radius: 6px;
+  border-radius: 8px;
   position: relative;
   z-index: 310;
 }
@@ -90,16 +199,16 @@
 .chess-navbar__toggle .bar {
   display: block;
   width: 22px;
-  height: 3px;
+  height: 2.5px;
   margin: 4px 0;
-  background: var(--accent);
+  background: var(--text);
   border-radius: 2px;
   transition: all 0.3s ease;
   transform-origin: center;
 }
 
 .chess-navbar.slide-open .chess-navbar__toggle .bar:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
+  transform: translateY(6.5px) rotate(45deg);
 }
 
 .chess-navbar.slide-open .chess-navbar__toggle .bar:nth-child(2) {
@@ -108,204 +217,7 @@
 }
 
 .chess-navbar.slide-open .chess-navbar__toggle .bar:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
-}
-
-.chess-navbar__links {
-  display: flex;
-  align-items: center;
-  list-style: none;
-  gap: 18px;
-}
-
-.chess-navbar__links a,
-.chess-navbar__links .theme-toggle {
-  text-decoration: none;
-  font-size: 0.98rem;
-  padding: 6px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.chess-navbar__links a:hover,
-.chess-navbar__links .theme-toggle:hover {
-  background: var(--accent-faint);
-  color: var(--accent);
-}
-
-.chess-navbar__links a.active {
-  background: var(--accent-faint);
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.profile-wrapper {
-  position: relative;
-}
-
-.profile-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 6px;
-}
-
-.avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid var(--accent);
-}
-
-.elo {
-  background: var(--accent-faint);
-  padding: 3px 8px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.profile-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  display: none;
-  flex-direction: column;
-  width: 160px;
-  z-index: 320;
-}
-
-.profile-menu.open {
-  display: flex;
-}
-
-.profile-menu a {
-  padding: 10px 12px;
-  text-decoration: none;
-  color: var(--text);
-}
-
-.profile-menu a:hover {
-  background: var(--accent-faint);
-}
-
-.logout {
-  color: #ff5858;
-}
-
-.theme-toggle-icon {
-  cursor: pointer;
-}
-
-.search-box-btn {
-  margin-left: 8px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: var(--bg2);
-  font-weight: 600;
-  font-size: 0.95rem;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
-  white-space: nowrap;
-}
-
-.search-box-btn:hover {
-  background: var(--accent-faint);
-  color: var(--accent);
-}
-
-.search-box-btn:active {
-  transform: scale(0.94);
-}
-
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .chess-navbar {
-    padding: 10px 12px;
-    align-items: center;
-  }
-
-  .search-box input {
-    width: min(56vw, 240px);
-  }
-
-  .search-box input:focus {
-    width: min(80vw, 320px);
-  }
-
-  .chess-navbar__toggle {
-    display: block;
-  }
-
-  .chess-navbar__links {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100vh;
-    width: min(84vw, 320px);
-    background: var(--bg2);
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 72px 18px;
-    gap: 18px;
-    transform: translateX(100%);
-    transition: transform 260ms cubic-bezier(.2, .9, .2, 1);
-    box-shadow: -8px 0 30px rgba(0, 0, 0, 0.45);
-    z-index: 300;
-    pointer-events: none;
-  }
-
-  .chess-navbar__links.active {
-    transform: translateX(0);
-    background-color: var(--bg);
-    pointer-events: auto;
-  }
-
-  .chess-navbar__links a,
-  .chess-navbar__links .theme-toggle,
-  .profile-btn {
-    font-size: 1.12rem;
-    width: 100%;
-    display: block;
-  }
-
-  .search-dropdown {
-    left: 12px;
-    transform: none;
-    width: calc(100% - 40px);
-    top: calc(100% + 12px);
-  }
-
-  .profile-menu {
-    position: static;
-    width: 100%;
-    border-radius: 6px;
-  }
-
-  .search-box-btn {
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
+  transform: translateY(-6.5px) rotate(-45deg);
 }
 
 .user-menu-container {
@@ -331,10 +243,10 @@
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
-  border: 2px solid var(--accent);
+  border: 2px solid #10b981;
   object-fit: cover;
 }
 
@@ -342,14 +254,20 @@
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
   min-width: 240px;
   overflow: hidden;
   animation: slideDown 0.2s ease;
   z-index: 320;
+}
+
+body[data-theme="light"] .user-dropdown {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
 }
 
 @keyframes slideDown {
@@ -357,7 +275,6 @@
     opacity: 0;
     transform: translateY(-8px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -369,25 +286,25 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: var(--glass);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .user-avatar-large {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 2px solid var(--accent);
+  border: 2px solid #10b981;
   object-fit: cover;
 }
 
 .user-name {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.95rem;
   color: var(--text);
 }
 
 .user-email {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -401,104 +318,102 @@
 .dropdown-item {
   display: block;
   width: 100%;
-  padding: 12px 16px;
+  padding: 11px 16px;
   text-align: left;
   background: none;
   border: none;
   color: var(--text);
   text-decoration: none;
   cursor: pointer;
-  font-size: 0.95rem;
-  transition: background 0.15s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .dropdown-item:hover {
-  background: var(--accent-faint);
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
 }
 
 .logout-btn {
-  color: #ff5858;
+  color: #ef4444;
 }
 
 .logout-btn:hover {
-  background: rgba(255, 88, 88, 0.1);
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
 }
 
-.auth-btn {
-  display: inline-block;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
+.auth-btn.signin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
   text-decoration: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #04130e;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.28);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
-.signin-btn {
-  background: linear-gradient(135deg, var(--accent) 0%, #6366f1 50%, #8b5cf6 100%);
-  color: #ffffff;
-  border: none;
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.35), 0 0 20px rgba(139, 92, 246, 0.15);
-  position: relative;
-  overflow: hidden;
-}
-
-.signin-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.signin-btn:hover::before {
-  left: 100%;
-}
-
-.signin-btn:hover {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
-  color: #ffffff;
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45), 0 0 30px rgba(139, 92, 246, 0.25);
-}
-
-.signin-btn:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
-}
-
-.signup-btn {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.signup-btn:hover {
-  background: var(--accent-faint);
-  color: var(--accent);
+.auth-btn.signin-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  filter: brightness(1.06);
 }
 
-body[data-theme="light"] .signup-btn {
-  color: #ffffff !important;
-}
+@media (max-width: 960px) {
+  .chess-navbar__toggle {
+    display: block;
+  }
 
-@media (max-width: 768px) {
+  .chess-navbar__links {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(84vw, 320px);
+    background: rgba(11, 15, 25, 0.97);
+    backdrop-filter: blur(24px);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 76px 20px 28px;
+    gap: 10px;
+    transform: translateX(100%);
+    transition: transform 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    box-shadow: -8px 0 36px rgba(0, 0, 0, 0.6);
+    z-index: 300;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+
+  body[data-theme="light"] .chess-navbar__links {
+    background: rgba(255, 255, 255, 0.98);
+  }
+
+  .chess-navbar__links.active {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .chess-navbar__links a:not(.auth-btn):not(.dropdown-item) {
+    font-size: 1rem;
+    padding: 10px 14px;
+    border-radius: 12px;
+    display: block;
+  }
+
   .user-dropdown {
     position: static;
     width: 100%;
-    border-radius: 8px;
+    border-radius: 12px;
     margin-top: 8px;
-  }
-
-  .auth-btn {
-    width: 100%;
-    text-align: center;
-    display: block;
   }
 
   .user-menu-container {

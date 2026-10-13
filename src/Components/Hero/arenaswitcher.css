@@ -1,0 +1,183 @@
+.arena-carousel-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 450px;
+  margin-top: 2rem;
+  position: relative;
+  z-index: 12;
+}
+
+.arena-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.arena-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  color: var(--text-muted);
+}
+
+.arena-header-icon {
+  color: var(--accent);
+}
+
+.arena-nav-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.arena-arrow-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.arena-arrow-btn:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+  transform: scale(1.06);
+}
+
+/* 3-Card Telemetry Grid */
+.arena-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.arena-card {
+  background: rgba(15, 20, 34, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.9rem 0.85rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  text-align: left;
+  outline: none;
+}
+
+:root:not(.dark) .arena-card,
+body[data-theme="light"] .arena-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+.arena-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-3px);
+}
+
+.arena-card.active {
+  border-color: var(--card-accent, #a855f7);
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 10px 26px -6px rgba(0, 0, 0, 0.5),
+              0 0 0 1px var(--card-accent, #a855f7);
+}
+
+.arena-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.arena-icon-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+
+.arena-card:hover .arena-icon-box,
+.arena-card.active .arena-icon-box {
+  transform: scale(1.08);
+  border-color: var(--card-accent, #a855f7);
+}
+
+.arena-card-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--card-accent, #a855f7);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  line-height: 1;
+}
+
+:root:not(.dark) .arena-card-badge,
+body[data-theme="light"] .arena-card-badge {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.arena-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.arena-card-name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.arena-card-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .arena-cards-row {
+    gap: 8px;
+  }
+  .arena-card {
+    padding: 2.2rem 0.4rem 0.7rem;
+  }
+  .arena-card-name {
+    font-size: 0.7rem;
+  }
+}

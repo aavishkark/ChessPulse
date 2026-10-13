@@ -19,7 +19,7 @@ const AICoachCard = ({ onRefresh }) => {
         const particle = document.createElement('div');
         particle.className = 'cursor-particle';
 
-        const symbols = ['♟', '♞', '♝', '♜', '✦', '✧', '⬡', '◇'];
+        const symbols = ['✦', '✧', '⬡', '◇', '◈', '∆'];
         particle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
 
         // Random offset for spread effect

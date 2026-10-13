@@ -1,0 +1,381 @@
+/* ==========================================================================
+   FEATURE BAND — LUMORA 4-PILL STATEMENT BAND & HOVER-SWEEP CAPABILITY ROWS
+   ========================================================================== */
+
+.feature-band-section {
+  padding-top: 4.5rem;
+  padding-bottom: 5rem;
+}
+
+/* 1. Lumora-Inspired 4-Pill Interlocking Band */
+.lumora-pill-band {
+  display: grid;
+  grid-template-columns: 1.25fr auto 1.35fr 1.2fr;
+  gap: 14px;
+  margin-bottom: 4.5rem;
+  align-items: stretch;
+}
+
+.lumora-pill {
+  height: 92px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 2.2rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.lumora-pill:hover {
+  transform: translateY(-3px) scale(1.015);
+}
+
+.lumora-pill-word {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: clamp(1.35rem, 2.5vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.lumora-pill-kicker {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--arena-accent);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.lumora-pill.pill-surface {
+  background: linear-gradient(145deg, rgba(25, 33, 52, 0.85), rgba(13, 18, 30, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.lumora-pill.pill-accent {
+  width: 92px;
+  padding: 0;
+  background: linear-gradient(135deg, var(--arena-accent), var(--arena-accent-2));
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(var(--arena-rgb), 0.35);
+}
+
+.lumora-pill-arrow-svg {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lumora-pill-band:hover .lumora-pill-arrow-svg {
+  transform: translateX(4px) rotate(-15deg);
+}
+
+.lumora-pill.pill-ink {
+  background: #0c101b;
+  border: 1px solid rgba(var(--arena-rgb), 0.35);
+  color: #ffffff;
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    inset 0 0 28px rgba(var(--arena-rgb), 0.12);
+}
+
+.lumora-pill.pill-outline {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
+.lumora-pill-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 12px #10b981;
+}
+
+body[data-theme="light"] .lumora-pill.pill-surface {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+body[data-theme="light"] .lumora-pill.pill-outline {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.22);
+  color: #0f172a;
+}
+
+.fb-studio-pill-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.fb-studio-pill-link:hover {
+  border-color: var(--arena-accent);
+  color: var(--arena-accent);
+  transform: translateY(-2px);
+}
+
+/* 2. Lumora-Style Numbered Hover-Sweep Capability Rows */
+.capability-rows-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+body[data-theme="light"] .capability-rows-list {
+  border-top-color: rgba(15, 23, 42, 0.1);
+}
+
+.capability-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 230px 1.35fr 1fr 220px;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem 1.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  color: var(--text);
+  overflow: hidden;
+  transition: border-color 0.3s ease, padding-left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[data-theme="light"] .capability-row {
+  border-bottom-color: rgba(15, 23, 42, 0.1);
+}
+
+.capability-row-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    color-mix(in srgb, var(--row-accent) 14%, transparent) 60%,
+    color-mix(in srgb, var(--row-accent) 22%, transparent) 100%
+  );
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.capability-row:hover,
+.capability-row.is-hovered {
+  padding-left: 2.25rem;
+  border-bottom-color: var(--row-accent);
+}
+
+.capability-row:hover .capability-row-sweep,
+.capability-row.is-hovered .capability-row-sweep {
+  transform: scaleY(1);
+}
+
+.cap-col-index,
+.cap-col-main,
+.cap-col-specs,
+.cap-col-telemetry {
+  position: relative;
+  z-index: 1;
+}
+
+.cap-col-index {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cap-num {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  transition: color 0.25s ease;
+}
+
+.capability-row:hover .cap-num {
+  color: var(--row-accent);
+}
+
+.cap-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--row-accent);
+  transition: all 0.3s ease;
+}
+
+.capability-row:hover .cap-icon-box {
+  background: var(--row-accent);
+  color: #06080f;
+  border-color: var(--row-accent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--row-accent) 50%, transparent);
+}
+
+.cap-tag {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.cap-col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cap-title {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text);
+}
+
+.cap-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 54ch;
+}
+
+.cap-col-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cap-spec-chip {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease;
+}
+
+.capability-row:hover .cap-spec-chip {
+  border-color: color-mix(in srgb, var(--row-accent) 45%, transparent);
+  color: var(--text);
+}
+
+.cap-col-telemetry {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.cap-metric-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.cap-metric-val {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.03em;
+  transition: color 0.25s ease;
+}
+
+.capability-row:hover .cap-metric-val {
+  color: var(--row-accent);
+}
+
+.cap-metric-lbl {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cap-arrow-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.capability-row:hover .cap-arrow-circle {
+  background: var(--row-accent);
+  border-color: var(--row-accent);
+  color: #06080f;
+  transform: translate(3px, -3px);
+}
+
+@media (max-width: 1120px) {
+  .lumora-pill-band {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .lumora-pill.pill-accent {
+    width: 100%;
+  }
+  .capability-row {
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+  }
+  .cap-col-specs {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 680px) {
+  .lumora-pill-band {
+    grid-template-columns: 1fr;
+  }
+  .lumora-pill {
+    height: 68px;
+  }
+  .capability-row {
+    grid-template-columns: 1fr;
+    padding: 1.5rem 1rem;
+  }
+  .cap-col-telemetry {
+    justify-content: space-between;
+  }
+}

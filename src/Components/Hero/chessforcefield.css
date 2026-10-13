@@ -1,0 +1,72 @@
+.chess-pieces-container-fg,
+.chess-pieces-container-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.chess-pieces-container-fg {
+  z-index: 4;
+}
+
+.chess-pieces-container-bg {
+  z-index: 1;
+}
+
+.cp-item {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform, opacity;
+  transition: filter 0.4s ease;
+}
+
+.cp-item .staunton-piece-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Surgical Perimeter & Stage Orbit Positions (Zero Text Collision) */
+.cp1 { top: 6%;  left: 4%;  width: 78px; height: 78px; }
+.cp2 { top: 8%;  left: 52%; width: 88px; height: 88px; }
+.cp3 { top: 82%; left: 6%;  width: 82px; height: 82px; }
+.cp4 { top: 10%; left: 91%; width: 74px; height: 74px; }
+.cp5 { top: 78%; left: 92%; width: 80px; height: 80px; }
+.cp6 { top: 44%; left: 50%; width: 68px; height: 68px; }
+
+/* Background Depth Pieces */
+.cp7  { top: 22%; left: 44%; width: 52px; height: 52px; filter: blur(1.2px); }
+.cp8  { top: 68%; left: 42%; width: 48px; height: 48px; filter: blur(1.5px); }
+.cp9  { top: 86%; left: 54%; width: 46px; height: 46px; filter: blur(1px); }
+.cp10 { top: 38%; left: 94%; width: 54px; height: 54px; filter: blur(1.2px); }
+
+/* Theme Glow Filters */
+.cp-item.theme-classic {
+  filter: drop-shadow(0 10px 22px rgba(16, 185, 129, 0.45));
+}
+
+.cp-item.theme-blitz {
+  filter: drop-shadow(0 10px 22px rgba(168, 85, 247, 0.5));
+}
+
+.cp-item.theme-gold {
+  filter: drop-shadow(0 10px 22px rgba(245, 158, 11, 0.45));
+}
+
+@media (max-width: 1024px) {
+  .cp2, .cp6, .cp7, .cp8 {
+    display: none;
+  }
+  .cp1, .cp3, .cp4, .cp5 {
+    width: 58px;
+    height: 58px;
+  }
+}

@@ -1,0 +1,38 @@
+#notation-sparks-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.notation-spark-item {
+  position: absolute;
+  bottom: -40px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+  pointer-events: none;
+  user-select: none;
+  animation: floatUpGlyph linear forwards;
+}
+
+@keyframes floatUpGlyph {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--target-opacity, 0.4);
+  }
+  80% {
+    opacity: var(--target-opacity, 0.4);
+  }
+  100% {
+    transform: translateY(-115vh) translateX(var(--drift-x, 25px)) rotate(18deg);
+    opacity: 0;
+  }
+}
