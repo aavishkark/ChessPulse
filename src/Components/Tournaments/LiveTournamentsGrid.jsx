@@ -101,7 +101,12 @@ export default function LiveTournamentsGrid() {
 
             {liveTournaments.length === 0 ? (
                 <div className="no-tournaments">
-                    <span className="no-tournaments-icon">♞</span>
+                    <span className="no-tournaments-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M8 12h2l1.5-3 2 6 1.5-3H17" />
+                        </svg>
+                    </span>
                     <p>No live tournaments at the moment</p>
                     <p className="no-tournaments-subtitle">Check back soon!</p>
                 </div>

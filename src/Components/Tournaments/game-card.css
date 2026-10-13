@@ -98,3 +98,16 @@
     transform: scale(1.02);
     box-shadow: 0 4px 12px var(--card-glow);
 }
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES FOR GAME CARD
+   ========================================================================== */
+body[data-theme="light"] .game-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+}
+
+body[data-theme="light"] .player-name {
+    color: #0f172a;
+}

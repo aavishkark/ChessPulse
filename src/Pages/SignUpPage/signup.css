@@ -4,21 +4,13 @@
     align-items: center;
     justify-content: center;
     padding: 40px 20px;
-    background: linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 100%);
+    background: var(--bg);
     position: relative;
     overflow: hidden;
 }
 
 .auth-page::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-    opacity: 0.03;
-    animation: rotate 30s linear infinite;
+    display: none;
 }
 
 @keyframes rotate {
@@ -33,17 +25,30 @@
 
 .auth-container {
     position: relative;
-    z-index: 1;
+    z-index: 2;
 }
 
 .auth-card {
-    background: var(--glass);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border);
+    position: relative;
+    background: rgba(15, 22, 35, 0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
     padding: 48px 40px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 28px 68px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     animation: fadeInUp 0.6s ease;
+    overflow: hidden;
+}
+
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.5), rgba(52, 211, 153, 0.5), transparent);
 }
 
 @keyframes fadeInUp {
@@ -60,14 +65,21 @@
 
 .auth-header {
     text-align: center;
-    margin-bottom: 36px;
+    margin-bottom: 32px;
 }
 
 .chess-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-    display: inline-block;
-    animation: bounce 2s ease-in-out infinite;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(167, 139, 250, 0.25);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 24px rgba(167, 139, 250, 0.14);
+    animation: bounce 3.5s ease-in-out infinite;
 }
 
 @keyframes bounce {
@@ -78,14 +90,16 @@
     }
 
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-6px);
     }
 }
 
 .auth-title {
+    font-family: var(--font-display, 'Space Grotesk', sans-serif) !important;
     color: var(--text);
     margin-bottom: 8px;
-    font-weight: 700;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
@@ -322,16 +336,71 @@ body[data-theme="light"] .divider-text {
     color: var(--accent-2);
 }
 
+body[data-theme="light"] .auth-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08), inset 0 1px 0 #ffffff;
+}
+
+body[data-theme="light"] .chess-icon {
+    background: linear-gradient(145deg, #ffffff, #f1f5f9);
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08), 0 0 20px rgba(16, 185, 129, 0.12);
+}
+
+body[data-theme="light"] .auth-title {
+    color: #0f172a !important;
+}
+
 body[data-theme="light"] .auth-subtitle {
-    color: rgba(0, 0, 0, 0.6);
+    color: #64748b !important;
+}
+
+body[data-theme="light"] .input-label {
+    color: #0f172a;
+}
+
+body[data-theme="light"] .auth-input {
+    background: #f8fafc !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+    color: #0f172a !important;
+}
+
+body[data-theme="light"] .auth-input:focus {
+    background: #ffffff !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
 }
 
 body[data-theme="light"] .auth-input::placeholder {
-    color: rgba(0, 0, 0, 0.4);
+    color: #94a3b8 !important;
+}
+
+body[data-theme="light"] .oauth-button {
+    background: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.12);
+    color: #0f172a;
+}
+
+body[data-theme="light"] .oauth-button:hover {
+    background: #f1f5f9;
+    border-color: var(--accent);
+}
+
+body[data-theme="light"] .divider-line {
+    background: rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .divider-text {
+    color: #64748b;
+}
+
+body[data-theme="light"] .auth-footer {
+    border-top-color: rgba(15, 23, 42, 0.08);
 }
 
 body[data-theme="light"] .footer-text {
-    color: rgba(0, 0, 0, 0.6);
+    color: #64748b;
 }
 
 @media (max-width: 480px) {

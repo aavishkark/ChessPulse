@@ -113,6 +113,25 @@ export const BOT_PROFILES = [
             depth: 20,
             thinkTimeMs: 3000
         }
+    },
+    {
+        id: 'queen',
+        name: 'Queen Regina',
+        elo: 2100,
+        avatar: '/assets/bots/queen.png',
+        bio: 'A majestic grandmaster who rules the board with iron tactical precision.',
+        personality: 'Regal, elegant, and uncompromising. Seizes initiative from move one.',
+        catchphrases: [
+            "Bow before the tactical horizon.",
+            "A queen never retreats without purpose.",
+            "Royalty demands flawless precision.",
+            "Your king's defenses are crumbling."
+        ],
+        engineConfig: {
+            skillLevel: 16,
+            depth: 18,
+            thinkTimeMs: 2500
+        }
     }
 ];
 

@@ -7,6 +7,7 @@ import PuzzleStatsView from './PuzzleStatsView';
 import LichessUserCard from '../../Components/LichessUserCard';
 import ChesscomUserCard from '../../Components/ChesscomUserCard';
 import EditProfileDialog from './components/EditProfileDialog';
+import { PageAmbient } from '../../Components/UI/PageHeader';
 import './profile.css';
 
 const ProfilePage = () => {
@@ -16,7 +17,8 @@ const ProfilePage = () => {
     if (!user) {
         return (
             <div className="profile-page">
-                <Container maxW="1200px" py={12}>
+                <PageAmbient watermark="PROFILE" theme="engine" />
+                <Container maxW="1200px" py={12} position="relative" zIndex={2}>
                     <Text className="loading-text">Loading profile...</Text>
                 </Container>
             </div>
@@ -25,7 +27,8 @@ const ProfilePage = () => {
 
     return (
         <div className="profile-page">
-            <Container maxW="1200px" py={8}>
+            <PageAmbient watermark="PROFILE" theme="engine" />
+            <Container maxW="1200px" py={8} position="relative" zIndex={2}>
                 <Box className="profile-header-card" mb={8}>
                     <Flex direction={{ base: 'column', md: 'row' }} align="center" gap={8}>
                         <Box className="avatar-wrapper">

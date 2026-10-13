@@ -365,3 +365,49 @@
         font-size: 1.1rem;
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES FOR LIVE TOURNAMENTS GRID
+   ========================================================================== */
+body[data-theme="light"] .tournament-grid-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    color: #0f172a;
+}
+
+body[data-theme="light"] .tournament-grid-card:hover {
+    border-color: rgba(15, 240, 252, 0.5);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .tournament-grid-card.live {
+    background: #ffffff;
+    border-color: rgba(16, 185, 129, 0.35);
+}
+
+body[data-theme="light"] .tournament-title {
+    color: #0f172a;
+}
+
+body[data-theme="light"] .info-item {
+    color: #475569;
+}
+
+body[data-theme="light"] .tournament-clock {
+    background: rgba(124, 58, 237, 0.08);
+    border-color: rgba(124, 58, 237, 0.25);
+    color: #6d28d9;
+}
+
+body[data-theme="light"] .tournament-card-footer {
+    border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .view-link {
+    color: #0284c7;
+}
+
+body[data-theme="light"] .tournaments-count {
+    color: #64748b;
+}

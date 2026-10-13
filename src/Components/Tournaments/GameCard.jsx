@@ -34,6 +34,7 @@ export default function GameCard({ game, onClick }) {
                         showNotation: false,
                         darkSquareStyle: { backgroundColor: darkSquareColor },
                         lightSquareStyle: { backgroundColor: lightSquareColor },
+                        pieces: getCustomPieces(pieceSet),
                         customPieces: getCustomPieces(pieceSet)
                     }}
                     boardWidth={180}

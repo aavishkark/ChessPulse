@@ -306,3 +306,63 @@
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES FOR TOURNAMENT MODAL
+   ========================================================================== */
+body[data-theme="light"] .tournament-modal {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.15);
+    color: #0f172a;
+}
+
+body[data-theme="light"] .modal-header {
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .modal-title {
+    color: #0f172a;
+}
+
+body[data-theme="light"] .modal-description {
+    color: #475569;
+}
+
+body[data-theme="light"] .modal-section-item {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .modal-section-header {
+    background: #f8fafc;
+}
+
+body[data-theme="light"] .modal-section-header:hover {
+    background: #f1f5f9;
+}
+
+body[data-theme="light"] .modal-section-title span:first-child {
+    color: #0f172a;
+}
+
+body[data-theme="light"] .modal-section-rounds {
+    background: #f8fafc;
+}
+
+body[data-theme="light"] .modal-round-item {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .modal-round-name {
+    color: #0f172a;
+}
+
+body[data-theme="light"] .modal-footer {
+    border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .modal-lichess-link {
+    color: #0284c7;
+}

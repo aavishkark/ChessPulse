@@ -246,3 +246,27 @@
         font-size: 20px;
     }
 }
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES FOR ROUND GAMES MODAL
+   ========================================================================== */
+body[data-theme="light"] .round-games-modal {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.12);
+    box-shadow: 0 25px 60px rgba(15, 23, 42, 0.15);
+    color: #0f172a;
+}
+
+body[data-theme="light"] .round-games-header {
+    border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .game-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+body[data-theme="light"] .game-card:hover {
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}

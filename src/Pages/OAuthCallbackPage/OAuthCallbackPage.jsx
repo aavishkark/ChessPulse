@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PulseBrandMark } from '../../Components/Icons/Icons';
 
 const OAuthCallbackPage = () => {
     const navigate = useNavigate();
@@ -41,7 +42,7 @@ const OAuthCallbackPage = () => {
             gap: '20px',
             color: 'var(--text)'
         }}>
-            <div style={{ fontSize: '48px' }}>♞</div>
+            <PulseBrandMark size={48} color="#a855f7" />
             <div style={{ fontSize: '18px' }}>Completing sign in...</div>
         </div>
     );

@@ -10,6 +10,7 @@ import { getBotById, getRandomCatchphrase } from '../../data/botProfiles';
 import { getStockfishService, destroyStockfishService } from '../../services/stockfishService';
 import { botGameService } from '../../services/botGameService';
 import { TrophyIcon, CheckIcon } from '../../Components/Icons/Icons';
+import { PageAmbient } from '../../Components/UI/PageHeader';
 import './botGame.css';
 
 const BotGamePage = () => {
@@ -36,31 +37,7 @@ const BotGamePage = () => {
     const bubbleTimerRef = useRef(null);
     const boardRef = useRef(null);
 
-    useEffect(() => {
-        const initEngine = async () => {
-            try {
-                engineRef.current = await getStockfishService();
-
-                if (playerColor === 'black') {
-                    setTimeout(() => makeBotMove(game), 1000);
-                }
-            } catch (error) {
-                console.error('Failed to initialize Stockfish:', error);
-                addChatMessage('system', 'Engine failed to load. Please refresh.');
-            }
-        };
-
-        initEngine();
-        showBotMessage(getRandomCatchphrase(botId) || "Let's play!");
-
-        return () => {
-            destroyStockfishService();
-            if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
-        };
-    }, []);
-    const [boardWidth, setBoardWidth] = useState(480);
     const { darkSquareColor, lightSquareColor, showNotation, pieceSet, animationSpeed, highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
-    const { boardStyle: board3DStyle, customPieces, darkSquareStyle, lightSquareStyle } = use3DBoard(enable3D, darkSquareColor, lightSquareColor);
 
     const showBotMessage = (text) => {
         if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
@@ -72,6 +49,29 @@ const BotGamePage = () => {
             setTimeout(() => setSpeechBubble(null), 300);
         }, 4000);
     };
+
+    useEffect(() => {
+        const initEngine = async () => {
+            try {
+                engineRef.current = await getStockfishService();
+
+                if (playerColor === 'black') {
+                    setTimeout(() => makeBotMove(game), 1000);
+                }
+            } catch (error) {
+                console.error('Failed to initialize Stockfish:', error);
+                showBotMessage('Engine failed to load. Please refresh.');
+            }
+        };
+
+        initEngine();
+        showBotMessage(getRandomCatchphrase(botId) || "Let's play!");
+
+        return () => {
+            destroyStockfishService();
+            if (bubbleTimerRef.current) clearTimeout(bubbleTimerRef.current);
+        };
+    }, []);
 
     useEffect(() => {
         const recordGame = async () => {
@@ -288,7 +288,8 @@ const BotGamePage = () => {
 
     if (!bot) {
         return (
-            <div className="bot-game-page">
+            <div className="bot-game-page cp-subpage">
+                <PageAmbient watermark="ARENA" theme="blitz" />
                 <div className="bot-not-found">
                     <h2>Bot not found</h2>
                     <Link to="/bots">← Back to Bots</Link>
@@ -298,7 +299,8 @@ const BotGamePage = () => {
     }
 
     return (
-        <div className="bot-game-page">
+        <div className="bot-game-page cp-subpage">
+            <PageAmbient watermark="ARENA" theme="blitz" />
             <div className="bot-game-layout">
                 <div className="bot-board-wrapper">
                     <div className={`bot-board-container ${gameStatus !== 'playing' ? 'game-over' : ''}`}>
@@ -314,6 +316,7 @@ const BotGamePage = () => {
                                 showNotation,
                                 darkSquareStyle: { backgroundColor: darkSquareColor },
                                 lightSquareStyle: { backgroundColor: lightSquareColor },
+                                pieces: getCustomPieces(pieceSet),
                                 customPieces: getCustomPieces(pieceSet)
                             }}
                         />
@@ -322,25 +325,24 @@ const BotGamePage = () => {
                             <>
                                 <div className="promotion-backdrop" onClick={cancelPromotion} />
                                 <div className="promotion-dialog">
-                                    <div className="promotion-title">Promote to:</div>
+                                    <div className="promotion-title">Promote Pawn To</div>
                                     <div className="promotion-pieces">
-                                        {['q', 'r', 'b', 'n'].map((piece) => (
+                                        {[
+                                            { id: 'q', name: 'Queen', code: 'Q' },
+                                            { id: 'r', name: 'Rook', code: 'R' },
+                                            { id: 'b', name: 'Bishop', code: 'B' },
+                                            { id: 'n', name: 'Knight', code: 'N' }
+                                        ].map((piece) => (
                                             <button
-                                                key={piece}
+                                                key={piece.id}
                                                 className="promotion-piece-btn"
-                                                onClick={() => onPromotionPieceSelect(piece)}
+                                                onClick={() => onPromotionPieceSelect(piece.id)}
                                             >
-                                                <span className="promotion-piece-icon">
-                                                    {piece === 'q' && '♕'}
-                                                    {piece === 'r' && '♖'}
-                                                    {piece === 'b' && '♗'}
-                                                    {piece === 'n' && '♘'}
+                                                <span className="promotion-piece-icon" style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, fontSize: '1.35rem' }}>
+                                                    {piece.code}
                                                 </span>
                                                 <span className="promotion-piece-name">
-                                                    {piece === 'q' && 'Queen'}
-                                                    {piece === 'r' && 'Rook'}
-                                                    {piece === 'b' && 'Bishop'}
-                                                    {piece === 'n' && 'Knight'}
+                                                    {piece.name}
                                                 </span>
                                             </button>
                                         ))}
