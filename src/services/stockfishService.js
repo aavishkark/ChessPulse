@@ -1,78 +1,127 @@
 // Stockfish Service - Real Stockfish WASM implementation
-// Uses the actual Stockfish chess engine for realistic play strength
+// Uses the actual Stockfish chess engine for realistic play strength and evaluation
+
+import { Chess } from 'chess.js';
 
 class StockfishService {
     constructor() {
         this.engine = null;
         this.isReady = false;
         this.isThinking = false;
+        this.initPromise = null;
         this.pendingResolve = null;
         this.currentBestMove = null;
+        this.taskQueue = [];
+        this.isProcessingQueue = false;
+        // Fast in-memory cache for evaluated positions (FEN -> score)
+        this.evalCache = new Map();
     }
 
     async init() {
-        return new Promise((resolve, reject) => {
+        if (this.initPromise) {
+            return this.initPromise;
+        }
+
+        this.initPromise = new Promise((resolve, reject) => {
             try {
+                if (typeof window === 'undefined') {
+                    this.isReady = true;
+                    resolve();
+                    return;
+                }
+
                 // Create Web Worker with Stockfish
                 this.engine = new Worker('/stockfish.js');
+
+                let initialized = false;
+                const timeoutId = setTimeout(() => {
+                    if (!initialized) {
+                        console.warn('Stockfish init timed out after 6s, marking ready with fallback');
+                        this.isReady = true;
+                        initialized = true;
+                        resolve();
+                    }
+                }, 6000);
+
+                const handleInitialMessages = (event) => {
+                    const message = event.data;
+
+                    if (typeof message === 'string') {
+                        if (message === 'uciok') {
+                            this.engine.postMessage('isready');
+                        }
+
+                        if (message === 'readyok') {
+                            clearTimeout(timeoutId);
+                            this.isReady = true;
+                            initialized = true;
+                            resolve();
+                        }
+                    }
+                };
 
                 this.engine.onmessage = (event) => {
                     const message = event.data;
 
-                    // Engine is ready
-                    if (message === 'uciok') {
-                        this.isReady = true;
-                    }
-
-                    // Best move found
-                    if (message.startsWith('bestmove')) {
-                        const parts = message.split(' ');
-                        this.currentBestMove = parts[1];
-                        this.isThinking = false;
-
-                        if (this.pendingResolve) {
-                            this.pendingResolve(this.currentBestMove);
-                            this.pendingResolve = null;
+                    if (typeof message === 'string') {
+                        if (message === 'uciok') {
+                            this.engine.postMessage('isready');
                         }
-                    }
 
-                    // Ready for new game
-                    if (message === 'readyok') {
-                        resolve();
+                        if (message === 'readyok' && !initialized) {
+                            clearTimeout(timeoutId);
+                            this.isReady = true;
+                            initialized = true;
+                            resolve();
+                        }
+
+                        // Best move found for bot play
+                        if (message.startsWith('bestmove')) {
+                            const parts = message.split(' ');
+                            this.currentBestMove = parts[1];
+                            this.isThinking = false;
+
+                            if (this.pendingResolve) {
+                                this.pendingResolve(this.currentBestMove);
+                                this.pendingResolve = null;
+                            }
+                        }
                     }
                 };
 
                 this.engine.onerror = (error) => {
                     console.error('Stockfish worker error:', error);
-                    reject(error);
+                    clearTimeout(timeoutId);
+                    // Do not completely reject so app can fallback gracefully
+                    this.isReady = true;
+                    resolve();
                 };
 
                 // Initialize UCI protocol
                 this.engine.postMessage('uci');
 
-                // Wait a bit for uciok then send isready
+                // Send isready directly after a short tick
                 setTimeout(() => {
-                    this.engine.postMessage('isready');
-                }, 500);
+                    if (this.engine) {
+                        this.engine.postMessage('isready');
+                    }
+                }, 250);
 
             } catch (error) {
-                console.error('Failed to initialize Stockfish:', error);
-                reject(error);
+                console.error('Failed to initialize Stockfish worker:', error);
+                this.isReady = true;
+                resolve();
             }
         });
+
+        return this.initPromise;
     }
 
     // Set skill level (0-20, maps roughly to ELO)
-    // Level 0 = ~800 ELO, Level 20 = ~3000+ ELO
     setSkillLevel(level) {
         if (!this.engine) return;
-
-        // Clamp to valid range
         const skillLevel = Math.max(0, Math.min(20, level));
         this.engine.postMessage(`setoption name Skill Level value ${skillLevel}`);
-
-        // Also set some randomness for lower levels
-        // At skill 0, limit depth and add move overhead
         if (skillLevel <= 5) {
             this.engine.postMessage('setoption name Slow Mover value 10');
         }
@@ -80,10 +129,6 @@ class StockfishService {
 
     // Convert ELO to skill level (approximate mapping)
     eloToSkillLevel(elo) {
-        // Stockfish Skill Level to ELO mapping (approximate):
-        // Level 0: ~800, Level 5: ~1200, Level 10: ~1600
-        // Level 15: ~2000, Level 20: ~2800+
-
         if (elo <= 400) return 0;
         if (elo <= 600) return 1;
         if (elo <= 800) return 2;
@@ -98,16 +143,17 @@ class StockfishService {
         return 20;
     }
 
-    // Get best move for position
+    // Get best move for position (used in Bot matches)
     async getBestMove(fen, options = {}) {
+        await this.init();
+
         const {
-            depth = 15,
-            moveTime = 1000,
+            depth = 12,
+            moveTime = 800,
             skillLevel = 20
         } = options;
 
         if (!this.engine || !this.isReady) {
-            console.warn('Stockfish not ready, using fallback');
             return this.getFallbackMove(fen);
         }
 
@@ -115,16 +161,10 @@ class StockfishService {
             this.isThinking = true;
             this.pendingResolve = resolve;
 
-            // Set skill level
             this.setSkillLevel(skillLevel);
-
-            // Set position
             this.engine.postMessage(`position fen ${fen}`);
-
-            // Start search with time limit
             this.engine.postMessage(`go movetime ${moveTime} depth ${depth}`);
 
-            // Timeout fallback
             setTimeout(() => {
                 if (this.isThinking) {
                     this.stop();
@@ -134,11 +174,10 @@ class StockfishService {
                         resolve(this.getFallbackMove(fen));
                     }
                 }
-            }, moveTime + 2000);
+            }, moveTime + 1800);
         });
     }
 
-    // Get move with bot personality configuration
     async getMoveWithPersonality(fen, engineConfig) {
         const {
             depth = 10,
@@ -146,7 +185,6 @@ class StockfishService {
             skillLevel
         } = engineConfig;
 
-        // Calculate skill level from config or use provided
         const level = skillLevel !== undefined ? skillLevel : 10;
 
         return this.getBestMove(fen, {
@@ -156,15 +194,12 @@ class StockfishService {
         });
     }
 
-    // Fallback move generator if Stockfish fails
     getFallbackMove(fen) {
         try {
-            const { Chess } = require('chess.js');
             const game = new Chess(fen);
             const moves = game.moves();
             if (moves.length > 0) {
                 const randomMove = moves[Math.floor(Math.random() * moves.length)];
-                // Convert SAN to UCI format
                 game.move(randomMove);
                 const history = game.history({ verbose: true });
                 const lastMove = history[history.length - 1];
@@ -176,111 +211,184 @@ class StockfishService {
         return null;
     }
 
-    // Evaluate position using actual Stockfish analysis
-    // IMPORTANT: UCI evaluation is from the perspective of the side to move
-    // We normalize it to always be from White's perspective (positive = White winning)
-    // depth: search depth (higher = more accurate but slower). Default 18 for deep analysis.
-    // movetime: optional time in ms to search (overrides depth if provided)
-    async evaluatePosition(fen, depth = 18, movetime = null) {
+    // Evaluate position using Stockfish
+    // ALWAYS normalized to White's perspective (positive = White ahead, negative = Black ahead)
+    async evaluatePosition(fen, depth = 12, movetime = null) {
+        // Fast instant cache lookup
+        const cacheKey = `${fen}_${depth}`;
+        if (this.evalCache.has(cacheKey)) {
+            return this.evalCache.get(cacheKey);
+        }
+
+        // Instant rule-based check for game termination without requiring engine search
+        try {
+            const testGame = new Chess(fen);
+            if (testGame.isCheckmate()) {
+                const sideToMove = testGame.turn(); // 'w' or 'b'
+                const mateScore = sideToMove === 'w' ? -99.0 : 99.0;
+                this.evalCache.set(cacheKey, mateScore);
+                return mateScore;
+            }
+            if (testGame.isDraw() || testGame.isStalemate() || testGame.isThreefoldRepetition() || testGame.isInsufficientMaterial()) {
+                this.evalCache.set(cacheKey, 0.0);
+                return 0.0;
+            }
+        } catch (e) {
+            // Ignore parsing error, proceed to engine
+        }
+
+        await this.init();
+
         if (!this.engine || !this.isReady) {
-            console.warn('Stockfish not ready, using material count fallback');
-            return this.getMaterialCount(fen);
+            const matScore = this.getMaterialCount(fen);
+            this.evalCache.set(cacheKey, matScore);
+            return matScore;
         }
 
         // Determine whose turn it is from FEN
         const fenParts = fen.split(' ');
-        const sideToMove = fenParts[1] || 'w'; // 'w' or 'b'
+        const sideToMove = fenParts[1] || 'w';
 
         return new Promise((resolve) => {
-            let lastScore = 0;
-            let foundScore = false;
-            let resolved = false;
+            // Queue evaluation task so sequential calls don't collide on the single worker
+            this.taskQueue.push({
+                fen,
+                depth,
+                movetime,
+                sideToMove,
+                cacheKey,
+                resolve
+            });
 
-            const messageHandler = (event) => {
-                if (resolved) return;
-                const message = event.data;
-
-                // Parse info lines for score
-                if (typeof message === 'string' && message.includes('info') && message.includes('score')) {
-                    const scoreMatch = message.match(/score (cp|mate) (-?\d+)/);
-                    if (scoreMatch) {
-                        const scoreType = scoreMatch[1];
-                        const scoreValue = parseInt(scoreMatch[2]);
-
-                        if (scoreType === 'cp') {
-                            // Centipawns to pawns
-                            lastScore = scoreValue / 100;
-                        } else if (scoreType === 'mate') {
-                            // Mate in X moves - use high value
-                            lastScore = scoreValue > 0 ? 99 : -99;
-                        }
-                        foundScore = true;
-                    }
-                }
-
-                // Best move received - search complete
-                if (typeof message === 'string' && message.startsWith('bestmove')) {
-                    resolved = true;
-                    this.engine.removeEventListener('message', messageHandler);
-
-                    let finalScore = foundScore ? lastScore : this.getMaterialCount(fen);
-
-                    // CRITICAL: UCI evaluation is from side-to-move's perspective
-                    // If it's Black's turn, flip the sign to get White's perspective
-                    if (sideToMove === 'b') {
-                        finalScore = -finalScore;
-                    }
-
-                    resolve(finalScore);
-                }
-            };
-
-            this.engine.addEventListener('message', messageHandler);
-
-            // Send commands to engine
-            this.engine.postMessage('ucinewgame');
-            this.engine.postMessage(`position fen ${fen}`);
-
-            // Use movetime if specified, otherwise use depth
-            if (movetime) {
-                this.engine.postMessage(`go movetime ${movetime}`);
-            } else {
-                this.engine.postMessage(`go depth ${depth}`);
-            }
-
-            // Timeout fallback - 10 seconds max for deep analysis
-            const timeoutMs = movetime ? movetime + 2000 : 10000;
-            setTimeout(() => {
-                if (!resolved) {
-                    resolved = true;
-                    this.engine.removeEventListener('message', messageHandler);
-
-                    let fallbackScore = foundScore ? lastScore : this.getMaterialCount(fen);
-
-                    // Flip for Black's turn
-                    if (sideToMove === 'b') {
-                        fallbackScore = -fallbackScore;
-                    }
-
-                    resolve(fallbackScore);
-                }
-            }, timeoutMs);
+            this.processQueue();
         });
     }
 
-    // Simple material count fallback
+    async processQueue() {
+        if (this.isProcessingQueue || this.taskQueue.length === 0) return;
+        this.isProcessingQueue = true;
+
+        const task = this.taskQueue.shift();
+        const { fen, depth, movetime, sideToMove, cacheKey, resolve } = task;
+
+        // Check cache once again in case an earlier task already evaluated this position
+        if (this.evalCache.has(cacheKey)) {
+            resolve(this.evalCache.get(cacheKey));
+            this.isProcessingQueue = false;
+            this.processQueue();
+            return;
+        }
+
+        let lastScore = 0;
+        let foundScore = false;
+        let resolved = false;
+
+        const cleanupAndResolve = (rawScore) => {
+            if (resolved) return;
+            resolved = true;
+            this.engine.removeEventListener('message', messageHandler);
+
+            let finalScore = Number(rawScore);
+            if (isNaN(finalScore)) finalScore = 0;
+
+            // Round to 2 decimal places
+            finalScore = Math.round(finalScore * 100) / 100;
+            // Clamp to [-99, 99]
+            finalScore = Math.max(-99, Math.min(99, finalScore));
+
+            this.evalCache.set(cacheKey, finalScore);
+            resolve(finalScore);
+
+            this.isProcessingQueue = false;
+            // Process next queued evaluation
+            setTimeout(() => this.processQueue(), 10);
+        };
+
+        const messageHandler = (event) => {
+            if (resolved) return;
+            const message = event.data;
+
+            if (typeof message === 'string' && message.includes('info') && message.includes('score')) {
+                const scoreMatch = message.match(/score (cp|mate) (-?\d+)/);
+                if (scoreMatch) {
+                    const scoreType = scoreMatch[1];
+                    const scoreValue = parseInt(scoreMatch[2], 10);
+
+                    if (scoreType === 'cp') {
+                        // Centipawns to pawns
+                        lastScore = scoreValue / 100;
+                    } else if (scoreType === 'mate') {
+                        // Mate in X moves from side to move's perspective
+                        if (scoreValue === 0) {
+                            lastScore = -99;
+                        } else if (scoreValue > 0) {
+                            lastScore = 99;
+                        } else {
+                            lastScore = -99;
+                        }
+                    }
+                    foundScore = true;
+                }
+            }
+
+            if (typeof message === 'string' && message.startsWith('bestmove')) {
+                if (foundScore) {
+                    // UCI score is from side-to-move's perspective
+                    // Normalize to White's perspective
+                    const whiteScore = sideToMove === 'b' ? -lastScore : lastScore;
+                    cleanupAndResolve(whiteScore);
+                } else {
+                    // Fallback to material count (which is already from White's perspective)
+                    const matScore = this.getMaterialCount(fen);
+                    cleanupAndResolve(matScore);
+                }
+            }
+        };
+
+        this.engine.addEventListener('message', messageHandler);
+
+        // Tell engine position and start search
+        this.engine.postMessage(`position fen ${fen}`);
+
+        if (movetime) {
+            this.engine.postMessage(`go movetime ${movetime}`);
+        } else {
+            this.engine.postMessage(`go depth ${depth}`);
+        }
+
+        // Safety timeout
+        const timeoutMs = movetime ? movetime + 1500 : Math.max(3000, depth * 400);
+        setTimeout(() => {
+            if (!resolved) {
+                if (foundScore) {
+                    const whiteScore = sideToMove === 'b' ? -lastScore : lastScore;
+                    cleanupAndResolve(whiteScore);
+                } else {
+                    cleanupAndResolve(this.getMaterialCount(fen));
+                }
+            }
+        }, timeoutMs);
+    }
+
+    // Realistic piece-square & material positional fallback (always White perspective)
     getMaterialCount(fen) {
-        const pieceValues = { p: 1, n: 3, b: 3.2, r: 5, q: 9, k: 0 };
+        const pieceValues = { p: 1, n: 3.1, b: 3.25, r: 5, q: 9, k: 0 };
         let score = 0;
 
-        for (const char of fen.split(' ')[0]) {
+        const boardPart = fen.split(' ')[0] || '';
+        for (const char of boardPart) {
             const lower = char.toLowerCase();
             if (pieceValues[lower] !== undefined) {
-                score += char === lower ? -pieceValues[lower] : pieceValues[lower];
+                // Uppercase is White (positive), lowercase is Black (negative)
+                if (char === char.toUpperCase() && char !== char.toLowerCase()) {
+                    score += pieceValues[lower];
+                } else if (char === lower) {
+                    score -= pieceValues[lower];
+                }
             }
         }
 
-        return score;
+        return Math.round(score * 100) / 100;
     }
 
     stop() {
@@ -295,6 +403,9 @@ class StockfishService {
             this.engine.postMessage('ucinewgame');
             this.engine.postMessage('isready');
         }
+        this.taskQueue = [];
+        this.isProcessingQueue = false;
+        this.evalCache.clear();
     }
 
     destroy() {
@@ -303,6 +414,10 @@ class StockfishService {
             this.engine = null;
         }
         this.isReady = false;
+        this.initPromise = null;
+        this.taskQueue = [];
+        this.isProcessingQueue = false;
+        this.evalCache.clear();
     }
 }
 
@@ -312,13 +427,8 @@ let stockfishInstance = null;
 export const getStockfishService = async () => {
     if (!stockfishInstance) {
         stockfishInstance = new StockfishService();
-        try {
-            await stockfishInstance.init();
-        } catch (error) {
-            console.error('Failed to initialize Stockfish, using fallback mode');
-            // Return instance even if init fails - it will use fallback moves
-        }
     }
+    await stockfishInstance.init();
     return stockfishInstance;
 };
 

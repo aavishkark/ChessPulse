@@ -1,6 +1,6 @@
 import './PromotionDialog.css';
 
-export default function PromotionDialog({ color, onSelect }) {
+export default function PromotionDialog({ onSelect }) {
     const pieces = ['q', 'r', 'b', 'n'];
     const pieceNames = { q: 'Queen', r: 'Rook', b: 'Bishop', n: 'Knight' };
 
@@ -15,11 +15,8 @@ export default function PromotionDialog({ color, onSelect }) {
                             className="promotion-piece-btn"
                             onClick={() => onSelect(piece)}
                         >
-                            <span className="piece-symbol">
-                                {color === 'white' ?
-                                    { q: '♕', r: '♖', b: '♗', n: '♘' }[piece] :
-                                    { q: '♛', r: '♜', b: '♝', n: '♞' }[piece]
-                                }
+                            <span className="piece-symbol" style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, fontSize: '1.5rem' }}>
+                                {piece.toUpperCase()}
                             </span>
                             <span className="piece-name">{pieceNames[piece]}</span>
                         </button>

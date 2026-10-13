@@ -8,6 +8,8 @@ import { getGameByIndex } from '../../utils/pgnStream';
 import { parsePlayerNames, parsePlayerRatings, getCurrentFEN, getMoveList, getGameResult, parseClockInfo } from '../../utils/pgnParser';
 import { getStockfishService } from '../../services/stockfishService';
 import ChessLoader from '../../Components/ChessLoader/ChessLoader';
+import { PageAmbient } from '../../Components/UI/PageHeader';
+import { Radio } from 'lucide-react';
 import './game-view-page.css';
 
 export default function GameViewPage() {
@@ -226,8 +228,9 @@ export default function GameViewPage() {
 
     const fetchEvaluation = async (currentFen) => {
         try {
-            if (engineRef.current) {
-                const score = await engineRef.current.evaluatePosition(currentFen, 15);
+            const engine = engineRef.current || (engineRef.current = await getStockfishService());
+            if (engine) {
+                const score = await engine.evaluatePosition(currentFen, 12);
                 setEvaluation(score);
             }
         } catch (err) {
@@ -252,9 +255,10 @@ export default function GameViewPage() {
 
     if (loading) {
         return (
-            <div className="game-view-page">
+            <div className="game-view-page cp-subpage">
+                <PageAmbient watermark="BROADCAST" theme="classic" />
                 <div className="loading-game">
-                    <ChessLoader text="Loading game..." />
+                    <ChessLoader text="Connecting to Lichess PGN stream..." />
                 </div>
             </div>
         );
@@ -262,44 +266,71 @@ export default function GameViewPage() {
 
     if (error) {
         return (
-            <div className="game-view-page">
+            <div className="game-view-page cp-subpage">
+                <PageAmbient watermark="BROADCAST" theme="classic" />
                 <div className="error-game">
+                    <Radio size={44} color="#fbbf24" />
                     <p>{error}</p>
                     <button onClick={() => navigate('/tournaments')} className="back-btn">
-                        Back to Tournaments
+                        ← Back to Tournaments
                     </button>
                 </div>
             </div>
         );
     }
 
-    const whiteBarWidth = evaluation >= 99 ? '100%' : evaluation >= 4 ? '90%' :
-        evaluation <= -4 ? '10%' : `${50 + (evaluation * 7.5)}%`;
+    const whiteBarHeight = (() => {
+        if (typeof evaluation !== 'number' || isNaN(evaluation)) return '50%';
+        if (evaluation >= 99) return boardOrientation === 'black' ? '0%' : '100%';
+        if (evaluation <= -99) return boardOrientation === 'black' ? '100%' : '0%';
+        const winProb = 50 + 50 * (2 / (1 + Math.exp(-0.35 * evaluation)) - 1);
+        const oriented = boardOrientation === 'black' ? (100 - winProb) : winProb;
+        const clamped = Math.max(3, Math.min(97, oriented));
+        return `${clamped.toFixed(1)}%`;
+    })();
 
     return (
-        <div className="game-view-page">
+        <div className="game-view-page cp-subpage">
+            <PageAmbient watermark="BROADCAST" theme="classic" />
             <div className="game-header">
                 <button onClick={() => navigate('/tournaments')} className="back-button">
-                    ← Back
+                    ← Tournaments
                 </button>
-                <h1 className="game-title">Live Game</h1>
+                <div className="gv-header-title-wrap">
+                    <span className="gv-live-pill">
+                        <span className="gv-live-dot" />
+                        FIDE LIVE BOARD #{parseInt(gameIndex || 0) + 1}
+                    </span>
+                    <h1 className="game-title">Broadcast Telemetry</h1>
+                </div>
                 <button
                     onClick={() => setBoardOrientation(prev => prev === 'white' ? 'black' : 'white')}
                     className="flip-board-btn"
                     title="Flip board"
                 >
-                    ⇅ Flip
+                    ⇅ Flip Perspective
                 </button>
             </div>
 
             <div className="game-content">
                 <div className="left-section">
                     <div className="gv-player-info black-player-info">
-                        <div className={`player-color-box ${boardOrientation === 'white' ? 'black' : 'white'}`}></div>
+                        <div className={`player-color-box ${boardOrientation === 'white' ? 'black' : 'white'}`}>
+                            <span style={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: '50%',
+                                background: boardOrientation === 'white' ? '#0f172a' : '#f8fafc',
+                                border: boardOrientation === 'white' ? '2px solid #64748b' : '2px solid #cbd5e1',
+                                display: 'inline-block'
+                            }} />
+                        </div>
                         <div className="gv-player-details">
                             <span className="gv-player-name">
                                 {boardOrientation === 'white' ? players.black : players.white}
-                                ({boardOrientation === 'white' ? ratings.black : ratings.white})
+                                <span className="gv-player-rating">
+                                    {boardOrientation === 'white' ? ratings.black : ratings.white}
+                                </span>
                             </span>
                             <div className="gv-player-clock">
                                 {boardOrientation === 'white' ? formatClock(displayClock.b) : formatClock(displayClock.w)}
@@ -326,19 +357,31 @@ export default function GameViewPage() {
                                 lightSquareStyle: { backgroundColor: lightSquareColor },
                                 boardStyle: {
                                     borderRadius: '12px',
-                                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+                                    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.45)'
                                 },
+                                pieces: getCustomPieces(pieceSet),
                                 customPieces: getCustomPieces(pieceSet)
                             }}
                         />
                     </div>
 
                     <div className="gv-player-info white-player-info">
-                        <div className={`player-color-box ${boardOrientation === 'white' ? 'white' : 'black'}`}></div>
+                        <div className={`player-color-box ${boardOrientation === 'white' ? 'white' : 'black'}`}>
+                            <span style={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: '50%',
+                                background: boardOrientation === 'white' ? '#f8fafc' : '#0f172a',
+                                border: boardOrientation === 'white' ? '2px solid #cbd5e1' : '2px solid #64748b',
+                                display: 'inline-block'
+                            }} />
+                        </div>
                         <div className="gv-player-details">
                             <span className="gv-player-name">
                                 {boardOrientation === 'white' ? players.white : players.black}
-                                ({boardOrientation === 'white' ? ratings.white : ratings.black})
+                                <span className="gv-player-rating">
+                                    {boardOrientation === 'white' ? ratings.white : ratings.black}
+                                </span>
                             </span>
                             <div className="gv-player-clock">
                                 {boardOrientation === 'white' ? formatClock(displayClock.w) : formatClock(displayClock.b)}
@@ -353,26 +396,26 @@ export default function GameViewPage() {
 
                 <div className="right-section">
                     <div className="evaluation-section">
-                        <h3>Evaluation</h3>
+                        <h3>SF17 Evaluation</h3>
                         <div className="gv-eval-bar-container">
                             <div className="gv-eval-bar">
                                 <div
                                     className="gv-eval-bar-white"
-                                    style={{ height: whiteBarWidth }}
+                                    style={{ height: whiteBarHeight }}
                                 ></div>
                                 <div className="gv-eval-number">
                                     {evaluation >= 99 ? 'M' : evaluation <= -99 ? 'M' :
-                                        evaluation.toFixed(1)}
+                                        (evaluation >= 0 ? '+' : '') + evaluation.toFixed(1)}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="moves-section">
-                        <h3>Moves</h3>
+                        <h3>SAN Move Feed ({moves.length})</h3>
                         <div className="moves-list">
                             {moves.length === 0 ? (
-                                <p className="no-moves">No moves yet</p>
+                                <p className="no-moves">Awaiting first move on board...</p>
                             ) : (
                                 <div className="moves-grid">
                                     {moves.map((move, index) => {
