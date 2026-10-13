@@ -1,551 +1,589 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Chess } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
-import { useBoardCustomization } from '../../contexts/BoardCustomizationContext';
-import { playSound, getMoveSound } from '../../utils/sounds';
 import { puzzleService } from '../../services/puzzleService';
 import { puzzleStatsService } from '../../services/puzzleStatsService';
-import { DiceIcon, SeedlingIcon, TrendUpIcon, FlameIcon, CrownIcon, AIIcon, TimerIcon, CheckIcon } from '../../Components/Icons/Icons';
+import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
+import PuzzleSubnav from '../../Components/Puzzles/PuzzleSubnav';
+import PageHeader, { PageAmbient } from '../../Components/UI/PageHeader';
+import {
+  Zap,
+  Timer,
+  Trophy,
+  Flame,
+  RotateCcw,
+  AlertTriangle,
+  Play,
+  BarChart3,
+  Bot,
+  ShieldCheck,
+  FastForward,
+  CheckCircle2,
+  XCircle,
+  Sparkles
+} from 'lucide-react';
 import './puzzleRush.css';
 
 const TIME_OPTIONS = {
-    '3': { seconds: 3 * 60, label: '3 min', description: 'Quick sprint' },
-    '5': { seconds: 5 * 60, label: '5 min', description: 'Standard mode' },
-    '10': { seconds: 10 * 60, label: '10 min', description: 'Marathon' }
+  '3': { seconds: 3 * 60, label: '3 min', description: 'Quick sprint' },
+  '5': { seconds: 5 * 60, label: '5 min', description: 'Standard championship' },
+  '10': { seconds: 10 * 60, label: '10 min', description: 'Tactical marathon' }
 };
 
 const DIFFICULTY_OPTIONS = {
-    'all': { label: 'All Levels', description: 'Mixed puzzles', Icon: DiceIcon },
-    'beginner': { label: 'Beginner', description: '800-1199', Icon: SeedlingIcon },
-    'intermediate': { label: 'Intermediate', description: '1200-1599', Icon: TrendUpIcon },
-    'advanced': { label: 'Advanced', description: '1600-1999', Icon: FlameIcon },
-    'expert': { label: 'Expert', description: '2000-2400', Icon: CrownIcon }
+  all: { label: 'All Levels', description: 'Mixed dynamic pool' },
+  beginner: { label: 'Beginner', description: '800 – 1199 ELO' },
+  intermediate: { label: 'Intermediate', description: '1200 – 1599 ELO' },
+  advanced: { label: 'Advanced', description: '1600 – 1999 ELO' },
+  expert: { label: 'Expert', description: '2000 – 2400 ELO' }
 };
 
 const PuzzleRushPage = () => {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const { isAuthenticated } = useAuth();
-    const { highlightColor, soundEnabled, soundTheme } = useBoardCustomization();
-    const timeMode = searchParams.get('time') || '5';
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { isAuthenticated } = useAuth();
+  const timeMode = searchParams.get('time') || '5';
 
-    const [gameState, setGameState] = useState('ready');
-    const [timeLeft, setTimeLeft] = useState(TIME_OPTIONS[timeMode]?.seconds || 300);
-    const [score, setScore] = useState(0);
-    const [puzzlesSolved, setPuzzlesSolved] = useState(0);
-    const [puzzlesAttempted, setPuzzlesAttempted] = useState(0);
-    const [currentPuzzle, setCurrentPuzzle] = useState(null);
-    const [game, setGame] = useState(null);
-    const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-    const [orientation, setOrientation] = useState('white');
-    const [lastMove, setLastMove] = useState(null);
-    const [feedbackStatus, setFeedbackStatus] = useState(null);
-    const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
-    const [showTurnOverlay, setShowTurnOverlay] = useState(false);
-    const [difficulty, setDifficulty] = useState('all');
-    const [aiFeedback, setAiFeedback] = useState(null);
-    const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [gameState, setGameState] = useState('ready'); // 'ready' | 'playing' | 'finished'
+  const [timeLeft, setTimeLeft] = useState(TIME_OPTIONS[timeMode]?.seconds || 300);
+  const [score, setScore] = useState(0);
+  const [puzzlesSolved, setPuzzlesSolved] = useState(0);
+  const [puzzlesAttempted, setPuzzlesAttempted] = useState(0);
+  const [currentPuzzle, setCurrentPuzzle] = useState(null);
+  const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
+  const [difficulty, setDifficulty] = useState('all');
+  const [penaltyFlash, setPenaltyFlash] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
 
-    const timerRef = useRef(null);
+  const timerRef = useRef(null);
 
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (gameState === 'playing' && timeLeft > 0) {
-            timerRef.current = setInterval(() => {
-                setTimeLeft(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timerRef.current);
-                        setGameState('finished');
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-            return () => clearInterval(timerRef.current);
-        }
-    }, [gameState]);
-
-    useEffect(() => {
-        if (gameState === 'finished' && isAuthenticated && !aiFeedback) {
-            setLoadingFeedback(true);
-            puzzleStatsService.getSessionFeedback({
-                mode: 'rush',
-                solved: puzzlesSolved,
-                failed: puzzlesAttempted,
-                totalAttempted: puzzlesSolved + puzzlesAttempted,
-                duration: `${TIME_OPTIONS[timeMode]?.label || '5 min'}`,
-                score: score
-            }).then(res => {
-                if (res.success) setAiFeedback(res.data);
-            }).catch(err => console.error('Failed to get AI feedback:', err))
-                .finally(() => setLoadingFeedback(false));
-        }
-    }, [gameState, isAuthenticated]);
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
+  }, []);
 
-    const getTimerClass = () => {
-        if (timeLeft <= 10) return 'critical';
-        if (timeLeft <= 30) return 'low';
-        return '';
-    };
+  // Countdown timer
+  useEffect(() => {
+    if (gameState === 'playing' && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            setGameState('finished');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timerRef.current);
+    }
+  }, [gameState, timeLeft]);
 
-    const loadNewPuzzle = useCallback(async (selectedDifficulty) => {
-        setIsLoadingPuzzle(true);
-        setLastMove(null);
-        setFeedbackStatus(null);
+  // Fetch AI feedback upon completion
+  useEffect(() => {
+    if (gameState === 'finished' && isAuthenticated && !aiFeedback) {
+      setLoadingFeedback(true);
+      puzzleStatsService
+        .getSessionFeedback({
+          mode: 'rush',
+          solved: puzzlesSolved,
+          failed: puzzlesAttempted - puzzlesSolved,
+          totalAttempted: puzzlesAttempted,
+          duration: `${TIME_OPTIONS[timeMode]?.label || '5 min'}`,
+          score: score
+        })
+        .then((res) => {
+          if (res?.success) setAiFeedback(res.data);
+        })
+        .catch((err) => console.error('Failed to get AI feedback:', err))
+        .finally(() => setLoadingFeedback(false));
+    }
+  }, [gameState, isAuthenticated, puzzlesSolved, puzzlesAttempted, timeMode, score, aiFeedback]);
 
-        try {
-            const filters = selectedDifficulty && selectedDifficulty !== 'all'
-                ? { difficulty: selectedDifficulty }
-                : {};
-            const puzzle = await puzzleService.getPuzzleWithFilters(filters);
-            setCurrentPuzzle(puzzle);
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
-            const newGame = new Chess(puzzle.fen);
+  const getTimerClass = () => {
+    if (timeLeft <= 10) return 'critical';
+    if (timeLeft <= 30) return 'low';
+    return '';
+  };
 
-            if (puzzle.moves && puzzle.moves.length > 0) {
-                const firstMove = puzzle.moves[0];
-                const moveResult = makeUciMove(newGame, firstMove);
-                if (moveResult) {
-                    setLastMove({ from: firstMove.substring(0, 2), to: firstMove.substring(2, 4) });
-                    setCurrentMoveIndex(1);
-                } else {
-                    setCurrentMoveIndex(0);
-                }
-            } else {
-                setCurrentMoveIndex(0);
-            }
+  const loadNewPuzzle = useCallback(
+    async (selectedDifficulty) => {
+      setIsLoadingPuzzle(true);
+      try {
+        const filters =
+          selectedDifficulty && selectedDifficulty !== 'all'
+            ? { difficulty: selectedDifficulty }
+            : {};
+        const puzzle = await puzzleService.getPuzzleWithFilters(filters);
+        setCurrentPuzzle(puzzle);
+      } catch (error) {
+        console.error('Error loading puzzle:', error);
+      } finally {
+        setIsLoadingPuzzle(false);
+      }
+    },
+    []
+  );
 
-            setGame(newGame);
+  const startGame = async () => {
+    setTimeLeft(TIME_OPTIONS[timeMode]?.seconds || 300);
+    setScore(0);
+    setPuzzlesSolved(0);
+    setPuzzlesAttempted(0);
+    setPenaltyFlash(false);
+    setAiFeedback(null);
+    setGameState('playing');
+    puzzleService.resetSession();
+    await loadNewPuzzle(difficulty);
+  };
 
-            const setupTurn = new Chess(puzzle.fen).turn();
-            setOrientation(setupTurn === 'w' ? 'black' : 'white');
+  const handleCorrectSolve = useCallback(async () => {
+    setScore((prev) => prev + 1);
+    setPuzzlesSolved((prev) => prev + 1);
+    setPuzzlesAttempted((prev) => prev + 1);
 
-            setShowTurnOverlay(true);
-            setTimeout(() => setShowTurnOverlay(false), 1000);
-        } catch (error) {
-            console.error('Error loading puzzle:', error);
-        } finally {
-            setIsLoadingPuzzle(false);
-        }
-    }, []);
-
-    const startGame = async () => {
-        setGameState('playing');
-        setTimeLeft(TIME_OPTIONS[timeMode]?.seconds || 300);
-        setScore(0);
-        setPuzzlesSolved(0);
-        setPuzzlesAttempted(0);
-        puzzleService.resetSession();
-        await loadNewPuzzle(difficulty);
-    };
-
-    const makeUciMove = (chessGame, uciMove) => {
-        if (!uciMove || uciMove.length < 4) return null;
-        const from = uciMove.substring(0, 2);
-        const to = uciMove.substring(2, 4);
-        const promotion = uciMove.length > 4 ? uciMove[4] : undefined;
-        return chessGame.move({ from, to, promotion });
-    };
-
-    const handleCorrectMove = useCallback(async () => {
-        setFeedbackStatus('correct');
-        setScore(prev => prev + 1);
-        setPuzzlesSolved(prev => prev + 1);
-
-        if (isAuthenticated && currentPuzzle) {
-            try {
-                await puzzleStatsService.recordAttempt({
-                    puzzleId: currentPuzzle.id,
-                    solved: true,
-                    puzzleRating: currentPuzzle.rating,
-                    themes: currentPuzzle.themes || [],
-                    mode: 'rush',
-                    difficulty
-                });
-            } catch (err) {
-                console.error('Failed to record attempt:', err);
-            }
-        }
-
-        setTimeout(async () => {
-            setFeedbackStatus(null);
-            await loadNewPuzzle(difficulty);
-        }, 500);
-    }, [loadNewPuzzle, difficulty, isAuthenticated, currentPuzzle]);
-
-    const handleWrongMove = useCallback(() => {
-        setFeedbackStatus('wrong');
-        setTimeLeft(prev => Math.max(0, prev - 5));
-        setPuzzlesAttempted(prev => prev + 1);
-
-        if (isAuthenticated && currentPuzzle) {
-            puzzleStatsService.recordAttempt({
-                puzzleId: currentPuzzle.id,
-                solved: false,
-                puzzleRating: currentPuzzle.rating,
-                themes: currentPuzzle.themes || [],
-                mode: 'rush',
-                difficulty
-            }).catch(err => console.error('Failed to record attempt:', err));
-        }
-
-        if (currentPuzzle && game) {
-            const correctMove = currentPuzzle.moves[currentMoveIndex];
-            if (correctMove) {
-                const moveResult = makeUciMove(game, correctMove);
-                if (moveResult) {
-                    setGame(new Chess(game.fen()));
-                    setLastMove({
-                        from: correctMove.substring(0, 2),
-                        to: correctMove.substring(2, 4)
-                    });
-                }
-            }
-        }
-
-        setTimeout(async () => {
-            setFeedbackStatus(null);
-            await loadNewPuzzle(difficulty);
-        }, 600);
-    }, [loadNewPuzzle, difficulty, currentPuzzle, game, currentMoveIndex, isAuthenticated]);
-
-    const onDrop = useCallback((moveData) => {
-        if (gameState !== 'playing' || !game || !currentPuzzle || isLoadingPuzzle) return false;
-
-        const sourceSquare = moveData?.sourceSquare || moveData?.from;
-        const targetSquare = moveData?.targetSquare || moveData?.to;
-        const piece = moveData?.piece;
-
-        if (!sourceSquare || !targetSquare) return false;
-
-        if (sourceSquare === targetSquare) return false;
-
-        const expectedMove = currentPuzzle.moves[currentMoveIndex];
-        if (!expectedMove) return false;
-
-        const moveStr = sourceSquare + targetSquare;
-        const isPawn = piece?.toLowerCase?.().includes('p') || String(piece)?.toLowerCase?.().includes('p');
-        const isPromotion = isPawn && (targetSquare[1] === '8' || targetSquare[1] === '1');
-        const promotion = isPromotion ? 'q' : undefined;
-
-        const expectedMoveStr = expectedMove.substring(0, 4);
-        const playerMoveWithPromo = promotion ? moveStr + promotion : moveStr;
-
-        if (moveStr === expectedMoveStr || playerMoveWithPromo === expectedMove) {
-            try {
-                const move = game.move({
-                    from: sourceSquare,
-                    to: targetSquare,
-                    promotion: promotion || expectedMove[4]
-                });
-
-                if (!move) return false;
-
-                setGame(new Chess(game.fen()));
-                setLastMove({ from: sourceSquare, to: targetSquare });
-
-                // Play sound
-                const soundType = getMoveSound(move, move.captured, game.isCheck(), move.san.includes('O-'), move.promotion);
-                playSound(soundType, soundTheme, soundEnabled);
-
-                const nextMoveIndex = currentMoveIndex + 1;
-                setCurrentMoveIndex(nextMoveIndex);
-
-                if (nextMoveIndex >= currentPuzzle.moves.length) {
-                    handleCorrectMove();
-                    return true;
-                }
-
-                setTimeout(() => {
-                    const opponentMove = currentPuzzle.moves[nextMoveIndex];
-                    if (opponentMove) {
-                        const moveResult = makeUciMove(game, opponentMove);
-                        if (moveResult) {
-                            setGame(new Chess(game.fen()));
-                            setCurrentMoveIndex(nextMoveIndex + 1);
-                            setLastMove({
-                                from: opponentMove.substring(0, 2),
-                                to: opponentMove.substring(2, 4)
-                            });
-                        }
-                    }
-                }, 200);
-
-                return true;
-            } catch (err) {
-                return false;
-            }
-        } else {
-            handleWrongMove();
-            return false;
-        }
-    }, [game, currentPuzzle, currentMoveIndex, gameState, isLoadingPuzzle, handleCorrectMove, handleWrongMove]);
-
-    const customSquareStyles = {};
-    if (lastMove) {
-        customSquareStyles[lastMove.from] = { backgroundColor: highlightColor };
-        customSquareStyles[lastMove.to] = { backgroundColor: highlightColor };
+    if (isAuthenticated && currentPuzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: currentPuzzle.id,
+          solved: true,
+          puzzleRating: currentPuzzle.rating,
+          themes: currentPuzzle.themes || [],
+          mode: 'rush',
+          difficulty
+        });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
 
-    if (gameState === 'ready') {
-        return (
-            <div className="puzzle-rush-page">
-                <div className="rush-bg-aura"></div>
-                <div className="rush-bg-aura-2"></div>
+    // Auto-advance in Puzzle Rush with short delay for dopamine
+    setTimeout(() => {
+      loadNewPuzzle(difficulty);
+    }, 280);
+  }, [currentPuzzle, isAuthenticated, difficulty, loadNewPuzzle]);
 
-                <div className="rush-top-nav">
-                    <Link to="/puzzles" className="rush-back-link">
-                        ← Back to Puzzles
-                    </Link>
-                </div>
+  const handleFailedMove = useCallback(async () => {
+    setPuzzlesAttempted((prev) => prev + 1);
 
-                <div className="rush-hero">
-                    <div className="rush-hero-content">
-                        <p className="rush-pretitle">Race Against Time</p>
-                        <h1 className="rush-title">
-                            <span className="rush-gradient-text">Puzzle</span> Rush
-                        </h1>
-                        <p className="rush-description">
-                            Test your tactical skills under pressure. Solve as many puzzles as you can before the clock runs out.
-                            Every correct move earns points, but mistakes cost precious seconds!
-                        </p>
+    // Apply -5s time penalty
+    setTimeLeft((prev) => Math.max(0, prev - 5));
+    setPenaltyFlash(true);
+    setTimeout(() => setPenaltyFlash(false), 900);
 
-                        <div className="rush-time-selector">
-                            <h3>Choose Your Challenge</h3>
-                            <div className="rush-time-options">
-                                {Object.entries(TIME_OPTIONS).map(([key, value]) => (
-                                    <button
-                                        key={key}
-                                        className={`rush-time-option ${timeMode === key ? 'active' : ''}`}
-                                        onClick={() => navigate(`/puzzles/rush?time=${key}`)}
-                                    >
-                                        <span className="rush-time-value">{value.label}</span>
-                                        <span className="rush-time-desc">{value.description}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="rush-difficulty-selector">
-                            <h3>Difficulty</h3>
-                            <div className="rush-difficulty-options">
-                                {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => {
-                                    const IconComponent = value.Icon;
-                                    return (
-                                        <button
-                                            key={key}
-                                            className={`rush-difficulty-option ${difficulty === key ? 'active' : ''}`}
-                                            onClick={() => setDifficulty(key)}
-                                        >
-                                            <span className="difficulty-icon"><IconComponent size={18} /></span>
-                                            <span className="difficulty-label">{value.label}</span>
-                                            <span className="difficulty-desc">{value.description}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="rush-rules">
-                            <div className="rush-rule correct">
-                                <span className="rush-rule-icon">+1</span>
-                                <span>Point per puzzle</span>
-                            </div>
-                            <div className="rush-rule wrong">
-                                <span className="rush-rule-icon">-5s</span>
-                                <span>Wrong move penalty</span>
-                            </div>
-                        </div>
-
-                        <div className="rush-cta-wrapper">
-                            <div className="rush-cta-glow"></div>
-                            <button className="rush-cta" onClick={startGame}>
-                                Start Rush
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="rush-hero-visual">
-                        <div className="rush-image-glow"></div>
-                        <img
-                            src="/assets/puzzlerush.png"
-                            alt="Puzzle Rush"
-                            className="rush-illustration"
-                        />
-                    </div>
-                </div>
-            </div>
-        );
+    if (isAuthenticated && currentPuzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: currentPuzzle.id,
+          solved: false,
+          puzzleRating: currentPuzzle.rating,
+          themes: currentPuzzle.themes || [],
+          mode: 'rush',
+          difficulty
+        });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
 
-    if (gameState === 'finished') {
-        const accuracy = puzzlesAttempted > 0
-            ? Math.round((puzzlesSolved / (puzzlesSolved + puzzlesAttempted)) * 100)
-            : 100;
+    // Advance to next puzzle on mistake in rush
+    setTimeout(() => {
+      loadNewPuzzle(difficulty);
+    }, 450);
+  }, [currentPuzzle, isAuthenticated, difficulty, loadNewPuzzle]);
 
-        return (
-            <div className="puzzle-rush-page results">
-                <div className="rush-bg-aura"></div>
-                <div className="rush-bg-aura-2"></div>
+  const handleSkip = () => {
+    handleFailedMove();
+  };
 
-                <div className="rush-results">
-                    <div className="results-timer-icon"><TimerIcon size={48} /></div>
+  const accuracy =
+    puzzlesAttempted > 0
+      ? Math.round((puzzlesSolved / puzzlesAttempted) * 100)
+      : 100;
 
-                    <h1 className="results-title">Time's Up!</h1>
-
-                    <div className="final-score">
-                        <span className="score-value">{score}</span>
-                        <span className="score-label">Puzzles Solved</span>
-                    </div>
-
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <span className="stat-value">{puzzlesSolved + puzzlesAttempted}</span>
-                            <span className="stat-label">Attempted</span>
-                        </div>
-                        <div className="stat-card">
-                            <span className="stat-value">{accuracy}%</span>
-                            <span className="stat-label">Accuracy</span>
-                        </div>
-                    </div>
-
-                    {!isAuthenticated && (
-                        <div className="signin-prompt">
-                            <p>Sign in to save your score and compete on the leaderboard!</p>
-                            <Link to="/signin" className="signin-link">Sign In</Link>
-                        </div>
-                    )}
-
-                    {isAuthenticated && (
-                        <div className="ai-feedback-section">
-                            <h3 className="ai-feedback-title"><AIIcon size={18} /> AI Coach Tips</h3>
-                            {loadingFeedback ? (
-                                <p className="ai-loading">Analyzing your session...</p>
-                            ) : aiFeedback ? (
-                                <div className="ai-feedback-content">
-                                    <p className="ai-summary">{aiFeedback.summary}</p>
-                                    {aiFeedback.tips && aiFeedback.tips.length > 0 && (
-                                        <ul className="ai-tips-list">
-                                            {aiFeedback.tips.map((tip, i) => (
-                                                <li key={i}>{tip}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                    {aiFeedback.strength && (
-                                        <p className="ai-strength"><CheckIcon size={14} /> {aiFeedback.strength}</p>
-                                    )}
-                                </div>
-                            ) : (
-                                <p className="ai-error">Could not load tips</p>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="results-actions">
-                        <div className="play-again-wrapper">
-                            <div className="play-again-glow"></div>
-                            <button className="play-again-btn" onClick={startGame}>
-                                Play Again
-                            </button>
-                        </div>
-                        <Link to="/puzzles" className="results-back-link">
-                            ← Back to Puzzles
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+  // --------------------------------------------------------------------------
+  // Results Screen
+  // --------------------------------------------------------------------------
+  if (gameState === 'finished') {
     return (
-        <div className="puzzle-rush-page playing">
-            <div className="rush-bg-aura"></div>
-            <div className="rush-bg-aura-2"></div>
+      <div className="puzzle-rush-page cp-subpage">
+        <PageAmbient watermark="RUSH" theme="gold" />
 
-            <div className="rush-game-layout">
-                <div className="rush-board-wrapper">
-                    <div className={`rush-board-container ${feedbackStatus || ''}`}>
-                        {game && currentPuzzle ? (
-                            <Chessboard
-                                id="rush-board"
-                                options={{
-                                    position: game.fen(),
-                                    allowDragging: !isLoadingPuzzle,
-                                    onPieceDrop: onDrop,
-                                    animationDurationInMs: 150,
-                                    boardOrientation: orientation,
-                                    squareStyles: customSquareStyles,
-                                    showNotation: true
-                                }}
-                            />
-                        ) : (
-                            <div className="loading-puzzle">
-                                <div className="loading-spinner"></div>
-                            </div>
-                        )}
+        <PageHeader
+          badge="SPRINT TIMEOUT · FINAL TELEMETRY"
+          title="Puzzle Rush"
+          accent="Summary"
+          subtitle="Time has expired! Inspect your high-velocity calculation metrics and AI Coach evaluation."
+          theme="gold"
+          backTo="/puzzles"
+          backLabel="Tactical Hub"
+        />
 
-                        {feedbackStatus === 'correct' && (
-                            <div className="feedback-overlay correct"><CheckIcon size={64} /></div>
-                        )}
-                        {feedbackStatus === 'wrong' && (
-                            <div className="feedback-overlay wrong">✗</div>
-                        )}
-                        {showTurnOverlay && !feedbackStatus && (
-                            <div className="turn-overlay">
-                                <div className={`turn-dot-large ${orientation}`}></div>
-                                <span>{orientation === 'white' ? 'White' : 'Black'} to play</span>
-                            </div>
-                        )}
-                    </div>
+        <PuzzleSubnav />
 
-                    <div className="puzzle-info-bar">
-                        <span className="puzzle-rating-badge">Rating {currentPuzzle?.rating || '—'}</span>
-                        <span className="move-hint">{orientation === 'white' ? 'White' : 'Black'} to move</span>
-                    </div>
-                </div>
-
-                <div className="rush-sidebar">
-                    <div className={`timer-card ${getTimerClass()}`}>
-                        <span className="timer-value">{formatTime(timeLeft)}</span>
-                        <span className="timer-label">Time Left</span>
-                    </div>
-
-                    <div className="score-card">
-                        <span className="score-value">{score}</span>
-                        <span className="score-label">Score</span>
-                    </div>
-
-                    <div className="stats-mini">
-                        <div className="stat-row">
-                            <span>Solved</span>
-                            <span className="stat-num success">{puzzlesSolved}</span>
-                        </div>
-                        <div className="stat-row">
-                            <span>Mistakes</span>
-                            <span className="stat-num danger">{puzzlesAttempted}</span>
-                        </div>
-                    </div>
-
-                    <button className="end-game-btn" onClick={() => setGameState('finished')}>
-                        End Game
-                    </button>
-                </div>
+        <div className="rush-container">
+          <div className="rush-results-card cp-console-window">
+            <div className="cp-window-topbar">
+              <span className="cp-window-title">
+                <span className="cp-window-dot rose" />
+                <span>RUSH MISSION COMPLETE // RESULTS DEBRIEF</span>
+              </span>
+              <span className="rush-score-chip">{score} Solved</span>
             </div>
+
+            <div className="rush-results-body">
+              <div className="rush-summary-grid">
+                <div className="rush-stat-box highlight">
+                  <span className="r-stat-code">SCORE // SOLVED</span>
+                  <div className="r-stat-val gold">{score}</div>
+                  <span className="r-stat-lbl">Puzzles Completed</span>
+                </div>
+                <div className="rush-stat-box">
+                  <span className="r-stat-code">METRIC // ACCURACY</span>
+                  <div className="r-stat-val emerald">{accuracy}%</div>
+                  <span className="r-stat-lbl">Tactical Precision</span>
+                </div>
+                <div className="rush-stat-box">
+                  <span className="r-stat-code">METRIC // ATTEMPTS</span>
+                  <div className="r-stat-val cyan">{puzzlesAttempted}</div>
+                  <span className="r-stat-lbl">Total Attempted</span>
+                </div>
+                <div className="rush-stat-box">
+                  <span className="r-stat-code">MODE // FORMAT</span>
+                  <div className="r-stat-val violet">{TIME_OPTIONS[timeMode]?.label}</div>
+                  <span className="r-stat-lbl">Sprint Duration</span>
+                </div>
+              </div>
+
+              {/* AI Coach Analysis */}
+              {isAuthenticated && (
+                <div className="rush-coach-wrap">
+                  <div className="coach-header-line">
+                    <Bot size={18} className="coach-icon" />
+                    <span>Neural Coach Velocity Debrief</span>
+                  </div>
+
+                  {loadingFeedback ? (
+                    <div className="coach-loading">
+                      <div className="loading-spinner" />
+                      <span>Analyzing tactical sprint cadence...</span>
+                    </div>
+                  ) : aiFeedback ? (
+                    <div className="coach-content">
+                      <p className="coach-summary">{aiFeedback.summary}</p>
+                      {aiFeedback.tips && aiFeedback.tips.length > 0 && (
+                        <div className="coach-tips-grid">
+                          {aiFeedback.tips.map((tip, i) => (
+                            <div key={i} className="coach-tip-item">
+                              <span className="tip-bullet">›</span>
+                              <span>{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {aiFeedback.strength && (
+                        <div className="coach-strength-chip">
+                          <ShieldCheck size={14} />
+                          <span>Pace Strength: {aiFeedback.strength}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="coach-empty">
+                      Sprint recorded. Solve consistently to build automatic reflexes.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {!isAuthenticated && (
+                <div className="guest-nudge-box">
+                  <AlertTriangle size={18} className="guest-warn-icon" />
+                  <div className="guest-nudge-content">
+                    <strong>Guest Record</strong>
+                    <span>Sign in to save your score to the Global Rush Leaderboard!</span>
+                  </div>
+                  <Link to="/signin" className="guest-signin-btn">
+                    Sign In →
+                  </Link>
+                </div>
+              )}
+
+              <div className="rush-actions-row">
+                <button
+                  type="button"
+                  className="rush-primary-btn"
+                  onClick={startGame}
+                >
+                  <RotateCcw size={15} />
+                  <span>Rush Again</span>
+                </button>
+                <Link to="/puzzles/leaderboard" className="rush-secondary-btn">
+                  <Trophy size={15} />
+                  <span>View Global Standings</span>
+                </Link>
+                <Link to="/puzzles" className="rush-secondary-btn">
+                  <span>Return to Hub</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  // --------------------------------------------------------------------------
+  // Pre-game Sprint Terminal
+  // --------------------------------------------------------------------------
+  if (gameState !== 'playing') {
+    return (
+      <div className="puzzle-rush-page cp-subpage">
+        <PageAmbient watermark="RUSH" theme="gold" />
+
+        <PageHeader
+          badge="HIGH-VELOCITY SPRINT · REAL-TIME SPEED DRILL"
+          title="Puzzle"
+          accent="Rush"
+          subtitle="Race against the clock to solve as many tactical combinations as possible before time expires."
+          theme="gold"
+          backTo="/puzzles"
+          backLabel="Tactical Hub"
+        />
+
+        <PuzzleSubnav />
+
+        <div className="rush-container">
+          <div className="rush-briefing-grid">
+            {/* Left: Configuration & Launchpad */}
+            <div className="cp-console-window rush-launch-console">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span className="cp-window-dot rose" />
+                  <span>SPRINT TERMINAL // SPRINT CONFIGURATION</span>
+                </span>
+                <span className="rush-sys-id">VELOCITY-01</span>
+              </div>
+
+              <div className="rush-launch-body">
+                {/* Time Mode Selector */}
+                <div className="rush-section-group">
+                  <label className="rush-group-lbl">SELECT DURATION</label>
+                  <div className="rush-duration-grid">
+                    {Object.entries(TIME_OPTIONS).map(([key, val]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`duration-pill-btn ${timeMode === key ? 'active' : ''}`}
+                        onClick={() => navigate(`/puzzles/rush?time=${key}`)}
+                      >
+                        <span className="dur-val">{val.label}</span>
+                        <span className="dur-desc">{val.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Difficulty Selector */}
+                <div className="rush-section-group">
+                  <label className="rush-group-lbl">TACTICAL DIFFICULTY</label>
+                  <div className="rush-diff-grid">
+                    {Object.entries(DIFFICULTY_OPTIONS).map(([key, val]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`diff-pill-btn ${difficulty === key ? 'active' : ''}`}
+                        onClick={() => setDifficulty(key)}
+                      >
+                        <span className="diff-val">{val.label}</span>
+                        <span className="diff-desc">{val.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rules Strip */}
+                <div className="rush-rules-strip">
+                  <div className="r-rule-item">
+                    <span className="r-rule-badge green">+1</span>
+                    <span>Point per completed combination</span>
+                  </div>
+                  <div className="r-rule-item">
+                    <span className="r-rule-badge red">-5s</span>
+                    <span>Penalty on incorrect moves</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="rush-ignite-btn"
+                  onClick={startGame}
+                >
+                  <Zap size={18} />
+                  <span>Ignite Puzzle Rush</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Intel Console */}
+            <div className="cp-console-window rush-intel-console">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span>TELEMETRY INTEL // SPEED DRILL</span>
+                </span>
+              </div>
+
+              <div className="rush-intel-body">
+                <div className="intel-cell">
+                  <span className="intel-code">TACTICAL MOTIFS</span>
+                  <span className="intel-val">Rapid Recognition</span>
+                  <span className="intel-sub">Forks, pins, back-ranks, and sacrifices</span>
+                </div>
+
+                <div className="intel-cell">
+                  <span className="intel-code">CLOCK PRESSURE</span>
+                  <span className="intel-val">{TIME_OPTIONS[timeMode]?.seconds}s Continuous</span>
+                  <span className="intel-sub">Simulates blitz and bullet time-trouble</span>
+                </div>
+
+                <div className="intel-cell">
+                  <span className="intel-code">CORPUS STATUS</span>
+                  <span className="intel-val">Active Random Seed</span>
+                  <span className="intel-sub">Dynamic pool populated from master games</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // Active Gameplay Session
+  // --------------------------------------------------------------------------
+  return (
+    <div className="puzzle-rush-page playing cp-subpage">
+      <PageAmbient watermark="RUSH" theme="gold" />
+
+      <PageHeader
+        badge="ACTIVE SPRINT · HIGH-VELOCITY PULSE"
+        title="Puzzle"
+        accent="Rush"
+        subtitle="Speed calculation session in progress. Clock is ticking!"
+        theme="gold"
+        rightElement={
+          <button
+            type="button"
+            className="rush-abort-btn"
+            onClick={() => setGameState('finished')}
+          >
+            End Sprint
+          </button>
+        }
+      />
+
+      <PuzzleSubnav />
+
+      <div className="rush-container">
+        {/* Top High-Intensity Rush HUD */}
+        <div className="cp-console-window rush-live-hud">
+          {/* Big Neon Digital Clock */}
+          <div className={`rush-hud-cell timer-cell ${getTimerClass()} ${penaltyFlash ? 'penalty-active' : ''}`}>
+            <span className="hud-code">REMAINING TIME</span>
+            <div className="rush-clock-wrap">
+              <Timer size={22} className="rush-clock-icon" />
+              <span className="rush-clock-digits">{formatTime(timeLeft)}</span>
+              {penaltyFlash && <span className="rush-penalty-pop">-5s</span>}
+            </div>
+          </div>
+
+          <div className="rush-hud-cell score-cell">
+            <span className="hud-code">RUSH SCORE</span>
+            <span className="rush-score-digits">{score}</span>
+          </div>
+
+          <div className="rush-hud-cell">
+            <span className="hud-code">ACCURACY</span>
+            <span className="rush-hud-val cyan">{accuracy}%</span>
+          </div>
+
+          <div className="rush-hud-cell">
+            <span className="hud-code">PACE</span>
+            <span className="rush-hud-val violet">
+              {timeLeft < (TIME_OPTIONS[timeMode]?.seconds || 300)
+                ? (
+                    (score /
+                      Math.max(
+                        1,
+                        (TIME_OPTIONS[timeMode]?.seconds || 300) - timeLeft
+                      )) *
+                    60
+                  ).toFixed(1)
+                : '0.0'}{' '}
+              / min
+            </span>
+          </div>
+        </div>
+
+        {/* Board Window & Skip Control */}
+        <div className="rush-stage-layout">
+          <div className="cp-console-window rush-board-window">
+            <div className="cp-window-topbar">
+              <span className="cp-window-title">
+                <span className="cp-window-dot rose" />
+                <span>
+                  TACTICAL SPRINT COMBINATION //{' '}
+                  {currentPuzzle?.id ? `#${currentPuzzle.id}` : 'ACTIVE'}
+                </span>
+              </span>
+
+              <button
+                type="button"
+                className="rush-skip-btn"
+                onClick={handleSkip}
+                title="Skip puzzle with -5s penalty"
+              >
+                <FastForward size={13} />
+                <span>Skip (-5s)</span>
+              </button>
+            </div>
+
+            <div className="rush-board-body">
+              {isLoadingPuzzle ? (
+                <div className="puzzle-board-loading">
+                  <div className="loading-spinner" />
+                  <p>Queuing next tactical sprint position...</p>
+                </div>
+              ) : currentPuzzle ? (
+                <PuzzleBoard
+                  key={`rush-${currentPuzzle.id}`}
+                  puzzle={currentPuzzle}
+                  onSolve={handleCorrectSolve}
+                  onFail={handleFailedMove}
+                  showControls={false}
+                  autoAdvance={true}
+                  allowRetry={false}
+                />
+              ) : (
+                <div className="puzzle-board-loading">
+                  <p>Initializing position...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PuzzleRushPage;

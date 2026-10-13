@@ -1,381 +1,444 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { Chess } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
 import { puzzleStatsService } from '../../services/puzzleStatsService';
+import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
+import PuzzleSubnav from '../../Components/Puzzles/PuzzleSubnav';
+import PageHeader, { PageAmbient } from '../../Components/UI/PageHeader';
+import {
+  Crown,
+  Sparkles,
+  GitFork,
+  Crosshair,
+  Layers,
+  Shield,
+  Compass,
+  TrendingUp,
+  Zap,
+  Target,
+  Swords,
+  ArrowRight,
+  RotateCcw,
+  CheckCircle2,
+  ChevronLeft
+} from 'lucide-react';
 import './puzzleThemed.css';
 
 const THEME_DATA = {
-    mate: { name: 'Checkmate', icon: '♔', color: '#ef4444', description: 'Deliver checkmate' },
-    mateIn1: { name: 'Mate in 1', icon: '♚', color: '#dc2626', description: 'One move to mate' },
-    fork: { name: 'Fork', icon: '♞', color: '#8b5cf6', description: 'Attack two pieces' },
-    pin: { name: 'Pin', icon: '♗', color: '#06b6d4', description: 'Pin pieces to the king' },
-    backrank: { name: 'Back Rank', icon: '♜', color: '#f59e0b', description: 'Back rank mates' },
-    endgame: { name: 'Endgame', icon: '♙', color: '#22c55e', description: 'Endgame techniques' },
-    center: { name: 'Center Control', icon: '⬛', color: '#6366f1', description: 'Central play' },
-    development: { name: 'Development', icon: '→', color: '#14b8a6', description: 'Piece development' },
-    check: { name: 'Check', icon: '✓', color: '#ec4899', description: 'Giving check' },
-    capture: { name: 'Captures', icon: '×', color: '#f97316', description: 'Win material' },
-    attack: { name: 'Attack', icon: '⚔', color: '#e11d48', description: 'Aggressive play' }
+  fork: {
+    name: 'Tactical Fork',
+    icon: GitFork,
+    color: '#8b5cf6',
+    tag: 'DOUBLE ATTACK',
+    description: 'Attack two enemy pieces simultaneously, forcing immediate material gain.'
+  },
+  pin: {
+    name: 'Absolute & Relative Pin',
+    icon: Crosshair,
+    color: '#06b6d4',
+    tag: 'IMMOBILIZE',
+    description: 'Fix enemy pieces against higher-value targets or the king.'
+  },
+  skewer: {
+    name: 'Royal Skewer',
+    icon: Swords,
+    color: '#ec4899',
+    tag: 'LINEAR FORCE',
+    description: 'Force a valuable piece to flee, exposing an undefended target behind it.'
+  },
+  mate: {
+    name: 'Checkmate Patterns',
+    icon: Crown,
+    color: '#ef4444',
+    tag: 'LETHAL FINISH',
+    description: 'Trap the opponent king with unstoppable mating combinations.'
+  },
+  mateIn1: {
+    name: 'Mate in 1 Strike',
+    icon: Sparkles,
+    color: '#dc2626',
+    tag: 'ONE PLY',
+    description: 'Spot instant single-move checkmates from sharp positions.'
+  },
+  backrank: {
+    name: 'Back-Rank Weakness',
+    icon: Layers,
+    color: '#f59e0b',
+    tag: 'TRAPPED KING',
+    description: 'Punish uncastled kings or kings blocked behind their own pawn shelter.'
+  },
+  endgame: {
+    name: 'Endgame Conversion',
+    icon: Shield,
+    color: '#22c55e',
+    tag: 'TECHNIQUE',
+    description: 'Promote passed pawns and execute precise king and rook technical wins.'
+  },
+  capture: {
+    name: 'Material Advantage',
+    icon: Target,
+    color: '#f97316',
+    tag: 'WIN PIECES',
+    description: 'Exploit overloaded defenders and hanging pieces to win material.'
+  },
+  attack: {
+    name: 'Direct King Attack',
+    icon: Zap,
+    color: '#e11d48',
+    tag: 'AGGRESSION',
+    description: 'Break open the enemy castle with aggressive piece sacrifices.'
+  },
+  center: {
+    name: 'Central Domination',
+    icon: Compass,
+    color: '#6366f1',
+    tag: 'BOARD CONTROL',
+    description: 'Occupy and control central outposts to restrict enemy counterplay.'
+  },
+  development: {
+    name: 'Lead in Development',
+    icon: TrendingUp,
+    color: '#14b8a6',
+    tag: 'RAPID MOBILITY',
+    description: 'Leverage superior piece activity to punish slow setups.'
+  }
 };
 
 const DIFFICULTY_OPTIONS = {
-    'all': { label: 'All', icon: '🎲' },
-    'beginner': { label: 'Easy', icon: '🌱' },
-    'intermediate': { label: 'Medium', icon: '📈' },
-    'advanced': { label: 'Hard', icon: '🔥' },
-    'expert': { label: 'Expert', icon: '👑' }
+  all: { label: 'All Levels' },
+  beginner: { label: 'Easy (800-1199)' },
+  intermediate: { label: 'Medium (1200-1599)' },
+  advanced: { label: 'Hard (1600-1999)' },
+  expert: { label: 'Expert (2000+)' }
 };
 
 const PuzzleThemedPage = () => {
-    const navigate = useNavigate();
-    const { theme } = useParams();
-    const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { theme: urlTheme } = useParams();
+  const { isAuthenticated } = useAuth();
 
-    const [selectedTheme, setSelectedTheme] = useState(theme || null);
-    const [puzzlesSolved, setPuzzlesSolved] = useState(0);
-    const [currentPuzzle, setCurrentPuzzle] = useState(null);
-    const [game, setGame] = useState(null);
-    const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-    const [orientation, setOrientation] = useState('white');
-    const [lastMove, setLastMove] = useState(null);
-    const [feedbackStatus, setFeedbackStatus] = useState(null);
-    const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
-    const [showTurnOverlay, setShowTurnOverlay] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [difficulty, setDifficulty] = useState('all');
+  const [selectedTheme, setSelectedTheme] = useState(urlTheme || null);
+  const [isPlaying, setIsPlaying] = useState(!!urlTheme);
+  const [puzzlesSolved, setPuzzlesSolved] = useState(0);
+  const [currentPuzzle, setCurrentPuzzle] = useState(null);
+  const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
+  const [difficulty, setDifficulty] = useState('all');
 
-    const loadNewPuzzle = useCallback(async (themeName, selectedDifficulty) => {
-        setIsLoadingPuzzle(true);
-        setLastMove(null);
-        setFeedbackStatus(null);
-
-        try {
-            const filters = { themes: [themeName] };
-            if (selectedDifficulty && selectedDifficulty !== 'all') {
-                filters.difficulty = selectedDifficulty;
-            }
-            const puzzle = await puzzleService.getPuzzleWithFilters(filters);
-            setCurrentPuzzle(puzzle);
-
-            const newGame = new Chess(puzzle.fen);
-
-            if (puzzle.moves && puzzle.moves.length > 0) {
-                const firstMove = puzzle.moves[0];
-                const moveResult = makeUciMove(newGame, firstMove);
-                if (moveResult) {
-                    setLastMove({ from: firstMove.substring(0, 2), to: firstMove.substring(2, 4) });
-                    setCurrentMoveIndex(1);
-                } else {
-                    setCurrentMoveIndex(0);
-                }
-            } else {
-                setCurrentMoveIndex(0);
-            }
-
-            setGame(newGame);
-
-            const setupTurn = new Chess(puzzle.fen).turn();
-            setOrientation(setupTurn === 'w' ? 'black' : 'white');
-
-            setShowTurnOverlay(true);
-            setTimeout(() => setShowTurnOverlay(false), 1000);
-        } catch (error) {
-            console.error('Error loading puzzle:', error);
-        } finally {
-            setIsLoadingPuzzle(false);
+  const loadNewPuzzle = useCallback(
+    async (themeKey, selectedDifficulty) => {
+      setIsLoadingPuzzle(true);
+      try {
+        const filters = { themes: [themeKey] };
+        if (selectedDifficulty && selectedDifficulty !== 'all') {
+          filters.difficulty = selectedDifficulty;
         }
-    }, []);
+        const puzzle = await puzzleService.getPuzzleWithFilters(filters);
+        setCurrentPuzzle(puzzle);
+      } catch (error) {
+        console.error('Error loading themed puzzle:', error);
+      } finally {
+        setIsLoadingPuzzle(false);
+      }
+    },
+    []
+  );
 
-    const startPractice = async (themeName) => {
-        setSelectedTheme(themeName);
-        setIsPlaying(true);
-        setPuzzlesSolved(0);
-        puzzleService.resetSession();
-        await loadNewPuzzle(themeName, difficulty);
-    };
+  const startPractice = (themeKey) => {
+    setSelectedTheme(themeKey);
+    setIsPlaying(true);
+    setPuzzlesSolved(0);
+    puzzleService.resetSession();
+    loadNewPuzzle(themeKey, difficulty);
+  };
 
-    const endPractice = () => {
-        setIsPlaying(false);
-        setSelectedTheme(null);
-        setCurrentPuzzle(null);
-        setGame(null);
-    };
+  const endPractice = () => {
+    setIsPlaying(false);
+    setSelectedTheme(null);
+    setCurrentPuzzle(null);
+  };
 
-    const makeUciMove = (chessGame, uciMove) => {
-        if (!uciMove || uciMove.length < 4) return null;
-        const from = uciMove.substring(0, 2);
-        const to = uciMove.substring(2, 4);
-        const promotion = uciMove.length > 4 ? uciMove[4] : undefined;
-        return chessGame.move({ from, to, promotion });
-    };
+  const handleCorrectSolve = useCallback(async () => {
+    setPuzzlesSolved((prev) => prev + 1);
 
-    const handleCorrectMove = useCallback(async () => {
-        setFeedbackStatus('correct');
-        setPuzzlesSolved(prev => prev + 1);
-
-        if (isAuthenticated && currentPuzzle) {
-            try {
-                await puzzleStatsService.recordAttempt({
-                    puzzleId: currentPuzzle.id,
-                    solved: true,
-                    puzzleRating: currentPuzzle.rating,
-                    themes: currentPuzzle.themes || [selectedTheme],
-                    mode: 'themed',
-                    difficulty
-                });
-            } catch (err) {
-                console.error('Failed to record attempt:', err);
-            }
-        }
-
-        setTimeout(async () => {
-            setFeedbackStatus(null);
-            await loadNewPuzzle(selectedTheme, difficulty);
-        }, 600);
-    }, [loadNewPuzzle, selectedTheme, difficulty, isAuthenticated, currentPuzzle]);
-
-    const handleWrongMove = useCallback(() => {
-        setFeedbackStatus('wrong');
-
-        if (isAuthenticated && currentPuzzle) {
-            puzzleStatsService.recordAttempt({
-                puzzleId: currentPuzzle.id,
-                solved: false,
-                puzzleRating: currentPuzzle.rating,
-                themes: currentPuzzle.themes || [selectedTheme],
-                mode: 'themed',
-                difficulty
-            }).catch(err => console.error('Failed to record attempt:', err));
-        }
-
-        if (currentPuzzle && game) {
-            const correctMove = currentPuzzle.moves[currentMoveIndex];
-            if (correctMove) {
-                const moveResult = makeUciMove(game, correctMove);
-                if (moveResult) {
-                    setGame(new Chess(game.fen()));
-                    setLastMove({
-                        from: correctMove.substring(0, 2),
-                        to: correctMove.substring(2, 4)
-                    });
-                }
-            }
-        }
-
-        setTimeout(async () => {
-            setFeedbackStatus(null);
-            await loadNewPuzzle(selectedTheme, difficulty);
-        }, 800);
-    }, [loadNewPuzzle, selectedTheme, difficulty, currentPuzzle, game, currentMoveIndex, isAuthenticated]);
-
-    const onDrop = useCallback((moveData) => {
-        if (!isPlaying || !game || !currentPuzzle || isLoadingPuzzle) return false;
-
-        const sourceSquare = moveData?.sourceSquare || moveData?.from;
-        const targetSquare = moveData?.targetSquare || moveData?.to;
-        const piece = moveData?.piece;
-
-        if (!sourceSquare || !targetSquare) return false;
-
-        if (sourceSquare === targetSquare) return false;
-
-        const expectedMove = currentPuzzle.moves[currentMoveIndex];
-        if (!expectedMove) return false;
-
-        const moveStr = sourceSquare + targetSquare;
-        const isPawn = piece?.toLowerCase?.().includes('p') || String(piece)?.toLowerCase?.().includes('p');
-        const isPromotion = isPawn && (targetSquare[1] === '8' || targetSquare[1] === '1');
-        const promotion = isPromotion ? 'q' : undefined;
-
-        const expectedMoveStr = expectedMove.substring(0, 4);
-        const playerMoveWithPromo = promotion ? moveStr + promotion : moveStr;
-
-        if (moveStr === expectedMoveStr || playerMoveWithPromo === expectedMove) {
-            try {
-                const move = game.move({
-                    from: sourceSquare,
-                    to: targetSquare,
-                    promotion: promotion || expectedMove[4]
-                });
-
-                if (!move) return false;
-
-                setGame(new Chess(game.fen()));
-                setLastMove({ from: sourceSquare, to: targetSquare });
-
-                const nextMoveIndex = currentMoveIndex + 1;
-                setCurrentMoveIndex(nextMoveIndex);
-
-                if (nextMoveIndex >= currentPuzzle.moves.length) {
-                    handleCorrectMove();
-                    return true;
-                }
-
-                setTimeout(() => {
-                    const opponentMove = currentPuzzle.moves[nextMoveIndex];
-                    if (opponentMove) {
-                        const moveResult = makeUciMove(game, opponentMove);
-                        if (moveResult) {
-                            setGame(new Chess(game.fen()));
-                            setCurrentMoveIndex(nextMoveIndex + 1);
-                            setLastMove({
-                                from: opponentMove.substring(0, 2),
-                                to: opponentMove.substring(2, 4)
-                            });
-                        }
-                    }
-                }, 200);
-
-                return true;
-            } catch (err) {
-                return false;
-            }
-        } else {
-            handleWrongMove();
-            return false;
-        }
-    }, [game, currentPuzzle, currentMoveIndex, isPlaying, isLoadingPuzzle, handleCorrectMove, handleWrongMove]);
-
-    const customSquareStyles = {};
-    if (lastMove) {
-        customSquareStyles[lastMove.from] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
-        customSquareStyles[lastMove.to] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
+    if (isAuthenticated && currentPuzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: currentPuzzle.id,
+          solved: true,
+          puzzleRating: currentPuzzle.rating,
+          themes: currentPuzzle.themes || [selectedTheme],
+          mode: 'themed',
+          difficulty
+        });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
+  }, [currentPuzzle, isAuthenticated, selectedTheme, difficulty]);
 
-    const playerColor = orientation === 'white' ? 'White' : 'Black';
-    const currentThemeData = THEME_DATA[selectedTheme] || {};
-
-    if (!isPlaying) {
-        return (
-            <div className="puzzle-themed-page">
-                <div className="themed-bg-aura"></div>
-                <div className="themed-bg-aura-2"></div>
-
-                <div className="themed-top-nav">
-                    <Link to="/puzzles" className="themed-back-link">
-                        ← Back to Puzzles
-                    </Link>
-                </div>
-
-                <div className="themed-hero">
-                    <div className="themed-hero-header">
-                        <p className="themed-pretitle">Master The Patterns</p>
-                        <h1 className="themed-title">
-                            <span className="themed-gradient-text">Themed</span> Puzzles
-                        </h1>
-                        <p className="themed-description">
-                            Focus on specific tactical patterns to sharpen your skills.
-                            Choose a theme below and practice until it becomes second nature.
-                        </p>
-                    </div>
-
-                    <div className="themes-grid">
-                        {Object.entries(THEME_DATA).map(([key, data]) => (
-                            <button
-                                key={key}
-                                className="theme-card"
-                                style={{ '--theme-color': data.color }}
-                                onClick={() => startPractice(key)}
-                            >
-                                <span className="theme-icon">{data.icon}</span>
-                                <span className="theme-name">{data.name}</span>
-                                <span className="theme-desc">{data.description}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
+  const handleFailedMove = useCallback(async () => {
+    if (isAuthenticated && currentPuzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: currentPuzzle.id,
+          solved: false,
+          puzzleRating: currentPuzzle.rating,
+          themes: currentPuzzle.themes || [selectedTheme],
+          mode: 'themed',
+          difficulty
+        });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
+  }, [currentPuzzle, isAuthenticated, selectedTheme, difficulty]);
 
+  const currentThemeData = selectedTheme ? THEME_DATA[selectedTheme] || {} : {};
+  const CurrentIcon = currentThemeData.icon || Target;
+
+  // --------------------------------------------------------------------------
+  // Active Practice Stage
+  // --------------------------------------------------------------------------
+  if (isPlaying && selectedTheme) {
     return (
-        <div className="puzzle-themed-page playing">
-            <div className="themed-bg-aura"></div>
-            <div className="themed-bg-aura-2"></div>
+      <div className="puzzle-themed-page playing cp-subpage">
+        <PageAmbient watermark="PATTERNS" theme="gold" />
 
-            <div className="themed-game-layout">
-                <div className="themed-board-wrapper">
-                    <div className={`themed-board-container ${feedbackStatus || ''}`}>
-                        {game && currentPuzzle ? (
-                            <Chessboard
-                                id="themed-board"
-                                options={{
-                                    position: game.fen(),
-                                    allowDragging: !isLoadingPuzzle,
-                                    onPieceDrop: onDrop,
-                                    animationDurationInMs: 150,
-                                    boardOrientation: orientation,
-                                    squareStyles: customSquareStyles,
-                                    showNotation: true
-                                }}
-                            />
-                        ) : (
-                            <div className="loading-puzzle">
-                                <div className="loading-spinner"></div>
-                            </div>
-                        )}
+        <PageHeader
+          badge={`MOTIF DRILL · ${currentThemeData.name?.toUpperCase() || 'CUSTOM'}`}
+          title="Motif"
+          accent="Drill Lab"
+          subtitle={currentThemeData.description || 'Isolate and master this tactical pattern.'}
+          theme="gold"
+          backTo="/puzzles/themed"
+          backLabel="All Motifs"
+          rightElement={
+            <button
+              type="button"
+              className="themed-change-top-btn"
+              onClick={endPractice}
+            >
+              Switch Motif
+            </button>
+          }
+        />
 
-                        {feedbackStatus === 'correct' && (
-                            <div className="feedback-overlay correct">✓</div>
-                        )}
-                        {feedbackStatus === 'wrong' && (
-                            <div className="feedback-overlay wrong">✗</div>
-                        )}
-                        {showTurnOverlay && !feedbackStatus && (
-                            <div className="turn-overlay">
-                                <div className={`turn-dot-large ${orientation}`}></div>
-                                <span>{playerColor} to play</span>
-                            </div>
-                        )}
-                    </div>
+        <PuzzleSubnav />
 
-                    <div className="puzzle-info-bar">
-                        <span className="puzzle-rating-badge">Rating {currentPuzzle?.rating || '—'}</span>
-                        <span className="move-hint">{playerColor} to move</span>
-                    </div>
-                </div>
-
-                <div className="themed-sidebar">
-                    <div className="theme-badge" style={{ '--theme-color': currentThemeData.color }}>
-                        <span className="badge-icon">{currentThemeData.icon}</span>
-                        <span className="badge-name">{currentThemeData.name}</span>
-                    </div>
-
-                    <div className="solved-card">
-                        <span className="solved-value">{puzzlesSolved}</span>
-                        <span className="solved-label">Solved</span>
-                    </div>
-
-                    <div className="difficulty-filter">
-                        <span className="filter-label">Difficulty</span>
-                        <div className="filter-buttons">
-                            {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => (
-                                <button
-                                    key={key}
-                                    className={`filter-btn ${difficulty === key ? 'active' : ''}`}
-                                    onClick={() => setDifficulty(key)}
-                                    title={value.label}
-                                >
-                                    {value.icon}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <button className="change-theme-btn" onClick={endPractice}>
-                        Change Theme
-                    </button>
-
-                    <Link to="/puzzles" className="back-to-puzzles-btn">
-                        ← Back to Puzzles
-                    </Link>
-                </div>
+        <div className="themed-container">
+          {/* Top Live HUD */}
+          <div className="cp-console-window themed-live-hud">
+            <div className="live-hud-cell theme-cell">
+              <span className="hud-code">ACTIVE MOTIF</span>
+              <div className="theme-active-tag-line">
+                <CurrentIcon size={18} style={{ color: currentThemeData.color }} />
+                <span className="theme-active-title">{currentThemeData.name}</span>
+              </div>
             </div>
+
+            <div className="live-hud-cell">
+              <span className="hud-code">SOLVED THIS DRILL</span>
+              <span className="hud-val emerald">{puzzlesSolved}</span>
+            </div>
+
+            <div className="live-hud-cell">
+              <span className="hud-code">POSITION ELO</span>
+              <span className="hud-val gold">
+                {currentPuzzle?.rating ? `${currentPuzzle.rating} ELO` : '...'}
+              </span>
+            </div>
+
+            <div className="live-hud-cell">
+              <span className="hud-code">DIFFICULTY TIER</span>
+              <span className="hud-val cyan">
+                {DIFFICULTY_OPTIONS[difficulty]?.label}
+              </span>
+            </div>
+          </div>
+
+          {/* Board Stage Layout */}
+          <div className="themed-layout">
+            <div className="cp-console-window themed-board-window">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span className="cp-window-dot amber" />
+                  <span>
+                    TACTICAL MOTIF DRILL //{' '}
+                    {currentPuzzle?.id ? `#${currentPuzzle.id}` : 'ACTIVE'}
+                  </span>
+                </span>
+
+                <button
+                  type="button"
+                  className="themed-next-btn"
+                  onClick={() => loadNewPuzzle(selectedTheme, difficulty)}
+                >
+                  <span>Next Puzzle</span>
+                  <ArrowRight size={13} />
+                </button>
+              </div>
+
+              <div className="themed-board-stage">
+                {isLoadingPuzzle ? (
+                  <div className="puzzle-board-loading">
+                    <div className="loading-spinner" />
+                    <p>Loading {currentThemeData.name} combination...</p>
+                  </div>
+                ) : currentPuzzle ? (
+                  <div className="themed-board-wrap">
+                    <PuzzleBoard
+                      key={`themed-${currentPuzzle.id}`}
+                      puzzle={currentPuzzle}
+                      onSolve={handleCorrectSolve}
+                      onFail={handleFailedMove}
+                      showControls={true}
+                      allowRetry={true}
+                    />
+
+                    <div className="themed-bottom-actions">
+                      <button
+                        type="button"
+                        className="themed-next-big-btn"
+                        onClick={() => loadNewPuzzle(selectedTheme, difficulty)}
+                      >
+                        <span>Next {currentThemeData.name} Puzzle →</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="puzzle-board-loading">
+                    <p>No puzzle loaded.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar Controls */}
+            <div className="cp-console-window themed-sidebar-window">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span>DRILL WORKSTATION</span>
+                </span>
+              </div>
+
+              <div className="themed-sidebar-body">
+                <div className="sidebar-section">
+                  <span className="sidebar-section-title">MOTIF BRIEF</span>
+                  <p className="motif-brief-text">
+                    {currentThemeData.description}
+                  </p>
+                </div>
+
+                <div className="sidebar-section">
+                  <span className="sidebar-section-title">SELECT DIFFICULTY</span>
+                  <div className="themed-diff-selector">
+                    {Object.entries(DIFFICULTY_OPTIONS).map(([key, val]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`diff-opt-btn ${difficulty === key ? 'active' : ''}`}
+                        onClick={() => {
+                          setDifficulty(key);
+                          loadNewPuzzle(selectedTheme, key);
+                        }}
+                      >
+                        {val.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="themed-switch-btn"
+                  onClick={endPractice}
+                >
+                  <ChevronLeft size={15} />
+                  <span>Return to All Motifs</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  // --------------------------------------------------------------------------
+  // Motifs Grid Selection Screen
+  // --------------------------------------------------------------------------
+  return (
+    <div className="puzzle-themed-page cp-subpage">
+      <PageAmbient watermark="PATTERNS" theme="gold" />
+
+      <PageHeader
+        badge="11 TACTICAL MOTIFS · PATTERN RECOGNITION LAB"
+        title="Tactical"
+        accent="Motif Lab"
+        subtitle="Isolate and drill essential tactical motifs — from forks and pins to skewers and back-rank checkmates — until recognition is automatic."
+        theme="gold"
+        backTo="/puzzles"
+        backLabel="Tactical Hub"
+      />
+
+      <PuzzleSubnav />
+
+      <div className="themed-container">
+        {/* Difficulty Filter Strip */}
+        <div className="cp-console-window themed-filter-ribbon">
+          <span className="filter-ribbon-label">DIFFICULTY FILTER:</span>
+          <div className="filter-pills-row">
+            {Object.entries(DIFFICULTY_OPTIONS).map(([key, val]) => (
+              <button
+                key={key}
+                type="button"
+                className={`filter-pill-btn ${difficulty === key ? 'active' : ''}`}
+                onClick={() => setDifficulty(key)}
+              >
+                {val.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 11 Motifs Cards Grid */}
+        <div className="themes-grid-console">
+          {Object.entries(THEME_DATA).map(([key, data]) => {
+            const Icon = data.icon;
+            return (
+              <button
+                key={key}
+                type="button"
+                className="motif-studio-card"
+                style={{ '--motif-accent': data.color }}
+                onClick={() => startPractice(key)}
+              >
+                <div className="motif-card-glow" aria-hidden="true" />
+
+                <div className="motif-card-header">
+                  <div className="motif-icon-circle">
+                    <Icon size={22} style={{ color: data.color }} />
+                  </div>
+                  <span className="motif-tag-pill">{data.tag}</span>
+                </div>
+
+                <div className="motif-card-body">
+                  <span className="motif-title">{data.name}</span>
+                  <p className="motif-desc">{data.description}</p>
+                </div>
+
+                <div className="motif-card-footer">
+                  <span className="motif-action-text">Drill Motif</span>
+                  <ArrowRight size={14} className="motif-arrow" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PuzzleThemedPage;

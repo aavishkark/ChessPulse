@@ -1,502 +1,538 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Chess } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
 import { puzzleStatsService } from '../../services/puzzleStatsService';
-import { DiceIcon, SeedlingIcon, TrendUpIcon, FlameIcon, CrownIcon, AIIcon, HeartIcon, CheckIcon } from '../../Components/Icons/Icons';
+import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
+import PuzzleSubnav from '../../Components/Puzzles/PuzzleSubnav';
+import PageHeader, { PageAmbient } from '../../Components/UI/PageHeader';
+import {
+  Flame,
+  Shield,
+  ShieldAlert,
+  ShieldX,
+  Trophy,
+  RotateCcw,
+  AlertTriangle,
+  Play,
+  BarChart3,
+  Bot,
+  ShieldCheck,
+  CheckCircle2,
+  Heart,
+  HeartCrack,
+  ArrowRight
+} from 'lucide-react';
 import './puzzleSurvival.css';
 
 const DIFFICULTY_OPTIONS = {
-    'all': { label: 'All Levels', description: 'Mixed', Icon: DiceIcon },
-    'beginner': { label: 'Beginner', description: '800-1199', Icon: SeedlingIcon },
-    'intermediate': { label: 'Intermediate', description: '1200-1599', Icon: TrendUpIcon },
-    'advanced': { label: 'Advanced', description: '1600-1999', Icon: FlameIcon },
-    'expert': { label: 'Expert', description: '2000-2400', Icon: CrownIcon }
+  all: { label: 'All Levels', description: 'Mixed dynamic pool' },
+  beginner: { label: 'Beginner', description: '800 – 1199 ELO' },
+  intermediate: { label: 'Intermediate', description: '1200 – 1599 ELO' },
+  advanced: { label: 'Advanced', description: '1600 – 1999 ELO' },
+  expert: { label: 'Expert', description: '2000 – 2400 ELO' }
 };
 
 const PuzzleSurvivalPage = () => {
-    const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-    const [gameState, setGameState] = useState('ready');
-    const [lives, setLives] = useState(3);
-    const [streak, setStreak] = useState(0);
-    const [bestStreak, setBestStreak] = useState(() => {
-        const saved = localStorage.getItem('survivalBestStreak');
-        return saved ? parseInt(saved, 10) : 0;
+  const [gameState, setGameState] = useState('ready'); // 'ready' | 'playing' | 'finished'
+  const [lives, setLives] = useState(3);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(() => {
+    const saved = localStorage.getItem('survivalBestStreak');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [currentPuzzle, setCurrentPuzzle] = useState(null);
+  const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
+  const [difficulty, setDifficulty] = useState('all');
+  const [aiFeedback, setAiFeedback] = useState(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [lastStrike, setLastStrike] = useState(false);
+
+  useEffect(() => {
+    if (gameState === 'finished' && isAuthenticated && !aiFeedback) {
+      setLoadingFeedback(true);
+      puzzleStatsService
+        .getSessionFeedback({
+          mode: 'survival',
+          solved: streak,
+          failed: 3,
+          totalAttempted: streak + 3,
+          streak: streak
+        })
+        .then((res) => {
+          if (res?.success) setAiFeedback(res.data);
+        })
+        .catch((err) => console.error('Failed to get AI feedback:', err))
+        .finally(() => setLoadingFeedback(false));
+    }
+  }, [gameState, isAuthenticated, streak, aiFeedback]);
+
+  const loadNewPuzzle = useCallback(
+    async (selectedDifficulty) => {
+      setIsLoadingPuzzle(true);
+      setLastStrike(false);
+      try {
+        const filters =
+          selectedDifficulty && selectedDifficulty !== 'all'
+            ? { difficulty: selectedDifficulty }
+            : {};
+        const puzzle = await puzzleService.getPuzzleWithFilters(filters);
+        setCurrentPuzzle(puzzle);
+      } catch (error) {
+        console.error('Error loading puzzle:', error);
+      } finally {
+        setIsLoadingPuzzle(false);
+      }
+    },
+    []
+  );
+
+  const startGame = async () => {
+    setGameState('playing');
+    setLives(3);
+    setStreak(0);
+    setLastStrike(false);
+    setAiFeedback(null);
+    puzzleService.resetSession();
+    await loadNewPuzzle(difficulty);
+  };
+
+  const handleCorrectSolve = useCallback(async () => {
+    setStreak((prev) => {
+      const newStreak = prev + 1;
+      if (newStreak > bestStreak) {
+        setBestStreak(newStreak);
+        localStorage.setItem('survivalBestStreak', newStreak.toString());
+      }
+      return newStreak;
     });
-    const [currentPuzzle, setCurrentPuzzle] = useState(null);
-    const [game, setGame] = useState(null);
-    const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-    const [orientation, setOrientation] = useState('white');
-    const [lastMove, setLastMove] = useState(null);
-    const [feedbackStatus, setFeedbackStatus] = useState(null);
-    const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
-    const [showTurnOverlay, setShowTurnOverlay] = useState(false);
-    const [difficulty, setDifficulty] = useState('all');
-    const [aiFeedback, setAiFeedback] = useState(null);
-    const [loadingFeedback, setLoadingFeedback] = useState(false);
 
-    useEffect(() => {
-        if (gameState === 'finished' && isAuthenticated && !aiFeedback) {
-            setLoadingFeedback(true);
-            puzzleStatsService.getSessionFeedback({
-                mode: 'survival',
-                solved: streak,
-                failed: 3,
-                totalAttempted: streak + 3,
-                streak: streak
-            }).then(res => {
-                if (res.success) setAiFeedback(res.data);
-            }).catch(err => console.error('Failed to get AI feedback:', err))
-                .finally(() => setLoadingFeedback(false));
-        }
-    }, [gameState, isAuthenticated]);
-
-    const loadNewPuzzle = useCallback(async (selectedDifficulty) => {
-        setIsLoadingPuzzle(true);
-        setLastMove(null);
-        setFeedbackStatus(null);
-
-        try {
-            const filters = selectedDifficulty && selectedDifficulty !== 'all'
-                ? { difficulty: selectedDifficulty }
-                : {};
-            const puzzle = await puzzleService.getPuzzleWithFilters(filters);
-            setCurrentPuzzle(puzzle);
-
-            const newGame = new Chess(puzzle.fen);
-
-            if (puzzle.moves && puzzle.moves.length > 0) {
-                const firstMove = puzzle.moves[0];
-                const moveResult = makeUciMove(newGame, firstMove);
-                if (moveResult) {
-                    setLastMove({ from: firstMove.substring(0, 2), to: firstMove.substring(2, 4) });
-                    setCurrentMoveIndex(1);
-                } else {
-                    setCurrentMoveIndex(0);
-                }
-            } else {
-                setCurrentMoveIndex(0);
-            }
-
-            setGame(newGame);
-
-            const setupTurn = new Chess(puzzle.fen).turn();
-            setOrientation(setupTurn === 'w' ? 'black' : 'white');
-
-            setShowTurnOverlay(true);
-            setTimeout(() => setShowTurnOverlay(false), 1000);
-        } catch (error) {
-            console.error('Error loading puzzle:', error);
-        } finally {
-            setIsLoadingPuzzle(false);
-        }
-    }, []);
-
-    const startGame = async () => {
-        setGameState('playing');
-        setLives(3);
-        setStreak(0);
-        puzzleService.resetSession();
-        await loadNewPuzzle(difficulty);
-    };
-
-    const makeUciMove = (chessGame, uciMove) => {
-        if (!uciMove || uciMove.length < 4) return null;
-        const from = uciMove.substring(0, 2);
-        const to = uciMove.substring(2, 4);
-        const promotion = uciMove.length > 4 ? uciMove[4] : undefined;
-        return chessGame.move({ from, to, promotion });
-    };
-
-    const handleCorrectMove = useCallback(async () => {
-        setFeedbackStatus('correct');
-        setStreak(prev => {
-            const newStreak = prev + 1;
-            if (newStreak > bestStreak) {
-                setBestStreak(newStreak);
-                localStorage.setItem('survivalBestStreak', newStreak.toString());
-            }
-            return newStreak;
+    if (isAuthenticated && currentPuzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: currentPuzzle.id,
+          solved: true,
+          puzzleRating: currentPuzzle.rating,
+          themes: currentPuzzle.themes || [],
+          mode: 'survival',
+          difficulty
         });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
+    }
 
-        if (isAuthenticated && currentPuzzle) {
-            try {
-                await puzzleStatsService.recordAttempt({
-                    puzzleId: currentPuzzle.id,
-                    solved: true,
-                    puzzleRating: currentPuzzle.rating,
-                    themes: currentPuzzle.themes || [],
-                    mode: 'survival',
-                    difficulty
-                });
-            } catch (err) {
-                console.error('Failed to record attempt:', err);
-            }
-        }
+    setTimeout(() => {
+      loadNewPuzzle(difficulty);
+    }, 350);
+  }, [currentPuzzle, isAuthenticated, difficulty, bestStreak, loadNewPuzzle]);
 
-        setTimeout(async () => {
-            setFeedbackStatus(null);
-            await loadNewPuzzle(difficulty);
-        }, 500);
-    }, [loadNewPuzzle, difficulty, bestStreak, isAuthenticated, currentPuzzle]);
+  const handleFailedMove = useCallback(async () => {
+    const nextLives = lives - 1;
+    setLives(nextLives);
+    setLastStrike(true);
 
-    const handleWrongMove = useCallback(() => {
-        setFeedbackStatus('wrong');
-
-        if (isAuthenticated && currentPuzzle) {
-            puzzleStatsService.recordAttempt({
-                puzzleId: currentPuzzle.id,
-                solved: false,
-                puzzleRating: currentPuzzle.rating,
-                themes: currentPuzzle.themes || [],
-                mode: 'survival',
-                difficulty
-            }).catch(err => console.error('Failed to record attempt:', err));
-        }
-
-        if (currentPuzzle && game) {
-            const correctMove = currentPuzzle.moves[currentMoveIndex];
-            if (correctMove) {
-                const moveResult = makeUciMove(game, correctMove);
-                if (moveResult) {
-                    setGame(new Chess(game.fen()));
-                    setLastMove({
-                        from: correctMove.substring(0, 2),
-                        to: correctMove.substring(2, 4)
-                    });
-                }
-            }
-        }
-
-        setLives(prev => {
-            const newLives = prev - 1;
-            if (newLives <= 0) {
-                setTimeout(() => {
-                    setGameState('finished');
-                    setFeedbackStatus(null);
-                }, 800);
-            } else {
-                setTimeout(async () => {
-                    setFeedbackStatus(null);
-                    await loadNewPuzzle(difficulty);
-                }, 800);
-            }
-            return newLives;
+    if (isAuthenticated && currentPuzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: currentPuzzle.id,
+          solved: false,
+          puzzleRating: currentPuzzle.rating,
+          themes: currentPuzzle.themes || [],
+          mode: 'survival',
+          difficulty
         });
-    }, [loadNewPuzzle, difficulty, currentPuzzle, game, currentMoveIndex, isAuthenticated]);
-
-    const onDrop = useCallback((moveData) => {
-        if (gameState !== 'playing' || !game || !currentPuzzle || isLoadingPuzzle) return false;
-
-        const sourceSquare = moveData?.sourceSquare || moveData?.from;
-        const targetSquare = moveData?.targetSquare || moveData?.to;
-        const piece = moveData?.piece;
-
-        if (!sourceSquare || !targetSquare) return false;
-
-        if (sourceSquare === targetSquare) return false;
-
-        const expectedMove = currentPuzzle.moves[currentMoveIndex];
-        if (!expectedMove) return false;
-
-        const moveStr = sourceSquare + targetSquare;
-        const isPawn = piece?.toLowerCase?.().includes('p') || String(piece)?.toLowerCase?.().includes('p');
-        const isPromotion = isPawn && (targetSquare[1] === '8' || targetSquare[1] === '1');
-        const promotion = isPromotion ? 'q' : undefined;
-
-        const expectedMoveStr = expectedMove.substring(0, 4);
-        const playerMoveWithPromo = promotion ? moveStr + promotion : moveStr;
-
-        if (moveStr === expectedMoveStr || playerMoveWithPromo === expectedMove) {
-            try {
-                const move = game.move({
-                    from: sourceSquare,
-                    to: targetSquare,
-                    promotion: promotion || expectedMove[4]
-                });
-
-                if (!move) return false;
-
-                setGame(new Chess(game.fen()));
-                setLastMove({ from: sourceSquare, to: targetSquare });
-
-                const nextMoveIndex = currentMoveIndex + 1;
-                setCurrentMoveIndex(nextMoveIndex);
-
-                if (nextMoveIndex >= currentPuzzle.moves.length) {
-                    handleCorrectMove();
-                    return true;
-                }
-
-                setTimeout(() => {
-                    const opponentMove = currentPuzzle.moves[nextMoveIndex];
-                    if (opponentMove) {
-                        const moveResult = makeUciMove(game, opponentMove);
-                        if (moveResult) {
-                            setGame(new Chess(game.fen()));
-                            setCurrentMoveIndex(nextMoveIndex + 1);
-                            setLastMove({
-                                from: opponentMove.substring(0, 2),
-                                to: opponentMove.substring(2, 4)
-                            });
-                        }
-                    }
-                }, 200);
-
-                return true;
-            } catch (err) {
-                return false;
-            }
-        } else {
-            handleWrongMove();
-            return false;
-        }
-    }, [game, currentPuzzle, currentMoveIndex, gameState, isLoadingPuzzle, handleCorrectMove, handleWrongMove]);
-
-    const customSquareStyles = {};
-    if (lastMove) {
-        customSquareStyles[lastMove.from] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
-        customSquareStyles[lastMove.to] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
 
-    const playerColor = orientation === 'white' ? 'White' : 'Black';
-
-    if (gameState === 'ready') {
-        return (
-            <div className="puzzle-survival-page">
-                <div className="survival-bg-aura"></div>
-                <div className="survival-bg-aura-2"></div>
-
-                <div className="survival-top-nav">
-                    <Link to="/puzzles" className="survival-back-link">
-                        ← Back to Puzzles
-                    </Link>
-                </div>
-
-                <div className="survival-hero">
-                    <div className="survival-hero-content">
-                        <p className="survival-pretitle">Test Your Endurance</p>
-                        <h1 className="survival-title">
-                            <span className="survival-gradient-text">Puzzle</span> Survival
-                        </h1>
-                        <p className="survival-description">
-                            You have 3 lives. Every wrong move costs one. Solve as many puzzles as you can
-                            before running out of lives. How long can you survive?
-                        </p>
-
-                        <div className="survival-lives-display">
-                            <span className="heart"><HeartIcon size={24} color="#ef4444" filled /></span>
-                            <span className="heart"><HeartIcon size={24} color="#ef4444" filled /></span>
-                            <span className="heart"><HeartIcon size={24} color="#ef4444" filled /></span>
-                        </div>
-
-                        {bestStreak > 0 && (
-                            <div className="survival-best-streak">
-                                <span className="survival-best-value">{bestStreak}</span>
-                                <span className="survival-best-label">Your Best Streak</span>
-                            </div>
-                        )}
-
-                        <div className="survival-difficulty-selector">
-                            <h3>Difficulty</h3>
-                            <div className="survival-difficulty-options">
-                                {Object.entries(DIFFICULTY_OPTIONS).map(([key, value]) => {
-                                    const IconComponent = value.Icon;
-                                    return (
-                                        <button
-                                            key={key}
-                                            className={`survival-difficulty-option ${difficulty === key ? 'active' : ''}`}
-                                            onClick={() => setDifficulty(key)}
-                                        >
-                                            <span className="difficulty-icon"><IconComponent size={18} /></span>
-                                            <span className="difficulty-label">{value.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="survival-cta-wrapper">
-                            <div className="survival-cta-glow"></div>
-                            <button className="survival-cta" onClick={startGame}>
-                                Start Survival
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="survival-hero-visual">
-                        <div className="survival-image-glow"></div>
-                        <img
-                            src="/assets/puzzlesurvival.png"
-                            alt="Puzzle Survival"
-                            className="survival-illustration"
-                        />
-                    </div>
-                </div>
-            </div>
-        );
+    if (nextLives <= 0) {
+      setTimeout(() => {
+        setGameState('finished');
+      }, 700);
+    } else {
+      setTimeout(() => {
+        loadNewPuzzle(difficulty);
+      }, 650);
     }
+  }, [lives, currentPuzzle, isAuthenticated, difficulty, loadNewPuzzle]);
 
-    if (gameState === 'finished') {
-        const isNewRecord = streak >= bestStreak && streak > 0;
-
-        return (
-            <div className="puzzle-survival-page results">
-                <div className="survival-bg-aura"></div>
-                <div className="survival-bg-aura-2"></div>
-
-                <div className="survival-results">
-                    <div className="results-hearts">
-                        <span className="heart lost"><HeartIcon size={20} color="#666" /></span>
-                        <span className="heart lost"><HeartIcon size={20} color="#666" /></span>
-                        <span className="heart lost"><HeartIcon size={20} color="#666" /></span>
-                    </div>
-
-                    <h1 className="results-title">Game Over</h1>
-
-                    <div className="final-streak">
-                        <span className="streak-value">{streak}</span>
-                        <span className="streak-label">Puzzles Solved</span>
-                        {isNewRecord && <span className="new-record">New Record!</span>}
-                    </div>
-
-                    <div className="stats-row-results">
-                        <div className="stat-item">
-                            <span className="stat-value">{bestStreak}</span>
-                            <span className="stat-label">Best Streak</span>
-                        </div>
-                    </div>
-
-                    {!isAuthenticated && (
-                        <div className="signin-prompt">
-                            <p>Sign in to save your streak and compete on the leaderboard!</p>
-                            <Link to="/signin" className="signin-link">Sign In</Link>
-                        </div>
-                    )}
-
-                    {isAuthenticated && (
-                        <div className="ai-feedback-section">
-                            <h3 className="ai-feedback-title"><AIIcon size={18} /> AI Coach Tips</h3>
-                            {loadingFeedback ? (
-                                <p className="ai-loading">Analyzing your session...</p>
-                            ) : aiFeedback ? (
-                                <div className="ai-feedback-content">
-                                    <p className="ai-summary">{aiFeedback.summary}</p>
-                                    {aiFeedback.tips && aiFeedback.tips.length > 0 && (
-                                        <ul className="ai-tips-list">
-                                            {aiFeedback.tips.map((tip, i) => (
-                                                <li key={i}>{tip}</li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                    {aiFeedback.strength && (
-                                        <p className="ai-strength"><CheckIcon size={14} /> {aiFeedback.strength}</p>
-                                    )}
-                                </div>
-                            ) : (
-                                <p className="ai-error">Could not load tips</p>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="results-actions">
-                        <div className="play-again-wrapper">
-                            <div className="play-again-glow"></div>
-                            <button className="play-again-btn" onClick={startGame}>
-                                Try Again
-                            </button>
-                        </div>
-                        <Link to="/puzzles" className="results-back-link">
-                            ← Back to Puzzles
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+  // --------------------------------------------------------------------------
+  // Results Screen (Game Over)
+  // --------------------------------------------------------------------------
+  if (gameState === 'finished') {
+    const isNewRecord = streak >= bestStreak && streak > 0;
 
     return (
-        <div className="puzzle-survival-page playing">
-            <div className="survival-bg-aura"></div>
-            <div className="survival-bg-aura-2"></div>
+      <div className="puzzle-survival-page cp-subpage">
+        <PageAmbient watermark="SURVIVAL" theme="blitz" />
 
-            <div className="survival-game-layout">
-                <div className="survival-board-wrapper">
-                    <div className={`survival-board-container ${feedbackStatus || ''}`}>
-                        {game && currentPuzzle ? (
-                            <Chessboard
-                                id="survival-board"
-                                options={{
-                                    position: game.fen(),
-                                    allowDragging: !isLoadingPuzzle && lives > 0,
-                                    onPieceDrop: onDrop,
-                                    animationDurationInMs: 150,
-                                    boardOrientation: orientation,
-                                    squareStyles: customSquareStyles,
-                                    showNotation: true
-                                }}
-                            />
-                        ) : (
-                            <div className="loading-puzzle">
-                                <div className="loading-spinner"></div>
-                            </div>
-                        )}
+        <PageHeader
+          badge="SURVIVAL CLIMB CONCLUDED · 3 STRIKES"
+          title="Survival"
+          accent="Summary"
+          subtitle="Your 3 lives have expired. Review your streak depth and endurance telemetry."
+          theme="blitz"
+          backTo="/puzzles"
+          backLabel="Tactical Hub"
+        />
 
-                        {feedbackStatus === 'correct' && (
-                            <div className="feedback-overlay correct">✓</div>
-                        )}
-                        {feedbackStatus === 'wrong' && (
-                            <div className="feedback-overlay wrong">✗</div>
-                        )}
-                        {showTurnOverlay && !feedbackStatus && (
-                            <div className="turn-overlay">
-                                <div className={`turn-dot-large ${orientation}`}></div>
-                                <span>{playerColor} to play</span>
-                            </div>
-                        )}
-                    </div>
+        <PuzzleSubnav />
 
-                    <div className="puzzle-info-bar">
-                        <span className="puzzle-rating-badge">Rating {currentPuzzle?.rating || '—'}</span>
-                        <span className="move-hint">{playerColor} to move</span>
-                    </div>
-                </div>
-
-                <div className="survival-sidebar">
-                    <div className="lives-card">
-                        <div className="lives-hearts">
-                            {[1, 2, 3].map(i => (
-                                <span key={i} className={`heart ${i <= lives ? 'active' : 'lost'}`}>
-                                    ♥
-                                </span>
-                            ))}
-                        </div>
-                        <span className="lives-label">{lives} {lives === 1 ? 'Life' : 'Lives'} Left</span>
-                    </div>
-
-                    <div className="streak-card">
-                        <span className="streak-value">{streak}</span>
-                        <span className="streak-label">Current Streak</span>
-                    </div>
-
-                    {bestStreak > 0 && (
-                        <div className="best-card">
-                            <span className="best-value">{bestStreak}</span>
-                            <span className="best-label">Best Streak</span>
-                        </div>
-                    )}
-
-                    <button className="quit-btn" onClick={() => setGameState('finished')}>
-                        Give Up
-                    </button>
-                </div>
+        <div className="survival-container">
+          <div className="survival-results-card cp-console-window">
+            <div className="cp-window-topbar">
+              <span className="cp-window-title">
+                <span className="cp-window-dot violet" />
+                <span>ENDURANCE RUN TERMINATED // SYS-SURVIVAL</span>
+              </span>
+              <span className="survival-streak-badge">{streak} Streak</span>
             </div>
+
+            <div className="survival-results-body">
+              <div className="survival-summary-grid">
+                <div className="survival-stat-box highlight">
+                  <span className="s-stat-code">STREAK // FINAL</span>
+                  <div className="s-stat-val violet">{streak}</div>
+                  <span className="s-stat-lbl">Puzzles Solved In Row</span>
+                </div>
+                <div className="survival-stat-box">
+                  <span className="s-stat-code">RECORD // ALL-TIME</span>
+                  <div className="s-stat-val gold">{bestStreak}</div>
+                  <span className="s-stat-lbl">Personal Best Streak</span>
+                </div>
+                <div className="survival-stat-box">
+                  <span className="s-stat-code">DIFFICULTY // TIER</span>
+                  <div className="s-stat-val cyan">
+                    {DIFFICULTY_OPTIONS[difficulty]?.label}
+                  </div>
+                  <span className="s-stat-lbl">Corpus Selection</span>
+                </div>
+                <div className="survival-stat-box">
+                  <span className="s-stat-code">STRIKES // ALLOWED</span>
+                  <div className="s-stat-val rose">3 / 3</div>
+                  <span className="s-stat-lbl">Lives Depleted</span>
+                </div>
+              </div>
+
+              {isNewRecord && (
+                <div className="new-record-banner">
+                  <Trophy size={18} className="gold" />
+                  <strong>NEW PERSONAL BEST STREAK!</strong>
+                  <span>You set a record of {streak} consecutive tactical solves.</span>
+                </div>
+              )}
+
+              {/* AI Coach Analysis */}
+              {isAuthenticated && (
+                <div className="survival-coach-wrap">
+                  <div className="coach-header-line">
+                    <Bot size={18} className="coach-icon" />
+                    <span>Neural Coach Endurance Analysis</span>
+                  </div>
+
+                  {loadingFeedback ? (
+                    <div className="coach-loading">
+                      <div className="loading-spinner" />
+                      <span>Synthesizing calculation stamina data...</span>
+                    </div>
+                  ) : aiFeedback ? (
+                    <div className="coach-content">
+                      <p className="coach-summary">{aiFeedback.summary}</p>
+                      {aiFeedback.tips && aiFeedback.tips.length > 0 && (
+                        <div className="coach-tips-grid">
+                          {aiFeedback.tips.map((tip, i) => (
+                            <div key={i} className="coach-tip-item">
+                              <span className="tip-bullet">›</span>
+                              <span>{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="coach-empty">
+                      Endurance session recorded. Keep training to deepen calculation horizon.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="survival-actions-row">
+                <button
+                  type="button"
+                  className="survival-primary-btn"
+                  onClick={startGame}
+                >
+                  <RotateCcw size={15} />
+                  <span>Climb Again</span>
+                </button>
+                <Link to="/puzzles/leaderboard" className="survival-secondary-btn">
+                  <Trophy size={15} />
+                  <span>View Global Streak Standings</span>
+                </Link>
+                <Link to="/puzzles" className="survival-secondary-btn">
+                  <span>Return to Hub</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  // --------------------------------------------------------------------------
+  // Pre-game Briefing Terminal
+  // --------------------------------------------------------------------------
+  if (gameState !== 'playing') {
+    return (
+      <div className="puzzle-survival-page cp-subpage">
+        <PageAmbient watermark="SURVIVAL" theme="blitz" />
+
+        <PageHeader
+          badge="ENDURANCE CLIMB · 3 STRIKES ALLOWED"
+          title="3-Life"
+          accent="Survival"
+          subtitle="Zero time limit. Calculate as deeply as you need. Three tactical blunders and your run ends."
+          theme="blitz"
+          backTo="/puzzles"
+          backLabel="Tactical Hub"
+        />
+
+        <PuzzleSubnav />
+
+        <div className="survival-container">
+          <div className="survival-briefing-grid">
+            {/* Left: Launch Terminal */}
+            <div className="cp-console-window survival-launch-console">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span className="cp-window-dot violet" />
+                  <span>ENDURANCE CLIMB // CONFIGURATION</span>
+                </span>
+                <span className="survival-sys-id">SURV-03</span>
+              </div>
+
+              <div className="survival-launch-body">
+                {/* Hero Lives Demonstration */}
+                <div className="survival-hero-shield-box">
+                  <span className="hero-shield-label">LIVES ALLOCATED</span>
+                  <div className="hero-shields-row">
+                    <div className="shield-pod active">
+                      <Shield size={28} />
+                      <span>LIFE 1</span>
+                    </div>
+                    <div className="shield-pod active">
+                      <Shield size={28} />
+                      <span>LIFE 2</span>
+                    </div>
+                    <div className="shield-pod active">
+                      <Shield size={28} />
+                      <span>LIFE 3</span>
+                    </div>
+                  </div>
+                  <span className="hero-streak-record">
+                    BEST RECORD: {bestStreak} CONSECUTIVE SOLVES
+                  </span>
+                </div>
+
+                {/* Difficulty Selector */}
+                <div className="survival-section-group">
+                  <label className="survival-group-lbl">SELECT CORPUS TIER</label>
+                  <div className="survival-diff-grid">
+                    {Object.entries(DIFFICULTY_OPTIONS).map(([key, val]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`diff-pill-btn ${difficulty === key ? 'active' : ''}`}
+                        onClick={() => setDifficulty(key)}
+                      >
+                        <span className="diff-val">{val.label}</span>
+                        <span className="diff-desc">{val.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Rules Checklist */}
+                <div className="survival-rules-checklist">
+                  <div className="s-rule-item">
+                    <span className="s-rule-icon cyan">∞</span>
+                    <div className="s-rule-text">
+                      <strong>Zero Clock Pressure</strong>
+                      <span>Take all the time you need to verify opponent candidate moves.</span>
+                    </div>
+                  </div>
+                  <div className="s-rule-item">
+                    <span className="s-rule-icon red">3×</span>
+                    <div className="s-rule-text">
+                      <strong>Three Strikes Allowed</strong>
+                      <span>A single incorrect move consumes one life shield.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="survival-launch-btn"
+                  onClick={startGame}
+                >
+                  <Flame size={18} />
+                  <span>Begin Survival Climb</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Telemetry Intel */}
+            <div className="cp-console-window survival-intel-console">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span>TELEMETRY OVERVIEW // ENDURANCE</span>
+                </span>
+              </div>
+
+              <div className="survival-intel-body">
+                <div className="intel-cell">
+                  <span className="intel-code">CALCULATION DEPTH</span>
+                  <span className="intel-val">Multi-Ply Tactics</span>
+                  <span className="intel-sub">Requires calculating 3 to 6 moves ahead</span>
+                </div>
+
+                <div className="intel-cell">
+                  <span className="intel-code">SESSION STREAK PERSISTENCE</span>
+                  <span className="intel-val">Saved to Browser Record</span>
+                  <span className="intel-sub">High scores synced to user account</span>
+                </div>
+
+                <div className="intel-cell">
+                  <span className="intel-code">CORPUS STATUS</span>
+                  <span className="intel-val">Adaptive Difficulty</span>
+                  <span className="intel-sub">Puzzles escalate as your streak climbs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // Active Gameplay Stage
+  // --------------------------------------------------------------------------
+  return (
+    <div className="puzzle-survival-page playing cp-subpage">
+      <PageAmbient watermark="SURVIVAL" theme="blitz" />
+
+      <PageHeader
+        badge="ACTIVE SURVIVAL RUN · 3 LIVES"
+        title="3-Life"
+        accent="Survival"
+        subtitle="Endurance calculation in progress. Guard your remaining lives."
+        theme="blitz"
+        rightElement={
+          <button
+            type="button"
+            className="survival-abort-btn"
+            onClick={() => setGameState('finished')}
+          >
+            End Climb
+          </button>
+        }
+      />
+
+      <PuzzleSubnav />
+
+      <div className="survival-container">
+        {/* Top Telemetry HUD with Shield Icons */}
+        <div className="cp-console-window survival-live-hud">
+          {/* 3 Life Shields */}
+          <div className="survival-hud-cell shields-cell">
+            <span className="hud-code">SHIELD INTEGRITY</span>
+            <div className="live-shields-row">
+              {[1, 2, 3].map((num) => {
+                const isAlive = lives >= num;
+                return (
+                  <div
+                    key={num}
+                    className={`live-shield-pod ${isAlive ? 'alive' : 'lost'} ${
+                      lastStrike && num === lives + 1 ? 'just-lost' : ''
+                    }`}
+                  >
+                    {isAlive ? <Shield size={18} /> : <ShieldX size={18} />}
+                    <span className="shield-num">STRIKE {num}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="survival-hud-cell streak-cell">
+            <span className="hud-code">ACTIVE STREAK</span>
+            <span className="survival-streak-digits">{streak}</span>
+          </div>
+
+          <div className="survival-hud-cell">
+            <span className="hud-code">BEST STREAK</span>
+            <span className="survival-hud-val gold">{bestStreak}</span>
+          </div>
+
+          <div className="survival-hud-cell">
+            <span className="hud-code">PUZZLE ELO</span>
+            <span className="survival-hud-val cyan">
+              {currentPuzzle?.rating ? `${currentPuzzle.rating}` : '...'}
+            </span>
+          </div>
+        </div>
+
+        {/* Board Stage */}
+        <div className="survival-stage-layout">
+          <div className="cp-console-window survival-board-window">
+            <div className="cp-window-topbar">
+              <span className="cp-window-title">
+                <span className="cp-window-dot violet" />
+                <span>
+                  TACTICAL SURVIVAL POSITION //{' '}
+                  {currentPuzzle?.id ? `#${currentPuzzle.id}` : 'ACTIVE'}
+                </span>
+              </span>
+              <span className="survival-lives-tag">
+                {lives} {lives === 1 ? 'Life' : 'Lives'} Left
+              </span>
+            </div>
+
+            <div className="survival-board-body">
+              {isLoadingPuzzle ? (
+                <div className="puzzle-board-loading">
+                  <div className="loading-spinner" />
+                  <p>Loading endurance combination...</p>
+                </div>
+              ) : currentPuzzle ? (
+                <PuzzleBoard
+                  key={`survival-${currentPuzzle.id}`}
+                  puzzle={currentPuzzle}
+                  onSolve={handleCorrectSolve}
+                  onFail={handleFailedMove}
+                  showControls={true}
+                  autoAdvance={true}
+                  allowRetry={false}
+                />
+              ) : (
+                <div className="puzzle-board-loading">
+                  <p>Position ready...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PuzzleSurvivalPage;

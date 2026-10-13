@@ -1,0 +1,120 @@
+/* ==========================================================================
+   PUZZLE SUBNAV — HORIZONTAL TELEMETRY TACTICAL WORKSTATION SWITCHER
+   ========================================================================== */
+
+.puzzle-subnav-strip {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto 1.5rem auto;
+  position: relative;
+  z-index: 10;
+}
+
+.puzzle-subnav-scroll {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(13, 17, 28, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.puzzle-subnav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-theme="light"] .puzzle-subnav-scroll {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.puzzle-subnav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--text-muted, #94a3b8);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+body[data-theme="light"] .puzzle-subnav-pill {
+  color: #64748b;
+}
+
+.subnav-pill-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.subnav-pill-label {
+  letter-spacing: -0.01em;
+}
+
+.subnav-pill-tag {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted, #94a3b8);
+}
+
+body[data-theme="light"] .subnav-pill-tag {
+  background: rgba(15, 23, 42, 0.06);
+  color: #64748b;
+}
+
+.puzzle-subnav-pill:hover {
+  color: var(--text, #f8fafc);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.puzzle-subnav-pill:hover .subnav-pill-icon {
+  transform: scale(1.1);
+}
+
+body[data-theme="light"] .puzzle-subnav-pill:hover {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.puzzle-subnav-pill.active {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.32);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+body[data-theme="light"] .puzzle-subnav-pill.active {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.puzzle-subnav-pill.active .subnav-pill-tag {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+}
+
+body[data-theme="light"] .puzzle-subnav-pill.active .subnav-pill-tag {
+  color: #b45309;
+}

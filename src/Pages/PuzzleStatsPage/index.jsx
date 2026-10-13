@@ -6,6 +6,8 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
+import PageHeader, { PageAmbient } from '../../Components/UI/PageHeader';
+import PuzzleSubnav from '../../Components/Puzzles/PuzzleSubnav';
 import './puzzleStats.css';
 
 const COLORS = ['#4ade80', '#f87171', '#60a5fa', '#fbbf24', '#a78bfa', '#f472b6'];
@@ -46,6 +48,7 @@ const PuzzleStatsPage = () => {
     if (authLoading || loading) {
         return (
             <div className="puzzle-stats-page">
+                <PageAmbient watermark="ANALYTICS" theme="classic" />
                 <div className="stats-loading">
                     <div className="loading-spinner"></div>
                     <p>Loading your stats...</p>
@@ -57,6 +60,7 @@ const PuzzleStatsPage = () => {
     if (!stats) {
         return (
             <div className="puzzle-stats-page">
+                <PageAmbient watermark="ANALYTICS" theme="classic" />
                 <div className="stats-empty">
                     <h2>No Stats Yet</h2>
                     <p>Start solving puzzles to see your statistics!</p>
@@ -87,14 +91,21 @@ const PuzzleStatsPage = () => {
         }));
 
     return (
-        <div className="puzzle-stats-page">
-            <div className="stats-header">
-                <div className="stats-nav">
-                    <Link to="/puzzles" className="back-link">← Back to Puzzles</Link>
-                </div>
-                <h1>Your Puzzle Stats</h1>
-                <p>Track your progress and identify areas for improvement</p>
-            </div>
+        <div className="puzzle-stats-page cp-subpage">
+            <PageAmbient watermark="ANALYTICS" theme="classic" />
+
+            <PageHeader
+                badge="TACTICAL TELEMETRY · PERFORMANCE DATA"
+                badgeColor="emerald"
+                title="Performance"
+                titleAccent="Analytics"
+                subtitle="Track ELO progression, motif accuracy, and solve-time distribution across your tactical training sessions."
+                theme="classic"
+                backTo="/puzzles"
+                backLabel="Tactical Hub"
+            />
+
+            <PuzzleSubnav />
 
             <div className="stats-grid">
                 <div className="stat-card rating-card">

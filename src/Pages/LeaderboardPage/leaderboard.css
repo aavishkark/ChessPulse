@@ -1,51 +1,18 @@
 .leaderboard-page {
     min-height: calc(100vh - 80px);
-    padding: 24px;
-    max-width: 900px;
+    padding: 0 24px 64px;
+    max-width: 960px;
     margin: 0 auto;
+    position: relative;
 }
 
-.leaderboard-header {
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 500;
-    margin-bottom: 20px;
-    padding: 8px 14px;
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-.back-link:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-    transform: translateX(-4px);
-}
-
-.leaderboard-header h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin: 0 0 8px 0;
-    background: linear-gradient(135deg, #fbbf24, #f59e0b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.leaderboard-header p {
-    color: var(--text-muted);
-    font-size: 1rem;
-    margin: 0;
+.leaderboard-tabs,
+.user-rank-card,
+.auth-prompt,
+.leaderboard-table,
+.leaderboard-footer {
+    position: relative;
+    z-index: 2;
 }
 
 .leaderboard-tabs {
@@ -457,4 +424,31 @@
     .col-value {
         font-size: 0.95rem;
     }
+}
+
+/* ==========================================================================
+   LIGHT MODE OVERRIDES FOR LEADERBOARD PAGE
+   ========================================================================== */
+body[data-theme="light"] .user-rank-card {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+body[data-theme="light"] .rank-stat {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"] .leaderboard-table {
+    background: #ffffff;
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+body[data-theme="light"] .table-row:hover {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+body[data-theme="light"] .table-row.is-user {
+    background: rgba(245, 158, 11, 0.1);
 }

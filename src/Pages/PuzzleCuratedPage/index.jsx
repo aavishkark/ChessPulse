@@ -1,516 +1,541 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Chess } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { puzzleService } from '../../services/puzzleService';
 import { puzzleStatsService } from '../../services/puzzleStatsService';
-import { AIIcon, CheckIcon, TrophyIcon, ArrowRightIcon, TimerIcon, TargetIcon } from '../../Components/Icons/Icons';
+import PuzzleBoard from '../../Components/PuzzleBoard/PuzzleBoard';
+import PuzzleSubnav from '../../Components/Puzzles/PuzzleSubnav';
+import PageHeader, { PageAmbient } from '../../Components/UI/PageHeader';
+import {
+  Cpu,
+  Sparkles,
+  Trophy,
+  RotateCcw,
+  Play,
+  BarChart3,
+  Bot,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
+  Target,
+  Layers,
+  ChevronRight
+} from 'lucide-react';
 import './puzzleCurated.css';
 
 const PuzzleCuratedPage = () => {
-    const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-    const [puzzles, setPuzzles] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [puzzlesSolved, setPuzzlesSolved] = useState(0);
-    const [puzzlesAttempted, setPuzzlesAttempted] = useState(0);
-    const [game, setGame] = useState(null);
-    const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-    const [orientation, setOrientation] = useState('white');
-    const [lastMove, setLastMove] = useState(null);
-    const [feedbackStatus, setFeedbackStatus] = useState(null);
-    const [isLoadingSet, setIsLoadingSet] = useState(true);
-    const [isLoadingPuzzle, setIsLoadingPuzzle] = useState(false);
-    const [showTurnOverlay, setShowTurnOverlay] = useState(false);
-    const [sessionActive, setSessionActive] = useState(false);
-    const [aiPlan, setAiPlan] = useState(null);
-    const [sessionEnded, setSessionEnded] = useState(false);
-    const [accuracy, setAccuracy] = useState(0);
+  const [puzzles, setPuzzles] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [puzzlesSolved, setPuzzlesSolved] = useState(0);
+  const [puzzlesAttempted, setPuzzlesAttempted] = useState(0);
+  const [isLoadingSet, setIsLoadingSet] = useState(true);
+  const [sessionActive, setSessionActive] = useState(false);
+  const [aiPlan, setAiPlan] = useState(null);
+  const [sessionEnded, setSessionEnded] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState(null);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
 
-    const loadCuratedSet = useCallback(async () => {
-        setIsLoadingSet(true);
+  const loadCuratedSet = useCallback(async () => {
+    setIsLoadingSet(true);
+    try {
+      let plan = null;
+      if (isAuthenticated) {
         try {
-            let plan = null;
-            if (isAuthenticated) {
-                try {
-                    const res = await puzzleStatsService.getCurationPlan();
-                    if (res.success) plan = res.data;
-                } catch (err) {
-                    console.error("Failed to fetch AI plan, using default", err);
-                }
-            }
-
-            if (!plan) {
-                plan = {
-                    themes: [
-                        { theme: 'mateIn1', count: 6, reason: 'Core skill' },
-                        { theme: 'fork', count: 6, reason: 'Tactical primary' },
-                        { theme: 'pin', count: 6, reason: 'Essential pattern' },
-                        { theme: 'backRank', count: 6, reason: 'Positional awareness' },
-                        { theme: 'hangingPiece', count: 6, reason: 'Observation' }
-                    ],
-                    summary: "A balanced tactical foundation for your practice."
-                };
-            }
-            setAiPlan(plan);
-
-            const allPuzzles = [];
-            for (const item of plan.themes) {
-                const themePuzzles = await puzzleService.getPuzzlesBatchWithFilters(item.count, { themes: [item.theme] });
-                allPuzzles.push(...themePuzzles);
-            }
-
-            // Shuffle and limit to exactly 30
-            const finalPuzzles = allPuzzles
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 30);
-
-            setPuzzles(finalPuzzles);
-        } catch (error) {
-            console.error('Error loading curated set:', error);
-        } finally {
-            setIsLoadingSet(false);
+          const res = await puzzleStatsService.getCurationPlan();
+          if (res?.success) plan = res.data;
+        } catch (err) {
+          console.error('Failed to fetch AI plan, using default', err);
         }
-    }, [isAuthenticated]);
+      }
 
-    useEffect(() => {
-        loadCuratedSet();
-    }, [loadCuratedSet]);
+      if (!plan) {
+        plan = {
+          themes: [
+            { theme: 'mateIn1', count: 6, reason: 'Essential checkmate pattern recognition' },
+            { theme: 'fork', count: 6, reason: 'Double attack calculation' },
+            { theme: 'pin', count: 6, reason: 'Absolute and relative pins' },
+            { theme: 'backRank', count: 6, reason: 'King safety and back-rank exploitation' },
+            { theme: 'hangingPiece', count: 6, reason: 'Observation and undefended piece tactics' }
+          ],
+          summary: 'Tailored 30-puzzle tactical training plan targeting core tactical weaknesses.'
+        };
+      }
+      setAiPlan(plan);
 
-    const startSession = () => {
-        if (puzzles.length === 0) return;
-        setSessionActive(true);
-        setSessionEnded(false);
-        setCurrentIndex(0);
-        setPuzzlesSolved(0);
-        setPuzzlesAttempted(0);
-        loadCurrentPuzzle(0);
-    };
+      const allPuzzles = [];
+      for (const item of plan.themes) {
+        const themePuzzles = await puzzleService.getPuzzlesBatchWithFilters(item.count, {
+          themes: [item.theme]
+        });
+        allPuzzles.push(...themePuzzles);
+      }
 
-    const [aiFeedback, setAiFeedback] = useState(null);
-    const [loadingFeedback, setLoadingFeedback] = useState(false);
+      // Shuffle and limit to 30
+      const finalPuzzles = allPuzzles
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 30);
 
-    const loadCurrentPuzzle = useCallback((index) => {
-        if (!puzzles[index]) return;
+      setPuzzles(finalPuzzles);
+    } catch (error) {
+      console.error('Error loading curated set:', error);
+    } finally {
+      setIsLoadingSet(false);
+    }
+  }, [isAuthenticated]);
 
-        setIsLoadingPuzzle(true);
-        setFeedbackStatus(null);
-        setLastMove(null);
+  useEffect(() => {
+    loadCuratedSet();
+  }, [loadCuratedSet]);
 
-        const puzzle = puzzles[index];
-        const newGame = new Chess(puzzle.fen);
+  const startSession = () => {
+    if (puzzles.length === 0) return;
+    setSessionActive(true);
+    setSessionEnded(false);
+    setCurrentIndex(0);
+    setPuzzlesSolved(0);
+    setPuzzlesAttempted(0);
+  };
 
-        if (puzzle.moves && puzzle.moves.length > 0) {
-            const firstMove = puzzle.moves[0];
-            const moveResult = makeUciMove(newGame, firstMove);
-            if (moveResult) {
-                setLastMove({ from: firstMove.substring(0, 2), to: firstMove.substring(2, 4) });
-                setCurrentMoveIndex(1);
-            } else {
-                setCurrentMoveIndex(0);
-            }
-        } else {
-            setCurrentMoveIndex(0);
-        }
+  const endSession = useCallback(async () => {
+    setSessionActive(false);
+    setSessionEnded(true);
 
-        setGame(newGame);
-        const setupTurn = new Chess(puzzle.fen).turn();
-        setOrientation(setupTurn === 'w' ? 'black' : 'white');
+    if (puzzlesAttempted > 0 && isAuthenticated) {
+      setLoadingFeedback(true);
+      try {
+        const res = await puzzleStatsService.getSessionFeedback({
+          mode: 'curated',
+          solved: puzzlesSolved,
+          failed: puzzlesAttempted - puzzlesSolved,
+          totalAttempted: puzzlesAttempted
+        });
+        if (res?.success) setAiFeedback(res.data);
+      } catch (err) {
+        console.error('Failed to get feedback:', err);
+      } finally {
+        setLoadingFeedback(false);
+      }
+    }
+  }, [puzzlesAttempted, isAuthenticated, puzzlesSolved]);
 
-        setShowTurnOverlay(true);
-        setTimeout(() => setShowTurnOverlay(false), 800);
-        setIsLoadingPuzzle(false);
-    }, [puzzles]);
+  const nextPuzzle = useCallback(() => {
+    const nextIdx = currentIndex + 1;
+    if (nextIdx < puzzles.length) {
+      setCurrentIndex(nextIdx);
+    } else {
+      endSession();
+    }
+  }, [currentIndex, puzzles.length, endSession]);
 
-    const makeUciMove = (chessGame, uciMove) => {
-        if (!uciMove || uciMove.length < 4) return null;
-        const from = uciMove.substring(0, 2);
-        const to = uciMove.substring(2, 4);
-        const promotion = uciMove.length > 4 ? uciMove[4] : undefined;
-        return chessGame.move({ from, to, promotion });
-    };
+  const handleCorrectSolve = useCallback(async () => {
+    setPuzzlesSolved((prev) => prev + 1);
+    setPuzzlesAttempted((prev) => prev + 1);
 
-    const nextPuzzle = useCallback(() => {
-        const nextIdx = currentIndex + 1;
-        if (nextIdx < puzzles.length) {
-            setCurrentIndex(nextIdx);
-            loadCurrentPuzzle(nextIdx);
-        } else {
-            endSession();
-        }
-    }, [currentIndex, puzzles.length, loadCurrentPuzzle]);
-
-    const endSession = async () => {
-        setSessionActive(false);
-        setSessionEnded(true);
-        const finalAccuracy = puzzlesAttempted > 0 ? Math.round((puzzlesSolved / puzzlesAttempted) * 100) : 0;
-        setAccuracy(finalAccuracy);
-
-        if (isAuthenticated && puzzlesAttempted > 0) {
-            setLoadingFeedback(true);
-            try {
-                const res = await puzzleStatsService.getSessionFeedback({
-                    mode: 'curated',
-                    solved: puzzlesSolved,
-                    failed: puzzlesAttempted - puzzlesSolved,
-                    totalAttempted: puzzlesAttempted
-                });
-                if (res.success) setAiFeedback(res.data);
-            } catch (err) {
-                console.error('Failed to get AI feedback:', err);
-            } finally {
-                setLoadingFeedback(false);
-            }
-        }
-    };
-
-    const handleCorrectMove = useCallback(async () => {
-        setFeedbackStatus('correct');
-        const currentPuzzle = puzzles[currentIndex];
-
-        setPuzzlesSolved(prev => prev + 1);
-        setPuzzlesAttempted(prev => prev + 1);
-
-        if (isAuthenticated && currentPuzzle) {
-            puzzleStatsService.recordAttempt({
-                puzzleId: currentPuzzle.id,
-                solved: true,
-                puzzleRating: currentPuzzle.rating,
-                themes: currentPuzzle.themes || [],
-                mode: 'curated'
-            }).catch(err => console.error('Failed to record attempt:', err));
-        }
-
-        setTimeout(() => {
-            nextPuzzle();
-        }, 800);
-    }, [currentIndex, puzzles, isAuthenticated, nextPuzzle]);
-
-    const handleWrongMove = useCallback(() => {
-        setFeedbackStatus('wrong');
-        setPuzzlesAttempted(prev => prev + 1);
-
-        const currentPuzzle = puzzles[currentIndex];
-        if (isAuthenticated && currentPuzzle) {
-            puzzleStatsService.recordAttempt({
-                puzzleId: currentPuzzle.id,
-                solved: false,
-                puzzleRating: currentPuzzle.rating,
-                themes: currentPuzzle.themes || [],
-                mode: 'curated'
-            }).catch(err => console.error('Failed to record attempt:', err));
-        }
-
-        if (currentPuzzle && game) {
-            const correctMove = currentPuzzle.moves[currentMoveIndex];
-            if (correctMove) {
-                const moveResult = makeUciMove(game, correctMove);
-                if (moveResult) {
-                    setGame(new Chess(game.fen()));
-                    setLastMove({
-                        from: correctMove.substring(0, 2),
-                        to: correctMove.substring(2, 4)
-                    });
-                }
-            }
-        }
-
-        setTimeout(() => {
-            nextPuzzle();
-        }, 1000);
-    }, [currentIndex, puzzles, game, currentMoveIndex, isAuthenticated, nextPuzzle]);
-
-    const onDrop = useCallback((moveData) => {
-        if (!sessionActive || !game || !puzzles[currentIndex] || isLoadingPuzzle) return false;
-
-        const sourceSquare = moveData?.sourceSquare || moveData?.from;
-        const targetSquare = moveData?.targetSquare || moveData?.to;
-        const piece = moveData?.piece;
-
-        if (!sourceSquare || !targetSquare || sourceSquare === targetSquare) return false;
-
-        const expectedMove = puzzles[currentIndex].moves[currentMoveIndex];
-        if (!expectedMove) return false;
-
-        const moveStr = sourceSquare + targetSquare;
-        const isPawn = piece?.toLowerCase?.().includes('p');
-        const isPromotion = isPawn && (targetSquare[1] === '8' || targetSquare[1] === '1');
-        const promotion = isPromotion ? 'q' : undefined;
-
-        const expectedMoveStr = expectedMove.substring(0, 4);
-        const playerMoveWithPromo = promotion ? moveStr + promotion : moveStr;
-
-        if (moveStr === expectedMoveStr || playerMoveWithPromo === expectedMove) {
-            try {
-                const move = game.move({
-                    from: sourceSquare,
-                    to: targetSquare,
-                    promotion: promotion || expectedMove[4]
-                });
-
-                if (!move) return false;
-
-                setGame(new Chess(game.fen()));
-                setLastMove({ from: sourceSquare, to: targetSquare });
-
-                const nextMoveIdx = currentMoveIndex + 1;
-                setCurrentMoveIndex(nextMoveIdx);
-
-                if (nextMoveIdx >= puzzles[currentIndex].moves.length) {
-                    handleCorrectMove();
-                    return true;
-                }
-
-                setTimeout(() => {
-                    const opponentMove = puzzles[currentIndex].moves[nextMoveIdx];
-                    if (opponentMove) {
-                        const moveResult = makeUciMove(game, opponentMove);
-                        if (moveResult) {
-                            setGame(new Chess(game.fen()));
-                            setCurrentMoveIndex(nextMoveIdx + 1);
-                            setLastMove({
-                                from: opponentMove.substring(0, 2),
-                                to: opponentMove.substring(2, 4)
-                            });
-                        }
-                    }
-                }, 200);
-
-                return true;
-            } catch (err) {
-                return false;
-            }
-        } else {
-            handleWrongMove();
-            return false;
-        }
-    }, [game, currentIndex, puzzles, currentMoveIndex, sessionActive, isLoadingPuzzle, handleCorrectMove, handleWrongMove]);
-
-    const customSquareStyles = {};
-    if (lastMove) {
-        customSquareStyles[lastMove.from] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
-        customSquareStyles[lastMove.to] = { backgroundColor: 'rgba(255, 255, 0, 0.4)' };
+    const puzzle = puzzles[currentIndex];
+    if (isAuthenticated && puzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: puzzle.id,
+          solved: true,
+          puzzleRating: puzzle.rating,
+          themes: puzzle.themes || [],
+          mode: 'curated'
+        });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
 
-    const playerColor = orientation === 'white' ? 'White' : 'Black';
+    setTimeout(() => {
+      nextPuzzle();
+    }, 400);
+  }, [puzzles, currentIndex, isAuthenticated, nextPuzzle]);
 
-    if (isLoadingSet) {
-        return (
-            <div className="puzzle-curated-page">
-                <div className="curated-bg-aura"></div>
-                <div className="loading-state">
-                    <div className="ai-brain-loading">
-                        <div className="brain-ring ring-1"></div>
-                        <div className="brain-ring ring-2"></div>
-                        <div className="brain-ring ring-3"></div>
-                    </div>
-                    <h2>Pulse AI is curating your session...</h2>
-                    <p>Analyzing your tactical patterns and weaknesses</p>
-                </div>
-            </div>
-        );
+  const handleFailedMove = useCallback(async () => {
+    setPuzzlesAttempted((prev) => prev + 1);
+
+    const puzzle = puzzles[currentIndex];
+    if (isAuthenticated && puzzle) {
+      try {
+        await puzzleStatsService.recordAttempt({
+          puzzleId: puzzle.id,
+          solved: false,
+          puzzleRating: puzzle.rating,
+          themes: puzzle.themes || [],
+          mode: 'curated'
+        });
+      } catch (err) {
+        console.error('Failed to record attempt:', err);
+      }
     }
+  }, [puzzles, currentIndex, isAuthenticated]);
 
-    if (sessionEnded) {
-        return (
-            <div className="puzzle-curated-page results">
-                <div className="curated-bg-aura"></div>
-                <div className="curated-bg-aura-2"></div>
+  const accuracy =
+    puzzlesAttempted > 0
+      ? Math.round((puzzlesSolved / puzzlesAttempted) * 100)
+      : 100;
 
-                <div className="results-container">
-                    <div className="results-header">
-                        <h1 className="results-title">Session Complete</h1>
-                        <p className="results-subtitle">Here's a summary of your AI-curated training</p>
-                    </div>
+  const currentPuzzle = puzzles[currentIndex];
+  const progressPercent =
+    puzzles.length > 0 ? Math.round(((currentIndex + 1) / puzzles.length) * 100) : 0;
 
-                    <div className="results-stats-grid">
-                        <div className="result-card">
-                            <span className="result-value">{accuracy}%</span>
-                            <span className="result-label">Accuracy</span>
-                        </div>
-                        <div className="result-card">
-                            <span className="result-value">{puzzlesSolved}/30</span>
-                            <span className="result-label">Solved</span>
-                        </div>
-                    </div>
-
-                    {isAuthenticated && (
-                        <div className="results-ai-section">
-                            <div className="ai-coach-header">
-                                <AIIcon size={20} />
-                                <h3>AI Coach Analysis</h3>
-                            </div>
-                            {loadingFeedback ? (
-                                <div className="ai-loading-skeleton">
-                                    <div className="skeleton-line"></div>
-                                    <div className="skeleton-line short"></div>
-                                </div>
-                            ) : aiFeedback ? (
-                                <div className="ai-feedback-box">
-                                    <p className="ai-summary-text">{aiFeedback.summary}</p>
-                                    <div className="ai-tips-grid">
-                                        {aiFeedback.tips?.map((tip, i) => (
-                                            <div key={i} className="ai-tip-item">
-                                                <span className="tip-dot"></span>
-                                                <p>{tip}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="ai-error-msg">Coach analysis is standardizing. Well played!</p>
-                            )}
-                        </div>
-                    )}
-
-                    <div className="results-actions">
-                        <button className="btn-retry" onClick={() => navigate('/puzzles')}>
-                            Back to Puzzles
-                        </button>
-                        <button className="btn-primary" onClick={() => { setAiFeedback(null); loadCuratedSet(); }}>
-                            New Curated Session
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!sessionActive) {
-        return (
-            <div className="puzzle-curated-page">
-                <div className="curated-bg-aura"></div>
-                <div className="curated-bg-aura-2"></div>
-
-                <div className="curated-top-nav">
-                    <Link to="/puzzles" className="curated-back-link">
-                        ← Back to Puzzles
-                    </Link>
-                </div>
-
-                <div className="curated-hero">
-                    <div className="curated-hero-content">
-                        <p className="curated-pretitle">Personalized Tactics</p>
-                        <h1 className="curated-title">
-                            AI <span className="curated-gradient-text">Curated</span>
-                        </h1>
-                        <p className="curated-description">
-                            Pulse AI has analyzed your recent history and prepared a 30-puzzle set
-                            focused on your current growth areas and tactical weaknesses.
-                        </p>
-
-                        <div className="plan-summary-card">
-                            <div className="plan-header">
-                                <TargetIcon size={20} color="#fbbf24" />
-                                <h3>Training Parameters</h3>
-                            </div>
-                            <p className="plan-text">{aiPlan?.summary}</p>
-                            <div className="themes-list">
-                                {aiPlan?.themes.map((t, i) => (
-                                    <div key={i} className="theme-item">
-                                        <span className="theme-name">{t.theme}</span>
-                                        <span className="theme-count">{t.count} puzzles</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="curated-cta-wrapper">
-                            <div className="curated-cta-glow"></div>
-                            <button className="curated-cta" onClick={startSession}>
-                                Start Training Session
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="curated-hero-visual">
-                        <div className="curated-image-glow"></div>
-                        <img
-                            src="/assets/curatedpuzzles.png"
-                            alt="Curated Puzzles"
-                            className="curated-illustration"
-                        />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+  // --------------------------------------------------------------------------
+  // Results Screen
+  // --------------------------------------------------------------------------
+  if (sessionEnded) {
     return (
-        <div className="puzzle-curated-page playing">
-            <div className="curated-bg-aura"></div>
-            <div className="curated-bg-aura-2"></div>
+      <div className="puzzle-curated-page cp-subpage">
+        <PageAmbient watermark="CURATED" theme="classic" />
 
-            <div className="curated-game-layout">
-                <div className="curated-board-wrapper">
-                    <div className={`curated-board-container ${feedbackStatus || ''}`}>
-                        {game && (
-                            <Chessboard
-                                id="curated-board"
-                                options={{
-                                    position: game.fen(),
-                                    allowDragging: !isLoadingPuzzle,
-                                    onPieceDrop: onDrop,
-                                    animationDurationInMs: 150,
-                                    boardOrientation: orientation,
-                                    squareStyles: customSquareStyles,
-                                    showNotation: true
-                                }}
-                            />
-                        )}
-                        {feedbackStatus === 'correct' && (
-                            <div className="feedback-overlay correct"><CheckIcon size={64} /></div>
-                        )}
-                        {feedbackStatus === 'wrong' && (
-                            <div className="feedback-overlay wrong">✗</div>
-                        )}
-                        {showTurnOverlay && !feedbackStatus && (
-                            <div className="turn-overlay">
-                                <div className={`turn-dot-large ${orientation}`}></div>
-                                <span>{playerColor} to play</span>
-                            </div>
-                        )}
-                    </div>
+        <PageHeader
+          badge="NEURAL SET COMPLETE · EVALUATION REPORT"
+          title="Pulse AI"
+          accent="Set Debrief"
+          subtitle="Your personalized 30-puzzle training mission is finished. Review pattern telemetry."
+          theme="classic"
+          backTo="/puzzles"
+          backLabel="Tactical Hub"
+        />
 
-                    <div className="puzzle-info-bar">
-                        <span className="puzzle-rating-badge">Puzzle {currentIndex + 1} / {puzzles.length}</span>
-                        <span className="move-hint">{playerColor} to move</span>
-                    </div>
-                </div>
+        <PuzzleSubnav />
 
-                <div className="curated-sidebar">
-                    <div className="progress-card-live">
-                        <span className="progress-value">{currentIndex + 1}</span>
-                        <span className="progress-slash">/</span>
-                        <span className="progress-total">{puzzles.length}</span>
-                        <span className="progress-label">Puzzles</span>
-                    </div>
-
-                    <div className="stats-mini">
-                        <div className="stat-row">
-                            <span>Solved</span>
-                            <span className="stat-num success">{puzzlesSolved}</span>
-                        </div>
-                        <div className="stat-row">
-                            <span>Accuracy</span>
-                            <span className="stat-num">{accuracy}%</span>
-                        </div>
-                    </div>
-
-                    <div className="active-theme-card">
-                        <span className="theme-label">Active Pattern</span>
-                        <span className="theme-value">{puzzles[currentIndex]?.themes?.[0] || 'Mixed'}</span>
-                    </div>
-
-                    <button className="end-session-btn" onClick={endSession}>
-                        End Session
-                    </button>
-                </div>
+        <div className="curated-container">
+          <div className="curated-results-card cp-console-window">
+            <div className="cp-window-topbar">
+              <span className="cp-window-title">
+                <span className="cp-window-dot cyan" />
+                <span>NEURAL CURATION EVALUATION // SYS-COMPLETE</span>
+              </span>
+              <span className="curated-acc-tag">{accuracy}% Precision</span>
             </div>
+
+            <div className="curated-results-body">
+              <div className="curated-summary-grid">
+                <div className="curated-stat-box highlight">
+                  <span className="c-stat-code">COMPLETED // SOLVED</span>
+                  <div className="c-stat-val cyan">{puzzlesSolved}</div>
+                  <span className="c-stat-lbl">Combinations Solved</span>
+                </div>
+                <div className="curated-stat-box">
+                  <span className="c-stat-code">METRIC // ACCURACY</span>
+                  <div className="c-stat-val emerald">{accuracy}%</div>
+                  <span className="c-stat-lbl">Tactical Precision</span>
+                </div>
+                <div className="curated-stat-box">
+                  <span className="c-stat-code">CORPUS // SET SIZE</span>
+                  <div className="c-stat-val gold">{puzzlesAttempted} / 30</div>
+                  <span className="c-stat-lbl">Puzzles Completed</span>
+                </div>
+                <div className="curated-stat-box">
+                  <span className="c-stat-code">MODEL // CURATION</span>
+                  <div className="c-stat-val violet">Pulse AI</div>
+                  <span className="c-stat-lbl">Neural Tailoring</span>
+                </div>
+              </div>
+
+              {/* AI Coach Analysis */}
+              {isAuthenticated && (
+                <div className="curated-coach-wrap">
+                  <div className="coach-header-line">
+                    <Bot size={18} className="coach-icon" />
+                    <span>Neural Coach Repertoire Diagnosis</span>
+                  </div>
+
+                  {loadingFeedback ? (
+                    <div className="coach-loading">
+                      <div className="loading-spinner" />
+                      <span>Generating motif performance diagnostics...</span>
+                    </div>
+                  ) : aiFeedback ? (
+                    <div className="coach-content">
+                      <p className="coach-summary">{aiFeedback.summary}</p>
+                      {aiFeedback.tips && aiFeedback.tips.length > 0 && (
+                        <div className="coach-tips-grid">
+                          {aiFeedback.tips.map((tip, i) => (
+                            <div key={i} className="coach-tip-item">
+                              <span className="tip-bullet">›</span>
+                              <span>{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {aiFeedback.strength && (
+                        <div className="coach-strength-chip">
+                          <ShieldCheck size={14} />
+                          <span>Solid Motif: {aiFeedback.strength}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="coach-empty">
+                      Curated set recorded. New training sets generate weekly based on your performance.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <div className="curated-actions-row">
+                <button
+                  type="button"
+                  className="curated-primary-btn"
+                  onClick={() => {
+                    loadCuratedSet().then(startSession);
+                  }}
+                >
+                  <RotateCcw size={15} />
+                  <span>Generate New AI Set</span>
+                </button>
+                <Link to="/puzzles/stats" className="curated-secondary-btn">
+                  <BarChart3 size={15} />
+                  <span>View All Analytics</span>
+                </Link>
+                <Link to="/puzzles" className="curated-secondary-btn">
+                  <span>Return to Hub</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  // --------------------------------------------------------------------------
+  // Pre-game Briefing Terminal
+  // --------------------------------------------------------------------------
+  if (!sessionActive) {
+    return (
+      <div className="puzzle-curated-page cp-subpage">
+        <PageAmbient watermark="CURATED" theme="classic" />
+
+        <PageHeader
+          badge="NEURAL REPERTOIRE SET · 30 TACTICAL DRILLS"
+          title="Pulse AI"
+          accent="Curated Set"
+          subtitle="Hand-picked tactical combinations tailored to your calculation weaknesses and tactical motifs."
+          theme="classic"
+          backTo="/puzzles"
+          backLabel="Tactical Hub"
+        />
+
+        <PuzzleSubnav />
+
+        <div className="curated-container">
+          <div className="curated-briefing-grid">
+            {/* Left: AI Training Plan Console */}
+            <div className="cp-console-window curated-launch-console">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span className="cp-window-dot cyan" />
+                  <span>NEURAL TRAINING PLAN // ACTIVE REPERTOIRE</span>
+                </span>
+                <span className="curated-sys-id">NEURAL-30</span>
+              </div>
+
+              <div className="curated-launch-body">
+                {isLoadingSet ? (
+                  <div className="curated-loading-box">
+                    <div className="loading-spinner" />
+                    <p>Synthesizing tailored tactical combination set...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="ai-plan-summary-box">
+                      <Cpu size={24} className="plan-icon" />
+                      <div className="plan-text">
+                        <strong>Personalized Calculation Set</strong>
+                        <p>{aiPlan?.summary}</p>
+                      </div>
+                    </div>
+
+                    <div className="curated-themes-breakdown">
+                      <span className="breakdown-title">SET COMPOSITION (30 PUZZLES)</span>
+                      <div className="themes-list">
+                        {aiPlan?.themes?.map((item, idx) => (
+                          <div key={idx} className="theme-plan-row">
+                            <div className="theme-plan-left">
+                              <span className="theme-plan-name">{item.theme}</span>
+                              <span className="theme-plan-reason">{item.reason}</span>
+                            </div>
+                            <span className="theme-plan-count">{item.count} Drills</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="curated-launch-btn"
+                      onClick={startSession}
+                      disabled={puzzles.length === 0}
+                    >
+                      <Play size={18} />
+                      <span>Start Curated Session (30 Puzzles)</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Intel Overview */}
+            <div className="cp-console-window curated-intel-console">
+              <div className="cp-window-topbar">
+                <span className="cp-window-title">
+                  <span>TELEMETRY OVERVIEW // CURATION</span>
+                </span>
+              </div>
+
+              <div className="curated-intel-body">
+                <div className="intel-cell">
+                  <span className="intel-code">SET FORMAT</span>
+                  <span className="intel-val">30 Positions</span>
+                  <span className="intel-sub">Balanced distribution of motifs</span>
+                </div>
+
+                <div className="intel-cell">
+                  <span className="intel-code">CALCULATION RIGOR</span>
+                  <span className="intel-val">Verified Lines Only</span>
+                  <span className="intel-sub">Computer checked with Stockfish 17</span>
+                </div>
+
+                <div className="intel-cell">
+                  <span className="intel-code">ADAPTIVE REPERTOIRE</span>
+                  <span className="intel-val">Motif Targeting</span>
+                  <span className="intel-sub">Deepens recognition of tactical blindspots</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // Active Gameplay Stage
+  // --------------------------------------------------------------------------
+  return (
+    <div className="puzzle-curated-page playing cp-subpage">
+      <PageAmbient watermark="CURATED" theme="classic" />
+
+      <PageHeader
+        badge={`CURATED TRAINING SESSION · DRILL ${currentIndex + 1} OF ${puzzles.length}`}
+        title="Pulse AI"
+        accent="Studio"
+        subtitle="Work through your tailored 30-puzzle training plan."
+        theme="classic"
+        rightElement={
+          <button
+            type="button"
+            className="curated-end-top-btn"
+            onClick={endSession}
+          >
+            End & View Report
+          </button>
+        }
+      />
+
+      <PuzzleSubnav />
+
+      <div className="curated-container">
+        {/* Top Progress & Telemetry Ribbon */}
+        <div className="cp-console-window curated-live-hud">
+          <div className="live-hud-cell progress-cell">
+            <div className="progress-top-row">
+              <span className="hud-code">SET PROGRESS</span>
+              <span className="progress-pct">{progressPercent}%</span>
+            </div>
+            <div className="progress-bar-track">
+              <div
+                className="progress-bar-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <span className="progress-sub">
+              Puzzle {currentIndex + 1} of {puzzles.length}
+            </span>
+          </div>
+
+          <div className="live-hud-cell">
+            <span className="hud-code">SOLVED IN SET</span>
+            <span className="hud-val emerald">{puzzlesSolved}</span>
+          </div>
+
+          <div className="live-hud-cell">
+            <span className="hud-code">ACCURACY</span>
+            <span className="hud-val cyan">{accuracy}%</span>
+          </div>
+
+          <div className="live-hud-cell">
+            <span className="hud-code">PUZZLE ELO</span>
+            <span className="hud-val gold">
+              {currentPuzzle?.rating ? `${currentPuzzle.rating}` : '...'}
+            </span>
+          </div>
+        </div>
+
+        {/* Board Stage */}
+        <div className="curated-stage-layout">
+          <div className="cp-console-window curated-board-window">
+            <div className="cp-window-topbar">
+              <span className="cp-window-title">
+                <span className="cp-window-dot cyan" />
+                <span>
+                  CURATED COMBINATION // #{currentPuzzle?.id || 'ACTIVE'} (
+                  {currentIndex + 1}/{puzzles.length})
+                </span>
+              </span>
+
+              <button
+                type="button"
+                className="curated-next-top-btn"
+                onClick={nextPuzzle}
+              >
+                <span>{currentIndex + 1 === puzzles.length ? 'Finish Set' : 'Next Puzzle'}</span>
+                <ArrowRight size={13} />
+              </button>
+            </div>
+
+            <div className="curated-board-body">
+              {currentPuzzle ? (
+                <div className="curated-board-wrap">
+                  <PuzzleBoard
+                    key={`curated-${currentPuzzle.id}-${currentIndex}`}
+                    puzzle={currentPuzzle}
+                    onSolve={handleCorrectSolve}
+                    onFail={handleFailedMove}
+                    showControls={true}
+                    allowRetry={true}
+                  />
+
+                  <div className="curated-stage-bottom-bar">
+                    <button
+                      type="button"
+                      className="curated-advance-btn"
+                      onClick={nextPuzzle}
+                    >
+                      <span>
+                        {currentIndex + 1 === puzzles.length
+                          ? 'Finish Set & View Report →'
+                          : 'Skip / Next Puzzle →'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="puzzle-board-loading">
+                  <p>Loading position...</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PuzzleCuratedPage;
