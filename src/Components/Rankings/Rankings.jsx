@@ -1,22 +1,13 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../config/api";
 import "./rankings.css";
 import fide from "../../assets/fide.jpg";
 import { Trophy, Globe, TrendingUp, TrendingDown } from "lucide-react";
+import { RANKINGS_FALLBACK } from "../../data/rankingsFallback";
 
-const ENDPOINTS = {
-  general: {
-    standard: "https://2700chess.com/ajax/index-json?sort=standard&per-page=100",
-    rapid: "https://2700chess.com/ajax/index-json?sort=live_rapid_pos&per-page=100",
-    blitz: "https://2700chess.com/ajax/index-json?sort=live_blitz_pos&per-page=100",
-    juniors: "https://2700chess.com/ajax/index-json?sort=live_juniors_pos&per-page=100",
-  },
-  women: {
-    standard: "https://2700chess.com/ajax/index-json-women?sort=standard&per-page=100",
-    rapid: "https://2700chess.com/ajax/index-json-women?sort=live_rapid_pos&per-page=100",
-    blitz: "https://2700chess.com/ajax/index-json-women?sort=live_blitz_pos&per-page=100",
-    girls: "https://2700chess.com/ajax/index-json-women?sort=live_girls_pos&per-page=100",
-  },
+const CATEGORIES = {
+  general: ["standard", "rapid", "blitz", "juniors"],
+  women: ["standard", "rapid", "blitz", "girls"],
 };
 
 export default function Rankings() {
@@ -27,24 +18,30 @@ export default function Rankings() {
 
   useEffect(() => {
     setLoading(true);
-    setPlayers([]);
 
-    axios
-      .get(ENDPOINTS[section][type])
+    api
+      .get("/rankings", { params: { section, type } })
       .then((res) => {
         const responseData = res.data;
+        let list = [];
 
         if (Array.isArray(responseData)) {
-          setPlayers(responseData);
+          list = responseData;
         } else if (responseData && Array.isArray(responseData.data)) {
-          setPlayers(responseData.data);
+          list = responseData.data;
+        }
+
+        if (list.length > 0) {
+          setPlayers(list);
         } else {
-          setPlayers([]);
+          const fallback = RANKINGS_FALLBACK[section]?.[type] || RANKINGS_FALLBACK.general.standard;
+          setPlayers(fallback);
         }
       })
       .catch((err) => {
-        console.error("Error fetching rankings:", err);
-        setPlayers([]);
+        console.warn("API rankings fetch failed, loading curated FIDE leaderboard fallback:", err.message);
+        const fallback = RANKINGS_FALLBACK[section]?.[type] || RANKINGS_FALLBACK.general.standard;
+        setPlayers(fallback);
       })
       .finally(() => setLoading(false));
   }, [section, type]);
@@ -104,7 +101,7 @@ export default function Rankings() {
               </div>
 
               <div className="segment-group">
-                {Object.keys(ENDPOINTS[section]).map((t) => (
+                {CATEGORIES[section].map((t) => (
                   <button
                     key={t}
                     type="button"
