@@ -165,3 +165,14 @@ html {
 .dark ::selection, body[data-theme="dark"] ::selection {
     background: rgba(139, 92, 246, 0.4);
 }
+
+/* Accessibility Focus Ring System (R-32) */
+:focus-visible,
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--accent, #8b5cf6) !important;
+    outline-offset: 2px !important;
+}

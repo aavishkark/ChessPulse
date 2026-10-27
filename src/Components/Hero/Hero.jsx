@@ -7,7 +7,7 @@ import NotationSparks from "./NotationSparks";
 import GrandmasterCenterpiece from "./GrandmasterCenterpiece";
 import ArenaSwitcher from "./ArenaSwitcher";
 import HeroShowcaseCard from "./HeroShowcaseCard";
-import { Sparkles, ChevronRight } from "lucide-react";
+import { Terminal, ChevronRight } from "lucide-react";
 import "./hero.css";
 
 const ARENA_THEMES = {
@@ -109,7 +109,7 @@ const Hero = ({ onOpenSandbox }) => {
 
             <p className="hero-description">
               In-browser WebAssembly Stockfish 17 evaluation, sub-second live tournament broadcasts,
-              and adaptive grandmaster tactical training — engineered with zero server latency and 100% client-side privacy.
+              and adaptive grandmaster tactical training, engineered with zero server latency and 100% client-side privacy.
             </p>
 
             <div className="hero-ctaWrapper">
@@ -119,7 +119,7 @@ const Hero = ({ onOpenSandbox }) => {
                   onClick={onOpenSandbox}
                   className="hero-cta hero-cta-sandbox"
                 >
-                  <Sparkles size={16} className="cta-icon-sparkle" />
+                  <Terminal size={15} className="cta-icon-sparkle" />
                   <span>⚡ Recruiter Sandbox</span>
                 </button>
               )}
@@ -133,7 +133,7 @@ const Hero = ({ onOpenSandbox }) => {
               </div>
 
               <Link to="/tournaments" className="hero-cta hero-cta-ghost">
-                Explore Tournaments
+                Browse Tournaments
               </Link>
             </div>
 

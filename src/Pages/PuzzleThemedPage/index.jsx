@@ -376,7 +376,7 @@ const PuzzleThemedPage = () => {
         badge="11 TACTICAL MOTIFS · PATTERN RECOGNITION LAB"
         title="Tactical"
         accent="Motif Lab"
-        subtitle="Isolate and drill essential tactical motifs — from forks and pins to skewers and back-rank checkmates — until recognition is automatic."
+        subtitle="Isolate and drill essential tactical motifs, from forks and pins to skewers and back-rank checkmates, until recognition is automatic."
         theme="gold"
         backTo="/puzzles"
         backLabel="Tactical Hub"

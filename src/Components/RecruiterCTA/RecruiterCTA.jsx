@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, Terminal, Code2, ArrowRight } from "lucide-react";
+import { Terminal, Code2, ArrowRight } from "lucide-react";
 import "./recruitercta.css";
 
 export default function RecruiterCTA({ onOpenSandbox }) {
@@ -12,7 +12,7 @@ export default function RecruiterCTA({ onOpenSandbox }) {
 
           <div className="recruiter-cta-left">
             <div className="recruiter-cta-badge">
-              <Sparkles size={14} className="badge-sparkle" />
+              <Terminal size={14} className="badge-sparkle" />
               <span>RECRUITER & ARCHITECTURE FAST-TRACK</span>
             </div>
 
@@ -33,7 +33,7 @@ export default function RecruiterCTA({ onOpenSandbox }) {
                   onClick={onOpenSandbox}
                   className="recruiter-btn-primary"
                 >
-                  <Sparkles size={16} />
+                  <Terminal size={15} />
                   <span>Launch 1-Click Sandbox</span>
                 </button>
               )}

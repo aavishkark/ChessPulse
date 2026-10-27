@@ -28,7 +28,7 @@ const PRESET_SCENARIOS = [
   {
     id: 'kasparov',
     title: 'Deep Blue vs. Garry Kasparov (1997)',
-    subtitle: 'Game 6 — Historic AI Breakthrough & Sacrificial King Hunt',
+    subtitle: 'Game 6: Historic AI Breakthrough & Sacrificial King Hunt',
     event: 'IBM Man-Machine Summit, New York 1997',
     white: 'Deep Blue (IBM AI)',
     black: 'Garry Kasparov (2785)',
@@ -46,7 +46,7 @@ const PRESET_SCENARIOS = [
   {
     id: 'fischer',
     title: 'The Game of the Century (Fischer vs. Byrne 1956)',
-    subtitle: '13-Year-Old Fischer — Legendary Queen Sacrifice 17...Be6!!',
+    subtitle: '13-Year-Old Fischer: Legendary Queen Sacrifice 17...Be6!!',
     event: 'Rosenwald Memorial, New York 1956',
     white: 'Donald Byrne',
     black: 'Bobby Fischer (13 yo)',
@@ -67,7 +67,7 @@ const PRESET_SCENARIOS = [
   {
     id: 'immortal',
     title: 'The Immortal Game (Anderssen vs. Kieseritzky 1851)',
-    subtitle: 'Romantic Era — Queen & Double Rook Sacrifice Checkmate',
+    subtitle: 'Romantic Era: Queen & Double Rook Sacrifice Checkmate',
     event: 'The Great Exhibition Tournament, London 1851',
     white: 'Adolf Anderssen',
     black: 'Lionel Kieseritzky',
@@ -86,7 +86,7 @@ const PRESET_SCENARIOS = [
   {
     id: 'carlsen',
     title: 'Magnus Carlsen vs. Ian Nepomniachtchi (2021)',
-    subtitle: 'WCC Game 6 — 136-Move Historical Marathon & Masterclass',
+    subtitle: 'WCC Game 6: 136-Move Historical Marathon & Masterclass',
     event: 'FIDE World Chess Championship, Dubai 2021',
     white: 'Magnus Carlsen (2855)',
     black: 'Ian Nepomniachtchi (2782)',
@@ -244,7 +244,7 @@ export default function RecruiterSandboxModal({ isOpen, onClose }) {
         <div className="sandbox-modal-header">
           <div className="sandbox-header-left">
             <div className="sandbox-spark-icon">
-              <Sparkles size={18} />
+              <Terminal size={18} />
             </div>
             <div className="sandbox-title-col">
               <div className="sandbox-title-row">

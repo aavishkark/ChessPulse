@@ -105,7 +105,7 @@ const PuzzlesPage = () => {
             id: 'survival',
             title: '3-Life Survival',
             tag: 'ENDURANCE',
-            description: 'Zero time pressure, 3 strikes allowed — climb into deep calculation.',
+            description: 'Zero time pressure, 3 strikes allowed: climb into deep calculation.',
             icon: Flame,
             color: '#a855f7',
             path: '/puzzles/survival',

@@ -27,7 +27,7 @@ const ROUTE_META = {
   '/puzzles/survival': { title: 'Tactical Survival Mode', section: 'Precision Endurance' },
   '/puzzles/rating': { title: 'Adaptive Rated Ladder', section: 'Elo Rating' },
   '/puzzles/themed': { title: 'Themed Motifs & Openings', section: 'Curated Tactics' },
-  '/puzzles/curated': { title: 'Pulse AI Coach', section: 'Intelligent Tutor' },
+  '/puzzles/curated': { title: 'Pulse Tactical Coach', section: 'Interactive Tutor' },
   '/puzzles/stats': { title: 'Performance Metrics', section: 'Statistical Analysis' },
   '/puzzles/leaderboard': { title: 'Global Rankings', section: 'Rating Matrix' },
   '/bots': { title: 'AI Bot Arena', section: 'Neural Opponents' },

@@ -67,7 +67,7 @@ const SignUpPage = () => {
                             <PulseBrandMark size={44} color="#06b6d4" />
                         </div>
                         <Heading size="2xl" className="auth-title">Join ChessPulse</Heading>
-                        <Text className="auth-subtitle">Create your account to get started</Text>
+                        <Text className="auth-subtitle">Create an account to track your rating and analysis</Text>
                     </div>
 
                     {error && (
